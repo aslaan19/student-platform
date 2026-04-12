@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { supabase } from "../../lib/supabase/client";
+import { createClient } from "../../lib/supabase/client";
 
 export default function LoginPage() {
+  const supabase = createClient();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -22,43 +24,53 @@ export default function LoginPage() {
       password,
     });
 
+    console.log("LOGIN RESULT:", { data, error });
+
     if (error) {
       setLoading(false);
-      alert(error.message);
+      alert("خطأ في تسجيل الدخول: " + error.message);
       return;
     }
 
-    const userId = data.user.id;
+    const user = data.user;
+
+    if (!user) {
+      setLoading(false);
+      alert("تم تسجيل الدخول لكن لم يتم العثور على user");
+      return;
+    }
 
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("role")
-      .eq("id", userId)
+      .eq("id", user.id)
       .single();
+
+    console.log("PROFILE RESULT:", { profile, profileError });
 
     setLoading(false);
 
     if (profileError || !profile) {
-      alert("لم يتم العثور على بيانات المستخدم");
+      alert("تم تسجيل الدخول لكن لم يتم العثور على profile");
       return;
     }
 
-    if (profile.role === "admin") {
+    if (profile.role === "ADMIN") {
       window.location.href = "/admin";
       return;
     }
 
-    if (profile.role === "teacher") {
+    if (profile.role === "TEACHER") {
       window.location.href = "/teacher";
       return;
     }
 
-    if (profile.role === "student") {
+    if (profile.role === "STUDENT") {
       window.location.href = "/student";
       return;
     }
 
-    alert("دور المستخدم غير صحيح");
+    alert("نوع المستخدم غير صحيح: " + profile.role);
   };
 
   return (

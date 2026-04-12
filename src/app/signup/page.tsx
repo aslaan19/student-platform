@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { supabase } from "../../lib/supabase/client";
+import { createClient } from "../../lib/supabase/client";
 
 export default function SignupPage() {
+  const supabase = createClient();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -28,9 +29,11 @@ export default function SignupPage() {
       password,
     });
 
+    console.log("SIGNUP RESULT:", { data, error });
+
     if (error) {
       setLoading(false);
-      alert(error.message);
+      alert("خطأ في إنشاء مستخدم auth: " + error.message);
       return;
     }
 
@@ -38,20 +41,31 @@ export default function SignupPage() {
 
     if (!user) {
       setLoading(false);
-      alert("لم يتم إنشاء الحساب");
+      alert("لم يتم إنشاء الحساب في auth.users");
       return;
     }
 
-    const { error: profileError } = await supabase.from("profiles").insert({
-      id: user.id,
-      role: "student",
-      full_name: fullName,
+    const { data: insertedProfile, error: profileError } = await supabase
+      .from("profiles")
+      .insert({
+        id: user.id,
+        role: "STUDENT",
+        full_name: fullName,
+      })
+      .select()
+      .single();
+
+    console.log("PROFILE INSERT RESULT:", {
+      insertedProfile,
+      profileError,
     });
 
     setLoading(false);
 
     if (profileError) {
-      alert(profileError.message);
+      alert(
+        "تم إنشاء auth user لكن فشل إنشاء profile: " + profileError.message,
+      );
       return;
     }
 
