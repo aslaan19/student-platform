@@ -1,9 +1,9 @@
 import DashboardShell from "../../components/shared/dashboard-shell";
 
 const adminSidebarItems = [
-  { label: "الرئيسية", href: "/" },
-  { label: "المعلمون", href: "/teachers" },
-  { label: "الطلاب", href: "/student" },
+  { label: "الرئيسية", href: "/admin" },
+  { label: "المعلمون", href: "/admin/teachers" },
+  { label: "الطلاب", href: "/admin/students" },
   { label: "الفصول", href: "/admin/classes" },
 ];
 

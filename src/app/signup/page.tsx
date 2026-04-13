@@ -24,103 +24,115 @@ export default function SignupPage() {
 
     setLoading(true);
 
-    const { data, error } = await supabase.auth.signUp({
+    // ── Step 1: Auth ──────────────────────────────────────────
+    const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
     });
 
-    console.log("SIGNUP RESULT:", { data, error });
+    console.log(
+      "STEP 1 - AUTH:",
+      JSON.stringify({ authData, authError }, null, 2),
+    );
 
-    if (error) {
+    if (authError) {
       setLoading(false);
-      alert("خطأ في إنشاء مستخدم auth: " + error.message);
+      alert("فشل إنشاء auth user: " + authError.message);
       return;
     }
 
-    const user = data.user;
-
-    if (!user) {
+    if (!authData.user) {
       setLoading(false);
-      alert("لم يتم إنشاء الحساب في auth.users");
+      alert("لم يتم إرجاع user من auth");
       return;
     }
 
-    const { data: insertedProfile, error: profileError } = await supabase
+    const userId = authData.user.id;
+    console.log("STEP 1 - USER ID:", userId);
+
+    // ── Step 2: Profile ───────────────────────────────────────
+    const { data: profileData, error: profileError } = await supabase
       .from("profiles")
-      .insert({
-        id: user.id,
-        role: "STUDENT",
-        full_name: fullName,
-      })
+      .upsert(
+        { id: userId, role: "STUDENT", full_name: fullName },
+        { onConflict: "id" },
+      )
       .select()
       .single();
 
-    console.log("PROFILE INSERT RESULT:", {
-      insertedProfile,
-      profileError,
-    });
-
-    setLoading(false);
+    console.log(
+      "STEP 2 - PROFILE:",
+      JSON.stringify({ profileData, profileError }, null, 2),
+    );
 
     if (profileError) {
+      setLoading(false);
       alert(
-        "تم إنشاء auth user لكن فشل إنشاء profile: " + profileError.message,
+        "فشل إنشاء profile: " +
+          profileError.message +
+          " | code: " +
+          profileError.code,
       );
       return;
     }
 
-    alert("تم إنشاء حساب الطالب بنجاح");
-    window.location.href = "/student";
+    // ── Step 3: Student ───────────────────────────────────────
+    const { data: studentData, error: studentError } = await supabase
+      .from("students")
+      .upsert({ profile_id: userId }, { onConflict: "profile_id" })
+      .select()
+      .single();
+
+    console.log(
+      "STEP 3 - STUDENT:",
+      JSON.stringify({ studentData, studentError }, null, 2),
+    );
+
+    if (studentError) {
+      setLoading(false);
+      alert(
+        "فشل إنشاء student: " +
+          studentError.message +
+          " | code: " +
+          studentError.code,
+      );
+      return;
+    }
+
+    // ── All good ──────────────────────────────────────────────
+    console.log("SIGNUP COMPLETE ✅");
+    setLoading(false);
+    alert("تم إنشاء الحساب بنجاح!");
+    window.location.href = "/login";
   };
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
       <div className="w-full max-w-md rounded-2xl border bg-white p-6 shadow-sm">
         <h1 className="mb-2 text-center text-2xl font-bold">إنشاء حساب طالب</h1>
-        <p className="mb-6 text-center text-sm text-gray-500">
-          هذه الصفحة مخصصة للطلاب فقط
-        </p>
 
         <div className="space-y-4">
-          <div>
-            <label className="mb-1 block text-sm font-medium">
-              الاسم الكامل
-            </label>
-            <input
-              type="text"
-              placeholder="الاسم الكامل"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              className="w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-black"
-            />
-          </div>
-
-          <div>
-            <label className="mb-1 block text-sm font-medium">
-              البريد الإلكتروني
-            </label>
-            <input
-              type="email"
-              placeholder="example@mail.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-black"
-            />
-          </div>
-
-          <div>
-            <label className="mb-1 block text-sm font-medium">
-              كلمة المرور
-            </label>
-            <input
-              type="password"
-              placeholder="6 أحرف أو أكثر"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-black"
-            />
-          </div>
-
+          <input
+            type="text"
+            placeholder="الاسم الكامل"
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            className="w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-black"
+          />
+          <input
+            type="email"
+            placeholder="example@mail.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-black"
+          />
+          <input
+            type="password"
+            placeholder="6 أحرف أو أكثر"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-black"
+          />
           <button
             type="button"
             onClick={handleSignup}
