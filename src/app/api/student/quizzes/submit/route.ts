@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import type { Question } from "@prisma/client";
 import { createClient } from "../../../../../lib/supabase/server";
 import { prisma } from "../../../../../lib/prisma";
 
@@ -21,11 +22,11 @@ export async function POST(req: Request) {
     if (existing) return NextResponse.json({ error: "Already attempted" }, { status: 400 });
 
     // Fetch questions with correct answers
-    const questions = await prisma.question.findMany({ where: { quiz_id: quizId } });
+    const questions: Question[] = await prisma.question.findMany({ where: { quiz_id: quizId } });
 
     let score = 0;
     const answerData = answers.map((a: { questionId: string; answer: string }) => {
-      const question = questions.find(q => q.id === a.questionId);
+      const question = questions.find((q) => q.id === a.questionId);
       const is_correct = question?.correct_answer === a.answer;
       if (is_correct) score++;
       return {
