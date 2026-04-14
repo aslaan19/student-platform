@@ -1,17 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "../../../../../lib/prisma";
-import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+import { createAdminClient } from "../../../../../lib/supabase/admin";
 
 export async function DELETE(
   _: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const supabase = createAdminClient();
     const { id } = await params;
     const student = await prisma.student.findUnique({
       where: { id },

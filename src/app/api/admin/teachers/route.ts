@@ -1,11 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "../../../../lib/prisma";
-import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+import { createAdminClient } from "../../../../lib/supabase/admin";
 
 export async function GET() {
   const teachers = await prisma.teacher.findMany({
@@ -20,6 +15,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
+    const supabase = createAdminClient();
     const { fullName, email, password } = await req.json();
 
     if (!fullName || !email || !password) {
