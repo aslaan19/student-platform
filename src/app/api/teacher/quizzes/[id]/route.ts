@@ -7,10 +7,10 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    await prisma.class.delete({ where: { id } });
+    await prisma.quiz.delete({ where: { id } });
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ error: "Failed to delete class" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to delete quiz" }, { status: 500 });
   }
 }

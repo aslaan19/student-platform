@@ -6,8 +6,8 @@ import DashboardShell from "../../components/shared/dashboard-shell";
 const studentSidebarItems = [
   { label: "الرئيسية", href: "/student" },
   { label: "فصلي", href: "/student/class" },
+  { label: "الاختبارات", href: "/student/quizzes" },
 ];
-
 export default function StudentLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
@@ -15,8 +15,10 @@ export default function StudentLayout({
 
   useEffect(() => {
     fetch("/api/student")
-      .then(r => r.json())
-      .then(d => { if (d?.profile?.full_name) setName(d.profile.full_name); });
+      .then((r) => r.json())
+      .then((d) => {
+        if (d?.profile?.full_name) setName(d.profile.full_name);
+      });
   }, []);
 
   return (

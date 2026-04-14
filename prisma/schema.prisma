@@ -33,9 +33,88 @@ model Teacher {
 
   created_at    DateTime       @default(now())
   announcements Announcement[]
+  quizzes Quiz[]
 
   @@map("teachers")
 }
+model Quiz {
+  id         String   @id @default(uuid()) @db.Uuid
+  name       String
+  class_id   String   @db.Uuid
+  teacher_id String   @db.Uuid
+  created_at DateTime @default(now())
+
+  class     Class          @relation(fields: [class_id], references: [id], onDelete: Cascade)
+  teacher   Teacher        @relation(fields: [teacher_id], references: [id], onDelete: Cascade)
+  questions Question[]
+  attempts  QuizAttempt[]
+
+  @@map("quizzes")
+}
+
+model Question {
+  id             String   @id @default(uuid()) @db.Uuid
+  quiz_id        String   @db.Uuid
+  type           QuestionType
+  text           String
+  correct_answer String
+  order          Int
+  created_at     DateTime @default(now())
+
+  quiz    Quiz     @relation(fields: [quiz_id], references: [id], onDelete: Cascade)
+  options Option[]
+  answers QuizAnswer[]
+
+  @@map("questions")
+}
+
+model Option {
+  id          String   @id @default(uuid()) @db.Uuid
+  question_id String   @db.Uuid
+  text        String
+  order       Int
+  created_at  DateTime @default(now())
+
+  question Question @relation(fields: [question_id], references: [id], onDelete: Cascade)
+
+  @@map("options")
+}
+
+model QuizAttempt {
+  id           String   @id @default(uuid()) @db.Uuid
+  quiz_id      String   @db.Uuid
+  student_id   String   @db.Uuid
+  score        Int
+  total        Int
+  submitted_at DateTime @default(now())
+
+  quiz    Quiz         @relation(fields: [quiz_id], references: [id], onDelete: Cascade)
+  student Student      @relation(fields: [student_id], references: [id], onDelete: Cascade)
+  answers QuizAnswer[]
+
+  @@unique([quiz_id, student_id])
+  @@map("quiz_attempts")
+}
+
+model QuizAnswer {
+  id          String   @id @default(uuid()) @db.Uuid
+  attempt_id  String   @db.Uuid
+  question_id String   @db.Uuid
+  answer      String
+  is_correct  Boolean
+  created_at  DateTime @default(now())
+
+  attempt  QuizAttempt @relation(fields: [attempt_id], references: [id], onDelete: Cascade)
+  question Question    @relation(fields: [question_id], references: [id], onDelete: Cascade)
+
+  @@map("quiz_answers")
+}
+
+enum QuestionType {
+  MCQ
+  TF
+}
+
 
 model Student {
   id         String  @id @default(uuid()) @db.Uuid
@@ -46,6 +125,7 @@ model Student {
   class   Class?  @relation(fields: [class_id], references: [id], onDelete: SetNull)
 
   created_at DateTime @default(now())
+  attempts QuizAttempt[]
 
   @@map("students")
 }
@@ -54,6 +134,7 @@ model Class {
   id         String  @id @default(uuid()) @db.Uuid
   name       String  @unique
   teacher_id String? @db.Uuid
+  quizzes       Quiz[]
 
   teacher  Teacher?  @relation(fields: [teacher_id], references: [id], onDelete: SetNull)
   students Student[]
