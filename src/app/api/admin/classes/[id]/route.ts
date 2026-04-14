@@ -12,5 +12,6 @@ export async function DELETE(
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: "Failed to delete class" }, { status: 500 });
+ 
   }
 }
