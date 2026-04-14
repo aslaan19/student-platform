@@ -2,6 +2,16 @@ import { NextResponse } from "next/server";
 import { createClient } from "../../../../../lib/supabase/server";
 import { prisma } from "../../../../../lib/prisma";
 
+interface SubmittedAnswer {
+  questionId: string;
+  answer: string;
+}
+
+interface QuizQuestion {
+  id: string;
+  correct_answer: string;
+}
+
 export async function POST(req: Request) {
   try {
     const supabase = await createClient();
@@ -11,17 +21,26 @@ export async function POST(req: Request) {
     const student = await prisma.student.findUnique({ where: { profile_id: user.id } });
     if (!student) return NextResponse.json({ error: "Student not found" }, { status: 404 });
 
-    const { quizId, answers } = await req.json();
+    const { quizId, answers } = await req.json() as {
+      quizId: string;
+      answers: SubmittedAnswer[];
+    };
 
     const existing = await prisma.quizAttempt.findUnique({
       where: { quiz_id_student_id: { quiz_id: quizId, student_id: student.id } },
     });
     if (existing) return NextResponse.json({ error: "Already attempted" }, { status: 400 });
 
-    const questions = await prisma.question.findMany({ where: { quiz_id: quizId } });
+    const questions: QuizQuestion[] = await prisma.question.findMany({
+      where: { quiz_id: quizId },
+      select: {
+        id: true,
+        correct_answer: true,
+      },
+    });
 
     let score = 0;
-    const answerData = answers.map((a: { questionId: string; answer: string }) => {
+    const answerData = answers.map((a: SubmittedAnswer) => {
       const question = questions.find((q) => q.id === a.questionId);
       const is_correct = question?.correct_answer === a.answer;
       if (is_correct) score++;
