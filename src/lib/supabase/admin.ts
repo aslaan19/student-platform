@@ -1,3 +1,4 @@
+//admin.ts
 import { createClient } from "@supabase/supabase-js";
 
 function getAdminSupabaseConfig() {

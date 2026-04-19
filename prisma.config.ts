@@ -8,7 +8,12 @@ const databaseUrl =
 
 export default defineConfig({
   schema: "prisma/schema.prisma",
+
   datasource: {
     url: databaseUrl,
-  }
+  },
+
+  migrations: {
+    seed: "npx ts-node prisma/seed.ts", // ✅ THIS LINE
+  },
 });

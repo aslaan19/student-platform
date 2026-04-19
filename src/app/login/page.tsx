@@ -1,3 +1,4 @@
+// login/page.tsx
 "use client";
 
 import Link from "next/link";
@@ -5,126 +6,211 @@ import { useState } from "react";
 import { createClient } from "../../lib/supabase/client";
 
 export default function LoginPage() {
-  const supabase = createClient();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleLogin = async () => {
-    if (!email || !password) {
-      alert("من فضلك أدخل البريد الإلكتروني وكلمة المرور");
+    setError("");
+
+    if (!email.trim() || !password) {
+      setError("من فضلك أدخل البريد الإلكتروني وكلمة المرور");
       return;
     }
 
     setLoading(true);
+    try {
+      const supabase = createClient();
 
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
 
-    console.log("LOGIN RESULT:", { data, error });
+      if (authError) {
+        setError("البريد الإلكتروني أو كلمة المرور غير صحيحة");
+        return;
+      }
 
-    if (error) {
+      if (!data.user) {
+        setError("تعذر تسجيل الدخول، حاول مرة أخرى");
+        return;
+      }
+
+      // Fetch profile role
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", data.user.id)
+        .maybeSingle();
+
+      if (profileError || !profile) {
+        setError("تعذر جلب بيانات الحساب");
+        return;
+      }
+
+      // Redirect based on role — middleware handles sub-routing from here
+      const roleRoutes: Record<string, string> = {
+        OWNER:        "/owner",
+        SCHOOL_ADMIN: "/school-admin",
+        TEACHER:      "/teacher",
+        STUDENT:      "/student",
+      };
+
+      const dest = roleRoutes[profile.role];
+      if (dest) {
+        window.location.href = dest;
+      } else {
+        setError("نوع الحساب غير معروف: " + profile.role);
+      }
+    } catch {
+      setError("تعذر الاتصال بالخادم، حاول مرة أخرى");
+    } finally {
       setLoading(false);
-      alert("خطأ في تسجيل الدخول: " + error.message);
-      return;
     }
-
-    const user = data.user;
-
-    if (!user) {
-      setLoading(false);
-      alert("تم تسجيل الدخول لكن لم يتم العثور على user");
-      return;
-    }
-
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-
-    console.log("PROFILE RESULT:", { profile, profileError });
-
-    setLoading(false);
-
-    if (profileError || !profile) {
-      alert("تم تسجيل الدخول لكن لم يتم العثور على profile");
-      return;
-    }
-
-    if (profile.role === "ADMIN") {
-      window.location.href = "/admin";
-      return;
-    }
-
-    if (profile.role === "TEACHER") {
-      window.location.href = "/teacher";
-      return;
-    }
-
-    if (profile.role === "STUDENT") {
-      window.location.href = "/student";
-      return;
-    }
-
-    alert("نوع المستخدم غير صحيح: " + profile.role);
   };
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-md rounded-2xl border bg-white p-6 shadow-sm">
-        <h1 className="mb-2 text-center text-2xl font-bold">تسجيل الدخول</h1>
-        <p className="mb-6 text-center text-sm text-gray-500">
-          أدخل بياناتك للوصول إلى المنصة
-        </p>
+    <main className="auth-shell">
+      <div className="auth-card">
+        <div className="auth-brand">
+          <div className="auth-logo">🎓</div>
+          <h1 className="auth-title">تسجيل الدخول</h1>
+          <p className="auth-sub">أدخل بياناتك للوصول إلى المنصة</p>
+        </div>
 
-        <div className="space-y-4">
-          <div>
-            <label className="mb-1 block text-sm font-medium">
-              البريد الإلكتروني
-            </label>
+        <div className="auth-fields">
+          <div className="field-group">
+            <label className="field-label">البريد الإلكتروني</label>
             <input
               type="email"
+              className="field-input"
               placeholder="example@mail.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-black"
+              disabled={loading}
+              dir="ltr"
             />
           </div>
 
-          <div>
-            <label className="mb-1 block text-sm font-medium">
-              كلمة المرور
-            </label>
+          <div className="field-group">
+            <label className="field-label">كلمة المرور</label>
             <input
               type="password"
+              className="field-input"
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-black"
+              disabled={loading}
+              onKeyDown={(e) => e.key === "Enter" && handleLogin()}
+              dir="ltr"
             />
           </div>
 
+          {error && (
+            <div className="auth-error">
+              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <circle cx="12" cy="12" r="10" /><path d="M12 8v4m0 4h.01" />
+              </svg>
+              {error}
+            </div>
+          )}
+
           <button
             type="button"
+            className="auth-btn"
             onClick={handleLogin}
             disabled={loading}
-            className="w-full rounded-lg bg-black py-2 text-white transition disabled:opacity-50"
           >
-            {loading ? "جارٍ تسجيل الدخول..." : "دخول"}
+            {loading ? (
+              <><span className="btn-spinner" /> جارٍ تسجيل الدخول...</>
+            ) : "دخول"}
           </button>
         </div>
 
-        <p className="mt-5 text-center text-sm text-gray-500">
+        <p className="auth-footer">
           لا تملك حسابًا؟{" "}
-          <Link href="/signup" className="font-medium text-black underline">
-            إنشاء حساب طالب
-          </Link>
+          <Link href="/signup" className="auth-link">إنشاء حساب طالب</Link>
         </p>
       </div>
+
+      <style>{authStyles}</style>
     </main>
   );
 }
+
+const authStyles = `
+  @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  .auth-shell {
+    min-height: 100vh;
+    background: #f7f8fa;
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px 16px;
+    font-family: 'Tajawal', sans-serif;
+    direction: rtl;
+  }
+
+  .auth-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 20px;
+    padding: 36px 32px;
+    width: 100%; max-width: 420px;
+    display: flex; flex-direction: column; gap: 24px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+  }
+
+  .auth-brand { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
+  .auth-logo { font-size: 40px; }
+  .auth-title { font-size: 22px; font-weight: 800; color: #111827; }
+  .auth-sub { font-size: 13px; color: #6b7280; }
+
+  .auth-fields { display: flex; flex-direction: column; gap: 14px; }
+
+  .field-group { display: flex; flex-direction: column; gap: 6px; }
+  .field-label { font-size: 13px; font-weight: 600; color: #374151; }
+  .field-input {
+    width: 100%; padding: 10px 14px;
+    background: #f7f8fa; border: 1.5px solid #e5e7eb;
+    border-radius: 10px; color: #111827;
+    font-size: 14px; font-family: 'Tajawal', sans-serif;
+    outline: none; transition: border-color 0.15s, background 0.15s;
+  }
+  .field-input:focus { border-color: #4f8ef7; background: white; }
+  .field-input:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  .auth-error {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2);
+    color: #dc2626; font-size: 13px; padding: 10px 12px; border-radius: 9px;
+  }
+
+  .auth-btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; padding: 12px;
+    background: #111827; color: white;
+    border: none; border-radius: 10px;
+    font-size: 15px; font-weight: 700;
+    cursor: pointer; transition: background 0.15s;
+    font-family: 'Tajawal', sans-serif;
+  }
+  .auth-btn:hover:not(:disabled) { background: #1f2937; }
+  .auth-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .btn-spinner {
+    display: inline-block;
+    width: 14px; height: 14px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .auth-footer { text-align: center; font-size: 13px; color: #6b7280; }
+  .auth-link { color: #4f8ef7; font-weight: 700; text-decoration: none; }
+  .auth-link:hover { text-decoration: underline; }
+`;

@@ -7,9 +7,34 @@ datasource db {
 }
 
 enum Role {
-  ADMIN
+  OWNER
+  SCHOOL_ADMIN
   TEACHER
   STUDENT
+}
+
+enum QuestionType {
+  MCQ
+  TF
+  WRITTEN
+}
+
+enum StudentOnboardingStatus {
+  PENDING_INTAKE
+  INTAKE_SUBMITTED
+  SCHOOL_ASSIGNED
+  SCHOOL_PLACEMENT_SUBMITTED
+  CLASS_ASSIGNED
+}
+
+enum AssessmentType {
+  PLATFORM_INTAKE
+  SCHOOL_PLACEMENT
+}
+
+enum AssessmentReviewStatus {
+  PENDING
+  REVIEWED
 }
 
 model Profile {
@@ -21,71 +46,147 @@ model Profile {
   teacher Teacher?
   student Student?
 
+  managed_school School? @relation("SchoolAdmin")
+
+  reviewed_assessment_attempts AssessmentAttempt[] @relation("AssessmentReviewedBy")
+
   @@map("profiles")
 }
 
+model School {
+  id         String   @id @default(uuid()) @db.Uuid
+  name       String   @unique
+  admin_id   String?  @unique @db.Uuid
+  created_at DateTime @default(now())
+
+  admin              Profile?            @relation("SchoolAdmin", fields: [admin_id], references: [id], onDelete: SetNull)
+  teachers           Teacher[]
+  students           Student[]
+  classes            Class[]
+  announcements      Announcement[]
+  quizzes            Quiz[]
+  assessments        Assessment[]
+  assessmentAttempts AssessmentAttempt[]
+
+  @@map("schools")
+}
+
 model Teacher {
-  id         String @id @default(uuid()) @db.Uuid
-  profile_id String @unique @db.Uuid
+  id         String   @id @default(uuid()) @db.Uuid
+  profile_id String   @unique @db.Uuid
+  school_id  String   @db.Uuid
+  created_at DateTime @default(now())
 
-  profile Profile @relation(fields: [profile_id], references: [id], onDelete: Cascade)
-  classes Class[]
-
-  created_at    DateTime       @default(now())
+  profile       Profile        @relation(fields: [profile_id], references: [id], onDelete: Cascade)
+  school        School         @relation(fields: [school_id], references: [id], onDelete: Cascade)
+  classes       Class[]
   announcements Announcement[]
-  quizzes Quiz[]
+  quizzes       Quiz[]
 
   @@map("teachers")
 }
-model Quiz {
+
+model Student {
+  id                String                  @id @default(uuid()) @db.Uuid
+  profile_id        String                  @unique @db.Uuid
+  school_id         String?                 @db.Uuid
+  class_id          String?                 @db.Uuid
+  onboarding_status StudentOnboardingStatus @default(PENDING_INTAKE)
+  created_at        DateTime                @default(now())
+
+  profile             Profile             @relation(fields: [profile_id], references: [id], onDelete: Cascade)
+  school              School?             @relation(fields: [school_id], references: [id], onDelete: SetNull)
+  class               Class?              @relation(fields: [class_id], references: [id], onDelete: SetNull)
+  quiz_attempts       QuizAttempt[]
+  assessment_attempts AssessmentAttempt[]
+
+  @@map("students")
+}
+
+model Class {
   id         String   @id @default(uuid()) @db.Uuid
   name       String
+  school_id  String   @db.Uuid
+  teacher_id String?  @db.Uuid
+  created_at DateTime @default(now())
+
+  school             School              @relation(fields: [school_id], references: [id], onDelete: Cascade)
+  teacher            Teacher?            @relation(fields: [teacher_id], references: [id], onDelete: SetNull)
+  students           Student[]
+  quizzes            Quiz[]
+  announcements      Announcement[]
+  assessmentAttempts AssessmentAttempt[]
+
+  @@unique([school_id, name])
+  @@map("classes")
+}
+
+model Announcement {
+  id         String   @id @default(uuid()) @db.Uuid
+  content    String
+  school_id  String   @db.Uuid
   class_id   String   @db.Uuid
   teacher_id String   @db.Uuid
   created_at DateTime @default(now())
 
+  school  School  @relation(fields: [school_id], references: [id], onDelete: Cascade)
+  class   Class   @relation(fields: [class_id], references: [id], onDelete: Cascade)
+  teacher Teacher @relation(fields: [teacher_id], references: [id], onDelete: Cascade)
+
+  @@map("announcements")
+}
+
+model Quiz {
+  id         String   @id @default(uuid()) @db.Uuid
+  name       String
+  school_id  String   @db.Uuid
+  class_id   String   @db.Uuid
+  teacher_id String   @db.Uuid
+  created_at DateTime @default(now())
+
+  school    School         @relation(fields: [school_id], references: [id], onDelete: Cascade)
   class     Class          @relation(fields: [class_id], references: [id], onDelete: Cascade)
   teacher   Teacher        @relation(fields: [teacher_id], references: [id], onDelete: Cascade)
-  questions Question[]
+  questions QuizQuestion[]
   attempts  QuizAttempt[]
 
   @@map("quizzes")
 }
 
-model Question {
-  id             String   @id @default(uuid()) @db.Uuid
-  quiz_id        String   @db.Uuid
+model QuizQuestion {
+  id             String       @id @default(uuid()) @db.Uuid
+  quiz_id        String       @db.Uuid
   type           QuestionType
   text           String
-  correct_answer String
+  correct_answer String?
   order          Int
-  created_at     DateTime @default(now())
+  created_at     DateTime     @default(now())
 
-  quiz    Quiz     @relation(fields: [quiz_id], references: [id], onDelete: Cascade)
-  options Option[]
+  quiz    Quiz         @relation(fields: [quiz_id], references: [id], onDelete: Cascade)
+  options QuizOption[]
   answers QuizAnswer[]
 
-  @@map("questions")
+  @@map("quiz_questions")
 }
 
-model Option {
+model QuizOption {
   id          String   @id @default(uuid()) @db.Uuid
   question_id String   @db.Uuid
   text        String
   order       Int
   created_at  DateTime @default(now())
 
-  question Question @relation(fields: [question_id], references: [id], onDelete: Cascade)
+  question QuizQuestion @relation(fields: [question_id], references: [id], onDelete: Cascade)
 
-  @@map("options")
+  @@map("quiz_options")
 }
 
 model QuizAttempt {
   id           String   @id @default(uuid()) @db.Uuid
   quiz_id      String   @db.Uuid
   student_id   String   @db.Uuid
-  score        Int
-  total        Int
+  score        Int?
+  total        Int?
   submitted_at DateTime @default(now())
 
   quiz    Quiz         @relation(fields: [quiz_id], references: [id], onDelete: Cascade)
@@ -101,59 +202,92 @@ model QuizAnswer {
   attempt_id  String   @db.Uuid
   question_id String   @db.Uuid
   answer      String
-  is_correct  Boolean
+  is_correct  Boolean?
   created_at  DateTime @default(now())
 
-  attempt  QuizAttempt @relation(fields: [attempt_id], references: [id], onDelete: Cascade)
-  question Question    @relation(fields: [question_id], references: [id], onDelete: Cascade)
+  attempt  QuizAttempt  @relation(fields: [attempt_id], references: [id], onDelete: Cascade)
+  question QuizQuestion @relation(fields: [question_id], references: [id], onDelete: Cascade)
 
   @@map("quiz_answers")
 }
 
-enum QuestionType {
-  MCQ
-  TF
+model Assessment {
+  id         String         @id @default(uuid()) @db.Uuid
+  title      String
+  type       AssessmentType
+  school_id  String?        @db.Uuid
+  is_active  Boolean        @default(true)
+  created_at DateTime       @default(now())
+
+  school    School?              @relation(fields: [school_id], references: [id], onDelete: Cascade)
+  questions AssessmentQuestion[]
+  attempts  AssessmentAttempt[]
+
+  @@map("assessments")
 }
 
+model AssessmentQuestion {
+  id             String       @id @default(uuid()) @db.Uuid
+  assessment_id  String       @db.Uuid
+  type           QuestionType
+  text           String
+  correct_answer String?
+  order          Int
+  created_at     DateTime     @default(now())
 
-model Student {
-  id         String  @id @default(uuid()) @db.Uuid
-  profile_id String  @unique @db.Uuid
-  class_id   String? @db.Uuid
+  assessment Assessment         @relation(fields: [assessment_id], references: [id], onDelete: Cascade)
+  options    AssessmentOption[]
+  answers    AssessmentAnswer[]
 
-  profile Profile @relation(fields: [profile_id], references: [id], onDelete: Cascade)
-  class   Class?  @relation(fields: [class_id], references: [id], onDelete: SetNull)
-
-  created_at DateTime @default(now())
-  attempts QuizAttempt[]
-
-  @@map("students")
+  @@map("assessment_questions")
 }
 
-model Class {
-  id         String  @id @default(uuid()) @db.Uuid
-  name       String  @unique
-  teacher_id String? @db.Uuid
-  quizzes       Quiz[]
+model AssessmentOption {
+  id          String   @id @default(uuid()) @db.Uuid
+  question_id String   @db.Uuid
+  text        String
+  order       Int
+  created_at  DateTime @default(now())
 
-  teacher  Teacher?  @relation(fields: [teacher_id], references: [id], onDelete: SetNull)
-  students Student[]
+  question AssessmentQuestion @relation(fields: [question_id], references: [id], onDelete: Cascade)
 
-  created_at    DateTime       @default(now())
-  announcements Announcement[]
-
-  @@map("classes")
+  @@map("assessment_options")
 }
 
-model Announcement {
-  id         String   @id @default(uuid()) @db.Uuid
-  content    String
-  class_id   String   @db.Uuid
-  teacher_id String   @db.Uuid
-  created_at DateTime @default(now())
+model AssessmentAttempt {
+  id                 String                 @id @default(uuid()) @db.Uuid
+  assessment_id      String                 @db.Uuid
+  student_id         String                 @db.Uuid
+  score              Int?
+  total              Int?
+  review_status      AssessmentReviewStatus @default(PENDING)
+  reviewer_id        String?                @db.Uuid
+  reviewer_notes     String?
+  assigned_school_id String?                @db.Uuid
+  assigned_class_id  String?                @db.Uuid
+  submitted_at       DateTime               @default(now())
+  reviewed_at        DateTime?
 
-  class   Class   @relation(fields: [class_id], references: [id], onDelete: Cascade)
-  teacher Teacher @relation(fields: [teacher_id], references: [id], onDelete: Cascade)
+  assessment      Assessment         @relation(fields: [assessment_id], references: [id], onDelete: Cascade)
+  student         Student            @relation(fields: [student_id], references: [id], onDelete: Cascade)
+  reviewer        Profile?           @relation("AssessmentReviewedBy", fields: [reviewer_id], references: [id], onDelete: SetNull)
+  assigned_school School?            @relation(fields: [assigned_school_id], references: [id], onDelete: SetNull)
+  assigned_class  Class?             @relation(fields: [assigned_class_id], references: [id], onDelete: SetNull)
+  answers         AssessmentAnswer[]
 
-  @@map("announcements")
+  @@map("assessment_attempts")
+}
+
+model AssessmentAnswer {
+  id          String   @id @default(uuid()) @db.Uuid
+  attempt_id  String   @db.Uuid
+  question_id String   @db.Uuid
+  answer      String
+  is_correct  Boolean?
+  created_at  DateTime @default(now())
+
+  attempt  AssessmentAttempt  @relation(fields: [attempt_id], references: [id], onDelete: Cascade)
+  question AssessmentQuestion @relation(fields: [question_id], references: [id], onDelete: Cascade)
+
+  @@map("assessment_answers")
 }
