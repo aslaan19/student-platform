@@ -84,23 +84,33 @@ export async function proxy(request: NextRequest) {
         .single();
 
       const status = student?.onboarding_status as string | undefined;
+if (status) {
+  const allowedPaths: Record<string, string[]> = {
+    PENDING_INTAKE:             ["/student/intake"],
+    INTAKE_SUBMITTED:           ["/student/waiting"],
+    SCHOOL_ASSIGNED:            ["/student/school-assigned", "/student/placement"],
+    SCHOOL_PLACEMENT_SUBMITTED: ["/student/waiting-class"],
+    CLASS_ASSIGNED:             ["/student/welcome"],
+  };
 
-      const onboardingRoutes: Record<string, string> = {
-        PENDING_INTAKE:             "/student/intake",
-        INTAKE_SUBMITTED:           "/student/waiting",
-        SCHOOL_ASSIGNED:            "/student/placement",
-        SCHOOL_PLACEMENT_SUBMITTED: "/student/waiting-class",
-        CLASS_ASSIGNED:             "/student",
-      };
+  const defaultRoute: Record<string, string> = {
+    PENDING_INTAKE:             "/student/intake",
+    INTAKE_SUBMITTED:           "/student/waiting",
+    SCHOOL_ASSIGNED:            "/student/school-assigned",
+    SCHOOL_PLACEMENT_SUBMITTED: "/student/waiting-class",
+    CLASS_ASSIGNED:             "/student/welcome",
+  };
 
-      if (status && status !== "CLASS_ASSIGNED") {
-        const correctPath = onboardingRoutes[status];
-        if (correctPath && pathname !== correctPath) {
-          const url = request.nextUrl.clone();
-          url.pathname = correctPath;
-          return NextResponse.redirect(url);
-        }
-      }
+  const allowed = allowedPaths[status] ?? [];
+  const isAllowed = allowed.includes(pathname) ||
+    (status === "CLASS_ASSIGNED" && (pathname === "/student" || pathname.startsWith("/student/")));
+
+  if (!isAllowed) {
+    const url = request.nextUrl.clone();
+    url.pathname = defaultRoute[status] ?? "/student";
+    return NextResponse.redirect(url);
+  }
+}
     }
   }
 

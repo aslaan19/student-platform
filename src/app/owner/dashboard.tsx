@@ -97,14 +97,7 @@ export default function OwnerDashboardPage() {
         </div>
         {!stats.hasIntakeAssessment && (
           <Link href="/owner/intake-assessment" className="dash-cta-btn">
-            <svg
-              width="15"
-              height="15"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
+            <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path d="M12 5v14M5 12h14" />
             </svg>
             إنشاء اختبار القبول
@@ -116,58 +109,30 @@ export default function OwnerDashboardPage() {
       {!stats.hasIntakeAssessment && (
         <div className="alert-banner danger">
           <div className="alert-icon">
-            <svg
-              width="16"
-              height="16"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
             </svg>
           </div>
           <div className="alert-body">
             <span className="alert-title">لم يتم إنشاء اختبار القبول بعد</span>
-            <span className="alert-desc">
-              لن يتمكن الطلاب الجدد من إجراء الاختبار الأوّلي.
-            </span>
+            <span className="alert-desc">لن يتمكن الطلاب الجدد من إجراء الاختبار الأوّلي.</span>
           </div>
-          <Link href="/owner/intake-assessment" className="alert-action">
-            إنشاء الآن ←
-          </Link>
+          <Link href="/owner/intake-assessment" className="alert-action">إنشاء الآن ←</Link>
         </div>
       )}
 
       {stats.pendingSubmissions > 0 && (
         <div className="alert-banner warning">
           <div className="alert-icon">
-            <svg
-              width="16"
-              height="16"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
-              <circle cx="12" cy="12" r="10" />
-              <path d="M12 8v4m0 4h.01" />
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/>
             </svg>
           </div>
           <div className="alert-body">
             <span className="alert-title">إجابات تنتظر المراجعة</span>
-            <span className="alert-desc">
-              يوجد {stats.pendingSubmissions} إجابة{" "}
-              {stats.pendingSubmissions > 1 ? "معلّقة" : "معلّقة"} تحتاج إلى
-              اتخاذ قرار.
-            </span>
+            <span className="alert-desc">يوجد {stats.pendingSubmissions} إجابة {stats.pendingSubmissions > 1 ? "معلّقة" : "معلّقة"} تحتاج إلى اتخاذ قرار.</span>
           </div>
-          <Link
-            href="/owner/submissions?status=PENDING"
-            className="alert-action"
-          >
-            مراجعة الآن ←
-          </Link>
+          <Link href="/owner/submissions?status=PENDING" className="alert-action">مراجعة الآن ←</Link>
         </div>
       )}
 
@@ -181,20 +146,12 @@ export default function OwnerDashboardPage() {
             style={{ "--card-accent": card.accent } as React.CSSProperties}
           >
             <div className="stat-card-top">
-              <div
-                className="stat-icon-wrap"
-                style={{
-                  background: `${card.accent}12`,
-                  border: `1px solid ${card.accent}22`,
-                }}
-              >
+              <div className="stat-icon-wrap" style={{ background: `${card.accent}12`, border: `1px solid ${card.accent}22` }}>
                 <span className="stat-icon">{card.icon}</span>
               </div>
               {card.alert && <div className="stat-alert-dot" />}
             </div>
-            <div className="stat-value">
-              {card.value.toLocaleString("ar-SA")}
-            </div>
+            <div className="stat-value">{card.value.toLocaleString("ar-SA")}</div>
             <div className="stat-label">{card.label}</div>
             <div className="stat-desc">{card.desc}</div>
           </Link>
@@ -207,39 +164,25 @@ export default function OwnerDashboardPage() {
         <div className="section-card">
           <div className="section-card-header">
             <h2 className="section-card-title">مسار تأهيل الطلاب</h2>
-            <span className="section-card-badge">
-              {stats.studentCount} طالب
-            </span>
+            <span className="section-card-badge">{stats.studentCount} طالب</span>
           </div>
           <div className="pipeline">
             {stats.studentsByStatus.length === 0 ? (
               <div className="empty-state">لا يوجد طلاب مسجّلون بعد.</div>
             ) : (
               stats.studentsByStatus.map((s) => {
-                const pct = stats.studentCount
-                  ? Math.min(100, (s.count / stats.studentCount) * 100)
-                  : 0;
+                const pct = stats.studentCount ? Math.min(100, (s.count / stats.studentCount) * 100) : 0;
                 return (
                   <div key={s.status} className="pipeline-item">
                     <div className="pipeline-label-row">
-                      <div
-                        className="pipeline-dot"
-                        style={{
-                          background: STATUS_COLORS[s.status] ?? "#4a5568",
-                        }}
-                      />
-                      <span className="pipeline-label">
-                        {STATUS_LABELS[s.status] ?? s.status}
-                      </span>
+                      <div className="pipeline-dot" style={{ background: STATUS_COLORS[s.status] ?? "#4a5568" }} />
+                      <span className="pipeline-label">{STATUS_LABELS[s.status] ?? s.status}</span>
                       <span className="pipeline-count">{s.count}</span>
                     </div>
                     <div className="pipeline-bar-wrap">
                       <div
                         className="pipeline-bar"
-                        style={{
-                          width: `${pct}%`,
-                          background: STATUS_COLORS[s.status] ?? "#4a5568",
-                        }}
+                        style={{ width: `${pct}%`, background: STATUS_COLORS[s.status] ?? "#4a5568" }}
                       />
                     </div>
                   </div>
@@ -259,21 +202,9 @@ export default function OwnerDashboardPage() {
               <div className="ql-icon-wrap">📋</div>
               <div className="ql-body">
                 <div className="ql-title">اختبار القبول</div>
-                <div className="ql-sub">
-                  {stats.hasIntakeAssessment
-                    ? "عرض وتعديل الاختبار"
-                    : "إنشاء اختبار جديد"}
-                </div>
+                <div className="ql-sub">{stats.hasIntakeAssessment ? "عرض وتعديل الاختبار" : "إنشاء اختبار جديد"}</div>
               </div>
-              <svg
-                width="16"
-                height="16"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-                style={{ color: "var(--text3)" }}
-              >
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} style={{color:"var(--text3)"}}>
                 <path d="M15 18l-6-6 6-6" />
               </svg>
             </Link>
@@ -281,20 +212,9 @@ export default function OwnerDashboardPage() {
               <div className="ql-icon-wrap">📝</div>
               <div className="ql-body">
                 <div className="ql-title">الإجابات المُقدَّمة</div>
-                <div className="ql-sub">
-                  {stats.totalSubmissions} إجمالي · {stats.pendingSubmissions}{" "}
-                  معلّق
-                </div>
+                <div className="ql-sub">{stats.totalSubmissions} إجمالي · {stats.pendingSubmissions} معلّق</div>
               </div>
-              <svg
-                width="16"
-                height="16"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-                style={{ color: "var(--text3)" }}
-              >
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} style={{color:"var(--text3)"}}>
                 <path d="M15 18l-6-6 6-6" />
               </svg>
             </Link>
@@ -302,19 +222,9 @@ export default function OwnerDashboardPage() {
               <div className="ql-icon-wrap">🏫</div>
               <div className="ql-body">
                 <div className="ql-title">المدارس المسجّلة</div>
-                <div className="ql-sub">
-                  {stats.schoolCount} مدارس في النظام
-                </div>
+                <div className="ql-sub">{stats.schoolCount} مدارس في النظام</div>
               </div>
-              <svg
-                width="16"
-                height="16"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-                style={{ color: "var(--text3)" }}
-              >
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} style={{color:"var(--text3)"}}>
                 <path d="M15 18l-6-6 6-6" />
               </svg>
             </Link>

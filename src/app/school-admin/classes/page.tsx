@@ -38,7 +38,7 @@ function ClassesLoading() {
   return (
     <div className="cl-loading">
       <div className="spin" />
-      Ø¬Ø§Ø±Ù Ø§Ù„ØªØ­Ù…ÙŠÙ„...
+      جارٍ التحميل...
       <style>{`
         .cl-loading { display: flex; align-items: center; gap: 10px; height: 140px; justify-content: center; color: var(--text2); font-size: 14px; }
         .spin { width: 18px; height: 18px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: sp 0.7s linear infinite; }
@@ -62,7 +62,7 @@ function SchoolAdminClassesContent({
 
   async function handleCreate() {
     if (!newName.trim()) {
-      setError("Ø£Ø¯Ø®Ù„ Ø§Ø³Ù… Ø§Ù„ÙØµÙ„");
+      setError("أدخل اسم الفصل");
       return;
     }
     setCreating(true);
@@ -75,7 +75,7 @@ function SchoolAdminClassesContent({
       });
       if (!r.ok) {
         const d = await r.json();
-        setError(d.error ?? "ÙØ´Ù„ Ø§Ù„Ø¥Ù†Ø´Ø§Ø¡");
+        setError(d.error ?? "فشل الإنشاء");
         return;
       }
       setNewName("");
@@ -86,7 +86,7 @@ function SchoolAdminClassesContent({
   }
 
   async function handleDelete(id: string) {
-    if (!confirm("Ø­Ø°Ù Ù‡Ø°Ø§ Ø§Ù„ÙØµÙ„ØŸ")) return;
+    if (!confirm("حذف هذا الفصل؟")) return;
     await fetch(`/api/school-admin/classes/${id}`, { method: "DELETE" });
     refresh();
   }
@@ -104,42 +104,42 @@ function SchoolAdminClassesContent({
     <div className="cl-page">
       <div className="cl-header">
         <div>
-          <h1 className="cl-title">Ø§Ù„ÙØµÙˆÙ„</h1>
-          <p className="cl-sub">{classes.length} ÙØµÙ„ ÙÙŠ Ù…Ø¯Ø±Ø³ØªÙƒ</p>
+          <h1 className="cl-title">الفصول</h1>
+          <p className="cl-sub">{classes.length} فصل في مدرستك</p>
         </div>
       </div>
 
       <div className="create-row">
         <input
           className="cl-input"
-          placeholder="Ø§Ø³Ù… Ø§Ù„ÙØµÙ„ Ø§Ù„Ø¬Ø¯ÙŠØ¯..."
+          placeholder="اسم الفصل الجديد..."
           value={newName}
           onChange={(e) => setNewName(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleCreate()}
           dir="rtl"
         />
         <button className="cl-btn" onClick={handleCreate} disabled={creating}>
-          {creating ? "Ø¬Ø§Ø±Ù Ø§Ù„Ø¥Ù†Ø´Ø§Ø¡..." : "+ Ø¥Ù†Ø´Ø§Ø¡ ÙØµÙ„"}
+          {creating ? "جارٍ الإنشاء..." : "+ إنشاء فصل"}
         </button>
       </div>
       {error && <div className="cl-error">{error}</div>}
 
       {classes.length === 0 ? (
-        <div className="cl-empty">Ù„Ø§ ØªÙˆØ¬Ø¯ ÙØµÙˆÙ„ Ø¨Ø¹Ø¯. Ø£Ù†Ø´Ø¦ Ø£ÙˆÙ„ ÙØµÙ„.</div>
+        <div className="cl-empty">لا توجد فصول بعد. أنشئ أول فصل.</div>
       ) : (
         <div className="cl-grid">
           {classes.map((cls) => (
             <div key={cls.id} className="cl-card">
               <div className="cl-card-header">
-                <div className="cl-icon">ðŸ“š</div>
+                <div className="cl-icon">📚</div>
                 <div className="cl-card-body">
                   <div className="cl-name">{cls.name}</div>
-                  <div className="cl-count">{cls._count.students} Ø·Ø§Ù„Ø¨</div>
+                  <div className="cl-count">{cls._count.students} طالب</div>
                 </div>
                 <button
                   className="delete-btn"
                   onClick={() => handleDelete(cls.id)}
-                  title="Ø­Ø°Ù Ø§Ù„ÙØµÙ„"
+                  title="حذف الفصل"
                 >
                   <svg
                     width="13"
@@ -156,7 +156,7 @@ function SchoolAdminClassesContent({
                 </button>
               </div>
               <div className="cl-teacher-row">
-                <span className="cl-teacher-label">Ø§Ù„Ù…Ø¹Ù„Ù…:</span>
+                <span className="cl-teacher-label">المعلم:</span>
                 <select
                   className="cl-select"
                   value={
@@ -171,7 +171,7 @@ function SchoolAdminClassesContent({
                   onChange={(e) => handleAssignTeacher(cls.id, e.target.value)}
                   dir="rtl"
                 >
-                  <option value="">Ø¨Ø¯ÙˆÙ† Ù…Ø¹Ù„Ù…</option>
+                  <option value="">بدون معلم</option>
                   {teachers.map((t) => (
                     <option key={t.id} value={t.id}>
                       {t.profile.full_name}

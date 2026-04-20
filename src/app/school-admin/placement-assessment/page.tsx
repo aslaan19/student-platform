@@ -28,9 +28,9 @@ interface Assessment {
 }
 
 const TYPE_LABELS: Record<QuestionType, string> = {
-  MCQ: "Ø§Ø®ØªÙŠØ§Ø± Ù…Ù† Ù…ØªØ¹Ø¯Ø¯",
-  TF: "ØµØ­ Ø£Ù… Ø®Ø·Ø£",
-  WRITTEN: "Ù…ÙƒØªÙˆØ¨",
+  MCQ: "اختيار من متعدد",
+  TF: "صح أم خطأ",
+  WRITTEN: "مكتوب",
 };
 
 const TYPE_COLORS: Record<QuestionType, string> = {
@@ -56,7 +56,7 @@ function PlacementAssessmentLoading() {
   return (
     <div className="pa-loading">
       <div className="spin" />
-      Ø¬Ø§Ø±Ù Ø§Ù„ØªØ­Ù…ÙŠÙ„...
+      جارٍ التحميل...
       <style>{`
         .pa-loading { display: flex; align-items: center; gap: 10px; height: 180px; justify-content: center; color: var(--text2); font-size: 14px; }
         .spin { width: 18px; height: 18px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: sp 0.7s linear infinite; }
@@ -74,7 +74,7 @@ function PlacementAssessmentContent({
   refresh: () => void;
 }) {
   const assessment = use(dataPromise);
-  const [newTitle, setNewTitle] = useState("Ø§Ø®ØªØ¨Ø§Ø± Ø§Ù„ØªØµÙ†ÙŠÙ Ø§Ù„Ù…Ø¯Ø±Ø³ÙŠ");
+  const [newTitle, setNewTitle] = useState("اختبار التصنيف المدرسي");
   const [creating, setCreating] = useState(false);
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState("");
@@ -190,7 +190,7 @@ function PlacementAssessmentContent({
   }
 
   async function handleDelete(qid: string) {
-    if (!assessment || !confirm("Ø­Ø°Ù Ù‡Ø°Ø§ Ø§Ù„Ø³Ø¤Ø§Ù„ØŸ")) return;
+    if (!assessment || !confirm("حذف هذا السؤال؟")) return;
     setDeleting(qid);
     try {
       await fetch(
@@ -220,22 +220,21 @@ function PlacementAssessmentContent({
     return (
       <div className="pa-page">
         <div className="pa-header">
-          <h1 className="pa-title">Ø§Ø®ØªØ¨Ø§Ø± Ø§Ù„ØªØµÙ†ÙŠÙ</h1>
-          <p className="pa-sub">
-            Ù„Ù… ÙŠØªÙ… Ø¥Ù†Ø´Ø§Ø¡ Ø§Ø®ØªØ¨Ø§Ø± ØªØµÙ†ÙŠÙ Ù„Ù…Ø¯Ø±Ø³ØªÙƒ Ø¨Ø¹Ø¯.
-          </p>
+          <h1 className="pa-title">اختبار التصنيف</h1>
+          <p className="pa-sub">لم يتم إنشاء اختبار تصنيف لمدرستك بعد.</p>
         </div>
         <div className="create-card">
-          <div className="create-icon">ðŸ“‹</div>
-          <h2 className="create-title">Ø¥Ù†Ø´Ø§Ø¡ Ø§Ø®ØªØ¨Ø§Ø± Ø§Ù„ØªØµÙ†ÙŠÙ</h2>
+          <div className="create-icon">📋</div>
+          <h2 className="create-title">إنشاء اختبار التصنيف</h2>
           <p className="create-desc">
-            Ù‡Ø°Ø§ Ø§Ù„Ø§Ø®ØªØ¨Ø§Ø± ÙŠØ¬Ø±ÙŠÙ‡ Ø§Ù„Ø·Ù„Ø§Ø¨ Ø¨Ø¹Ø¯ ØªØ¹ÙŠÙŠÙ†Ù‡Ù… ÙÙŠ Ù…Ø¯Ø±Ø³ØªÙƒ Ù„ØªØ­Ø¯ÙŠØ¯ Ø§Ù„ÙØµÙ„ Ø§Ù„Ù…Ù†Ø§Ø³Ø¨.
+            هذا الاختبار يجريه الطلاب بعد تعيينهم في مدرستك لتحديد الفصل
+            المناسب.
           </p>
           <input
             className="pa-input"
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
-            placeholder="Ø¹Ù†ÙˆØ§Ù† Ø§Ù„Ø§Ø®ØªØ¨Ø§Ø±"
+            placeholder="عنوان الاختبار"
             dir="rtl"
           />
           <button
@@ -243,7 +242,7 @@ function PlacementAssessmentContent({
             onClick={handleCreate}
             disabled={creating || !newTitle.trim()}
           >
-            {creating ? "Ø¬Ø§Ø±Ù Ø§Ù„Ø¥Ù†Ø´Ø§Ø¡..." : "Ø¥Ù†Ø´Ø§Ø¡ Ø§Ù„Ø§Ø®ØªØ¨Ø§Ø±"}
+            {creating ? "جارٍ الإنشاء..." : "إنشاء الاختبار"}
           </button>
         </div>
         <style>{styles}</style>
@@ -265,13 +264,13 @@ function PlacementAssessmentContent({
                 dir="rtl"
               />
               <button className="pa-btn primary sm" onClick={handleTitleSave}>
-                Ø­ÙØ¸
+                حفظ
               </button>
               <button
                 className="pa-btn ghost sm"
                 onClick={() => setEditingTitle(false)}
               >
-                Ø¥Ù„ØºØ§Ø¡
+                إلغاء
               </button>
             </div>
           ) : (
@@ -300,25 +299,27 @@ function PlacementAssessmentContent({
           )}
         </div>
         <div className="pa-meta">
-          <div className={`active-badge ${assessment.is_active ? "on" : "off"}`}>
+          <div
+            className={`active-badge ${assessment.is_active ? "on" : "off"}`}
+          >
             <div className="active-dot" />
-            {assessment.is_active ? "Ù…ÙØ¹Ù‘Ù„" : "Ù…Ø¹Ø·Ù‘Ù„"}
+            {assessment.is_active ? "مُفعَّل" : "مُعطَّل"}
           </div>
           <button className="pa-btn ghost sm" onClick={handleToggleActive}>
-            {assessment.is_active ? "ØªØ¹Ø·ÙŠÙ„" : "ØªÙØ¹ÙŠÙ„"}
+            {assessment.is_active ? "تعطيل" : "تفعيل"}
           </button>
-          <span className="q-count">{assessment.questions.length} Ø³Ø¤Ø§Ù„</span>
+          <span className="q-count">{assessment.questions.length} سؤال</span>
         </div>
       </div>
 
       <div className="q-list">
         {assessment.questions.length === 0 && (
-          <div className="q-empty">Ù„Ø§ ØªÙˆØ¬Ø¯ Ø£Ø³Ø¦Ù„Ø© Ø¨Ø¹Ø¯. Ø£Ø¶Ù Ø£ÙˆÙ„ Ø³Ø¤Ø§Ù„.</div>
+          <div className="q-empty">لا توجد أسئلة بعد. أضف أول سؤال.</div>
         )}
         {assessment.questions.map((q, idx) => (
           <div key={q.id} className="q-card">
             <div className="q-card-top">
-              <span className="q-num">Ø³{idx + 1}</span>
+              <span className="q-num">س{idx + 1}</span>
               <span
                 className="q-type"
                 style={{
@@ -389,14 +390,14 @@ function PlacementAssessmentContent({
             )}
             {q.type === "TF" && (
               <div className="q-tf">
-                Ø§Ù„Ø¥Ø¬Ø§Ø¨Ø©:{" "}
-                <strong>{q.correct_answer === "true" ? "ØµØ­ âœ“" : "Ø®Ø·Ø£ âœ—"}</strong>
+                الإجابة:{" "}
+                <strong>
+                  {q.correct_answer === "true" ? "صح ✓" : "خطأ ✗"}
+                </strong>
               </div>
             )}
             {q.type === "WRITTEN" && (
-              <div className="q-written">
-                ÙŠÙØµØ­ÙŽÙ‘Ø­ ÙŠØ¯ÙˆÙŠØ§Ù‹ Ø¨ÙˆØ§Ø³Ø·Ø© Ø§Ù„Ù…Ø¯ÙŠØ±
-              </div>
+              <div className="q-written">يُصحَّح يدوياً بواسطة المدير</div>
             )}
           </div>
         ))}
@@ -413,7 +414,7 @@ function PlacementAssessmentContent({
         >
           <path d="M12 5v14M5 12h14" />
         </svg>
-        Ø¥Ø¶Ø§ÙØ© Ø³Ø¤Ø§Ù„
+        إضافة سؤال
       </button>
 
       {modalOpen && (
@@ -424,7 +425,7 @@ function PlacementAssessmentContent({
           <div className="modal" dir="rtl">
             <div className="modal-head">
               <h2 className="modal-title">
-                {modalMode === "add" ? "Ø¥Ø¶Ø§ÙØ© Ø³Ø¤Ø§Ù„" : "ØªØ¹Ø¯ÙŠÙ„ Ø§Ù„Ø³Ø¤Ø§Ù„"}
+                {modalMode === "add" ? "إضافة سؤال" : "تعديل السؤال"}
               </h2>
               <button className="icon-btn" onClick={() => setModalOpen(false)}>
                 <svg
@@ -441,7 +442,7 @@ function PlacementAssessmentContent({
             </div>
 
             <div className="modal-field">
-              <label className="field-label">Ù†ÙˆØ¹ Ø§Ù„Ø³Ø¤Ø§Ù„</label>
+              <label className="field-label">نوع السؤال</label>
               <div className="type-btns">
                 {(["MCQ", "TF", "WRITTEN"] as QuestionType[]).map((t) => (
                   <button
@@ -453,7 +454,8 @@ function PlacementAssessmentContent({
                         ...f,
                         type: t,
                         correct_answer: "",
-                        options: t === "MCQ" ? [{ text: "" }, { text: "" }] : [],
+                        options:
+                          t === "MCQ" ? [{ text: "" }, { text: "" }] : [],
                       }))
                     }
                   >
@@ -464,10 +466,10 @@ function PlacementAssessmentContent({
             </div>
 
             <div className="modal-field">
-              <label className="field-label">Ù†Øµ Ø§Ù„Ø³Ø¤Ø§Ù„</label>
+              <label className="field-label">نص السؤال</label>
               <textarea
                 className="pa-textarea"
-                placeholder="Ø§ÙƒØªØ¨ Ø§Ù„Ø³Ø¤Ø§Ù„ Ù‡Ù†Ø§..."
+                placeholder="اكتب السؤال هنا..."
                 value={form.text}
                 onChange={(e) =>
                   setForm((f) => ({ ...f, text: e.target.value }))
@@ -480,8 +482,8 @@ function PlacementAssessmentContent({
             {form.type === "MCQ" && (
               <div className="modal-field">
                 <label className="field-label">
-                  Ø§Ù„Ø®ÙŠØ§Ø±Ø§Øª{" "}
-                  <span className="field-hint">(Ø§Ø®ØªØ± Ø§Ù„Ø¥Ø¬Ø§Ø¨Ø© Ø§Ù„ØµØ­ÙŠØ­Ø©)</span>
+                  الخيارات{" "}
+                  <span className="field-hint">(اختر الإجابة الصحيحة)</span>
                 </label>
                 <div className="opts-list">
                   {form.options.map((o, i) => (
@@ -509,7 +511,7 @@ function PlacementAssessmentContent({
                       </button>
                       <input
                         className="pa-input opt-inp"
-                        placeholder={`Ø®ÙŠØ§Ø± ${i + 1}`}
+                        placeholder={`خيار ${i + 1}`}
                         value={o.text}
                         onChange={(e) => updateOption(i, e.target.value)}
                         dir="rtl"
@@ -535,7 +537,7 @@ function PlacementAssessmentContent({
                   ))}
                   {form.options.length < 6 && (
                     <button className="add-opt-btn" onClick={addOption}>
-                      + Ø¥Ø¶Ø§ÙØ© Ø®ÙŠØ§Ø±
+                      + إضافة خيار
                     </button>
                   )}
                 </div>
@@ -544,11 +546,11 @@ function PlacementAssessmentContent({
 
             {form.type === "TF" && (
               <div className="modal-field">
-                <label className="field-label">Ø§Ù„Ø¥Ø¬Ø§Ø¨Ø© Ø§Ù„ØµØ­ÙŠØ­Ø©</label>
+                <label className="field-label">الإجابة الصحيحة</label>
                 <div className="tf-btns">
                   {[
-                    { val: "true", label: "âœ“ ØµØ­ÙŠØ­" },
-                    { val: "false", label: "âœ— Ø®Ø·Ø£" },
+                    { val: "true", label: "✓ صحيح" },
+                    { val: "false", label: "✗ خطأ" },
                   ].map((opt) => (
                     <button
                       key={opt.val}
@@ -566,13 +568,16 @@ function PlacementAssessmentContent({
 
             {form.type === "WRITTEN" && (
               <div className="written-note">
-                ÙŠÙØµØ­ÙŽÙ‘Ø­ Ù‡Ø°Ø§ Ø§Ù„Ø³Ø¤Ø§Ù„ ÙŠØ¯ÙˆÙŠØ§Ù‹ Ø£Ø«Ù†Ø§Ø¡ Ù…Ø±Ø§Ø¬Ø¹Ø© Ø§Ù„Ù†ØªØ§Ø¦Ø¬.
+                يُصحَّح هذا السؤال يدوياً أثناء مراجعة النتائج.
               </div>
             )}
 
             <div className="modal-actions">
-              <button className="pa-btn ghost" onClick={() => setModalOpen(false)}>
-                Ø¥Ù„ØºØ§Ø¡
+              <button
+                className="pa-btn ghost"
+                onClick={() => setModalOpen(false)}
+              >
+                إلغاء
               </button>
               <button
                 className="pa-btn primary"
@@ -580,10 +585,10 @@ function PlacementAssessmentContent({
                 disabled={saving || !form.text.trim()}
               >
                 {saving
-                  ? "Ø¬Ø§Ø±Ù Ø§Ù„Ø­ÙØ¸..."
+                  ? "جارٍ الحفظ..."
                   : modalMode === "add"
-                    ? "Ø¥Ø¶Ø§ÙØ©"
-                    : "Ø­ÙØ¸ Ø§Ù„ØªØ¹Ø¯ÙŠÙ„Ø§Øª"}
+                    ? "إضافة"
+                    : "حفظ التعديلات"}
               </button>
             </div>
           </div>

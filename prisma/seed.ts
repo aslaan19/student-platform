@@ -1,9 +1,7 @@
-import {
-  PrismaClient,
-  Role,
-  StudentOnboardingStatus,
-} from "@prisma/client";
+// prisma/seed-students.ts
+import { PrismaClient, Role, StudentOnboardingStatus } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
+
 const databaseUrl = process.env.DATABASE_URL;
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -17,407 +15,118 @@ const prisma = new PrismaClient({ adapter });
 
 import { createClient } from "@supabase/supabase-js";
 const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
-type SeedUser = {
-  email: string;
-  password: string;
-  fullName: string;
-  role: Role;
+
+// 3 students per class × 6 classes = 18 students
+// Each entry: { arabicName, emailSlug }
+const classSudents: Record<string, { fullName: string; email: string }[]> = {
+  "Grade 1": [
+    { fullName: "عمر سعيد الغامدي",   email: "omar.said@student.com" },
+    { fullName: "ريم محمد العتيبي",   email: "reem.mohammed@student.com" },
+    { fullName: "خالد عبدالله الزهراني", email: "khaled.abdallah@student.com" },
+  ],
+  "Grade 2": [
+    { fullName: "نورة سلمان القحطاني", email: "noura.salman@student.com" },
+    { fullName: "فيصل ناصر الشهري",   email: "faisal.nasser@student.com" },
+    { fullName: "هند علي الدوسري",    email: "hind.ali@student.com" },
+  ],
+  "Beginner": [
+    { fullName: "يوسف إبراهيم المطيري", email: "yousef.ibrahim@student.com" },
+    { fullName: "سارة أحمد الحربي",    email: "sara.ahmed.h@student.com" },
+    { fullName: "عبدالرحمن فهد العنزي", email: "abdelrahman.fahd@student.com" },
+  ],
+  "Intermediate": [
+    { fullName: "ليلى محمود الرشيدي",  email: "layla.mahmoud@student.com" },
+    { fullName: "تركي سعد البلوي",     email: "turki.saad@student.com" },
+    { fullName: "منى عمر السبيعي",     email: "mona.omar@student.com" },
+  ],
+  "Level A": [
+    { fullName: "جاسم سليمان المري",   email: "jasim.sulaiman@student.com" },
+    { fullName: "أسماء وليد الجهني",   email: "asma.walid@student.com" },
+    { fullName: "راشد حمد الكندي",     email: "rashed.hamad@student.com" },
+  ],
+  "Level B": [
+    { fullName: "دانة طارق الفيفي",    email: "dana.tariq@student.com" },
+    { fullName: "سلطان بدر الحازمي",   email: "sultan.badr@student.com" },
+    { fullName: "شيخة ماجد العمري",    email: "shaikha.majed@student.com" },
+  ],
 };
-
-const seedUsers: SeedUser[] = [
-  // Owner
-  {
-    email: "owner@platform.com",
-    password: "12345678",
-    fullName: "Aslan The Greatest",
-    role: Role.OWNER,
-  },
-
-  // School admins
-  {
-    email: "admin.ayman@platform.com",
-    password: "12345678",
-    fullName: "Ayman School Admin",
-    role: Role.SCHOOL_ADMIN,
-  },
-  {
-    email: "admin.omar@platform.com",
-    password: "12345678",
-    fullName: "Omar School Admin",
-    role: Role.SCHOOL_ADMIN,
-  },
-  {
-    email: "admin.manzoma@platform.com",
-    password: "12345678",
-    fullName: "Manzoma School Admin",
-    role: Role.SCHOOL_ADMIN,
-  },
-
-  // Teachers
-  {
-    email: "teacher1.ayman@platform.com",
-    password: "12345678",
-    fullName: "Ahmed Hassan",
-    role: Role.TEACHER,
-  },
-  {
-    email: "teacher2.ayman@platform.com",
-    password: "12345678",
-    fullName: "Mohamed Ali",
-    role: Role.TEACHER,
-  },
-  {
-    email: "teacher1.omar@platform.com",
-    password: "12345678",
-    fullName: "Omar Khaled",
-    role: Role.TEACHER,
-  },
-  {
-    email: "teacher2.omar@platform.com",
-    password: "12345678",
-    fullName: "Youssef Sameh",
-    role: Role.TEACHER,
-  },
-  {
-    email: "teacher1.manzoma@platform.com",
-    password: "12345678",
-    fullName: "Kareem Tarek",
-    role: Role.TEACHER,
-  },
-  {
-    email: "teacher2.manzoma@platform.com",
-    password: "12345678",
-    fullName: "Hassan Fathy",
-    role: Role.TEACHER,
-  },
-
-  // Fully assigned students
-  {
-    email: "student1.ayman@platform.com",
-    password: "12345678",
-    fullName: "Ali Mahmoud",
-    role: Role.STUDENT,
-  },
-  {
-    email: "student1.omar@platform.com",
-    password: "12345678",
-    fullName: "Sara Ahmed",
-    role: Role.STUDENT,
-  },
-  {
-    email: "student1.manzoma@platform.com",
-    password: "12345678",
-    fullName: "Mona Khaled",
-    role: Role.STUDENT,
-  },
-
-  // Onboarding test students
-  {
-    email: "pending.intake@platform.com",
-    password: "12345678",
-    fullName: "Pending Intake Student",
-    role: Role.STUDENT,
-  },
-  {
-    email: "submitted.intake@platform.com",
-    password: "12345678",
-    fullName: "Submitted Intake Student",
-    role: Role.STUDENT,
-  },
-  {
-    email: "school.assigned@platform.com",
-    password: "12345678",
-    fullName: "School Assigned Student",
-    role: Role.STUDENT,
-  },
-  {
-    email: "placement.submitted@platform.com",
-    password: "12345678",
-    fullName: "Placement Submitted Student",
-    role: Role.STUDENT,
-  },
-];
 
 async function deleteAuthUserByEmail(email: string) {
   const { data, error } = await supabaseAdmin.auth.admin.listUsers();
-
-  if (error) {
-    throw new Error(`Failed to list auth users: ${error.message}`);
-  }
-
+  if (error) throw new Error(`Failed to list users: ${error.message}`);
   const existing = data.users.find((u) => u.email === email);
-
   if (existing) {
-    const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(
-      existing.id
-    );
-
-    if (deleteError) {
-      throw new Error(
-        `Failed to delete existing auth user ${email}: ${deleteError.message}`
-      );
-    }
+    const { error: delErr } = await supabaseAdmin.auth.admin.deleteUser(existing.id);
+    if (delErr) throw new Error(`Failed to delete ${email}: ${delErr.message}`);
   }
-}
-
-async function createAuthUser(user: SeedUser) {
-  await deleteAuthUserByEmail(user.email);
-
-  const { data, error } = await supabaseAdmin.auth.admin.createUser({
-    email: user.email,
-    password: user.password,
-    email_confirm: true,
-  });
-
-  if (error || !data.user) {
-    throw new Error(
-      `Failed to create auth user ${user.email}: ${error?.message ?? "Unknown error"}`
-    );
-  }
-
-  return data.user;
-}
-
-async function createProfile(userId: string, fullName: string, role: Role) {
-  return prisma.profile.create({
-    data: {
-      id: userId,
-      full_name: fullName,
-      role,
-    },
-  });
-}
-
-async function createTeacherUser(user: SeedUser, schoolId: string) {
-  const authUser = await createAuthUser(user);
-
-  await createProfile(authUser.id, user.fullName, user.role);
-
-  return prisma.teacher.create({
-    data: {
-      profile_id: authUser.id,
-      school_id: schoolId,
-    },
-  });
-}
-
-async function createStudentUser(
-  user: SeedUser,
-  status: StudentOnboardingStatus,
-  schoolId?: string,
-  classId?: string
-) {
-  const authUser = await createAuthUser(user);
-
-  await createProfile(authUser.id, user.fullName, user.role);
-
-  return prisma.student.create({
-    data: {
-      profile_id: authUser.id,
-      onboarding_status: status,
-      school_id: schoolId ?? null,
-      class_id: classId ?? null,
-    },
-  });
-}
-
-async function createSchoolAdminUser(user: SeedUser, schoolId: string) {
-  const authUser = await createAuthUser(user);
-
-  await createProfile(authUser.id, user.fullName, user.role);
-
-  await prisma.school.update({
-    where: { id: schoolId },
-    data: {
-      admin_id: authUser.id,
-    },
-  });
-
-  return authUser;
 }
 
 async function main() {
-  console.log("🌱 Starting seed...");
+  console.log("🌱 Seeding students into classes...\n");
 
-  // Create owner
-  const ownerSeed = seedUsers.find((u) => u.role === Role.OWNER)!;
-  const ownerAuth = await createAuthUser(ownerSeed);
-  await createProfile(ownerAuth.id, ownerSeed.fullName, ownerSeed.role);
-
-  // Create schools
-  const schoolA = await prisma.school.create({
-    data: { name: "مدرسة ايمن" },
+  // Load all classes with their school
+  const classes = await prisma.class.findMany({
+    include: { school: true },
   });
 
-  const schoolB = await prisma.school.create({
-    data: { name: "مدرسة عمر" },
-  });
+  for (const cls of classes) {
+    const students = classSudents[cls.name];
+    if (!students) {
+      console.log(`⚠️  No students defined for class "${cls.name}" — skipping`);
+      continue;
+    }
 
-  const schoolC = await prisma.school.create({
-    data: { name: "مدرسة منظومة" },
-  });
+    console.log(`📚 Class: ${cls.name} (${cls.school.name})`);
 
-  // Create school admins
-  await createSchoolAdminUser(
-    seedUsers.find((u) => u.email === "admin.ayman@platform.com")!,
-    schoolA.id
-  );
+    for (const s of students) {
+      // Clean up existing auth user if any
+      await deleteAuthUserByEmail(s.email);
 
-  await createSchoolAdminUser(
-    seedUsers.find((u) => u.email === "admin.omar@platform.com")!,
-    schoolB.id
-  );
+      // Create auth user
+      const { data, error } = await supabaseAdmin.auth.admin.createUser({
+        email: s.email,
+        password: "123456",
+        email_confirm: true,
+      });
 
-  await createSchoolAdminUser(
-    seedUsers.find((u) => u.email === "admin.manzoma@platform.com")!,
-    schoolC.id
-  );
+      if (error || !data.user) {
+        console.error(`  ❌ Failed to create auth for ${s.email}: ${error?.message}`);
+        continue;
+      }
 
-  // Create teachers
-  const teacherA1 = await createTeacherUser(
-    seedUsers.find((u) => u.email === "teacher1.ayman@platform.com")!,
-    schoolA.id
-  );
-  const teacherA2 = await createTeacherUser(
-    seedUsers.find((u) => u.email === "teacher2.ayman@platform.com")!,
-    schoolA.id
-  );
+      const userId = data.user.id;
 
-  const teacherB1 = await createTeacherUser(
-    seedUsers.find((u) => u.email === "teacher1.omar@platform.com")!,
-    schoolB.id
-  );
-  const teacherB2 = await createTeacherUser(
-    seedUsers.find((u) => u.email === "teacher2.omar@platform.com")!,
-    schoolB.id
-  );
+      // Create profile
+      await prisma.profile.upsert({
+        where: { id: userId },
+        update: { full_name: s.fullName, role: Role.STUDENT },
+        create: { id: userId, full_name: s.fullName, role: Role.STUDENT },
+      });
 
-  const teacherC1 = await createTeacherUser(
-    seedUsers.find((u) => u.email === "teacher1.manzoma@platform.com")!,
-    schoolC.id
-  );
-  const teacherC2 = await createTeacherUser(
-    seedUsers.find((u) => u.email === "teacher2.manzoma@platform.com")!,
-    schoolC.id
-  );
+      // Create student row — fully assigned
+      await prisma.student.upsert({
+        where: { profile_id: userId },
+        update: {
+          onboarding_status: StudentOnboardingStatus.CLASS_ASSIGNED,
+          school_id: cls.school_id,
+          class_id: cls.id,
+        },
+        create: {
+          profile_id: userId,
+          onboarding_status: StudentOnboardingStatus.CLASS_ASSIGNED,
+          school_id: cls.school_id,
+          class_id: cls.id,
+        },
+      });
 
-  // Create classes
-  const classA1 = await prisma.class.create({
-    data: {
-      name: "Grade 1",
-      school_id: schoolA.id,
-      teacher_id: teacherA1.id,
-    },
-  });
+      console.log(`  ✅ ${s.fullName} (${s.email})`);
+    }
 
-  const classA2 = await prisma.class.create({
-    data: {
-      name: "Grade 2",
-      school_id: schoolA.id,
-      teacher_id: teacherA2.id,
-    },
-  });
+    console.log("");
+  }
 
-  const classB1 = await prisma.class.create({
-    data: {
-      name: "Beginner",
-      school_id: schoolB.id,
-      teacher_id: teacherB1.id,
-    },
-  });
-
-  const classB2 = await prisma.class.create({
-    data: {
-      name: "Intermediate",
-      school_id: schoolB.id,
-      teacher_id: teacherB2.id,
-    },
-  });
-
-  const classC1 = await prisma.class.create({
-    data: {
-      name: "Level A",
-      school_id: schoolC.id,
-      teacher_id: teacherC1.id,
-    },
-  });
-
-  const classC2 = await prisma.class.create({
-    data: {
-      name: "Level B",
-      school_id: schoolC.id,
-      teacher_id: teacherC2.id,
-    },
-  });
-
-  // Create fully assigned students
-  await createStudentUser(
-    seedUsers.find((u) => u.email === "student1.ayman@platform.com")!,
-    StudentOnboardingStatus.CLASS_ASSIGNED,
-    schoolA.id,
-    classA1.id
-  );
-
-  await createStudentUser(
-    seedUsers.find((u) => u.email === "student1.omar@platform.com")!,
-    StudentOnboardingStatus.CLASS_ASSIGNED,
-    schoolB.id,
-    classB1.id
-  );
-
-  await createStudentUser(
-    seedUsers.find((u) => u.email === "student1.manzoma@platform.com")!,
-    StudentOnboardingStatus.CLASS_ASSIGNED,
-    schoolC.id,
-    classC1.id
-  );
-
-  // Create onboarding students
-  await createStudentUser(
-    seedUsers.find((u) => u.email === "pending.intake@platform.com")!,
-    StudentOnboardingStatus.PENDING_INTAKE
-  );
-
-  await createStudentUser(
-    seedUsers.find((u) => u.email === "submitted.intake@platform.com")!,
-    StudentOnboardingStatus.INTAKE_SUBMITTED
-  );
-
-  await createStudentUser(
-    seedUsers.find((u) => u.email === "school.assigned@platform.com")!,
-    StudentOnboardingStatus.SCHOOL_ASSIGNED,
-    schoolA.id
-  );
-
-  await createStudentUser(
-    seedUsers.find((u) => u.email === "placement.submitted@platform.com")!,
-    StudentOnboardingStatus.SCHOOL_PLACEMENT_SUBMITTED,
-    schoolB.id
-  );
-
-  console.log("✅ Seed completed successfully!");
-  console.log("");
-  console.log("Owner:");
-  console.log("  owner@platform.com / 12345678");
-  console.log("");
-  console.log("School admins:");
-  console.log("  admin.ayman@platform.com / 12345678");
-  console.log("  admin.omar@platform.com / 12345678");
-  console.log("  admin.manzoma@platform.com / 12345678");
-  console.log("");
-  console.log("Teachers:");
-  console.log("  teacher1.ayman@platform.com / 12345678");
-  console.log("  teacher1.omar@platform.com / 12345678");
-  console.log("  teacher1.manzoma@platform.com / 12345678");
-  console.log("");
-  console.log("Students:");
-  console.log("  student1.ayman@platform.com / 12345678");
-  console.log("  student1.omar@platform.com / 12345678");
-  console.log("  student1.manzoma@platform.com / 12345678");
-  console.log("  pending.intake@platform.com / 12345678");
-  console.log("  submitted.intake@platform.com / 12345678");
-  console.log("  school.assigned@platform.com / 12345678");
-  console.log("  placement.submitted@platform.com / 12345678");
+  console.log("✅ Done! All students seeded.\n");
+  console.log("Password for all: 123456");
 }
 
 main()

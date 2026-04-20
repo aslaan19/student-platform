@@ -1,9 +1,10 @@
+// api/teacher/quizzes/route.ts
 import { NextResponse } from "next/server";
-import { createClient } from "../../../../lib/supabase/server";
-import { prisma } from "../../../../lib/prisma";
+import { createClient } from "@/lib/supabase/server";
+import { prisma } from "@/lib/prisma";
 
 interface QuestionInput {
-  type: string;
+  type: "MCQ" | "TF" | "WRITTEN";
   text: string;
   correct_answer: string;
   options?: string[];
@@ -21,12 +22,11 @@ export async function GET() {
     const quizzes = await prisma.quiz.findMany({
       where: { teacher_id: teacher.id },
       include: {
-        class: true,
-        questions: true,
+        class: { select: { id: true, name: true } },
+        questions: { include: { options: true }, orderBy: { order: "asc" } },
         attempts: {
-          include: {
-            student: { include: { profile: true } },
-          },
+          include: { student: { include: { profile: { select: { full_name: true } } } } },
+          orderBy: { submitted_at: "desc" },
         },
       },
       orderBy: { created_at: "desc" },
@@ -45,7 +45,10 @@ export async function POST(req: Request) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const teacher = await prisma.teacher.findUnique({ where: { profile_id: user.id } });
+    const teacher = await prisma.teacher.findUnique({
+      where: { profile_id: user.id },
+      include: { school: { select: { id: true } } },
+    });
     if (!teacher) return NextResponse.json({ error: "Teacher not found" }, { status: 404 });
 
     const { name, classId, questions } = await req.json();
@@ -59,18 +62,23 @@ export async function POST(req: Request) {
         name,
         class_id: classId,
         teacher_id: teacher.id,
+        school_id: teacher.school_id, // ← was missing — this caused the 500
         questions: {
           create: questions.map((q: QuestionInput, index: number) => ({
             type: q.type,
             text: q.text,
-            correct_answer: q.correct_answer,
+            correct_answer: q.correct_answer || null,
             order: index + 1,
-            options: q.type === "MCQ" ? {
-              create: q.options?.map((opt: string, i: number) => ({
-                text: opt,
-                order: i + 1,
-              })),
-            } : undefined,
+            ...(q.type === "MCQ" && q.options?.length
+              ? {
+                  options: {
+                    create: q.options.map((opt: string, i: number) => ({
+                      text: opt,
+                      order: i + 1,
+                    })),
+                  },
+                }
+              : {}),
           })),
         },
       },

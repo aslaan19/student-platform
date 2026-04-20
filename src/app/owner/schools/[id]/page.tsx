@@ -29,18 +29,18 @@ interface SchoolDetail {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  PENDING_INTAKE: "#4f8ef7",
-  INTAKE_SUBMITTED: "#fbbf24",
-  SCHOOL_ASSIGNED: "#34d399",
-  SCHOOL_PLACEMENT_SUBMITTED: "#a78bfa",
-  CLASS_ASSIGNED: "#6ee7b7",
+  PENDING_INTAKE: "#1a4fa0",
+  INTAKE_SUBMITTED: "#b45309",
+  SCHOOL_ASSIGNED: "#0d7c4f",
+  SCHOOL_PLACEMENT_SUBMITTED: "#6d28d9",
+  CLASS_ASSIGNED: "#0e7490",
 };
 const STATUS_LABELS: Record<string, string> = {
-  PENDING_INTAKE: "Pending Intake",
-  INTAKE_SUBMITTED: "Intake Submitted",
-  SCHOOL_ASSIGNED: "School Assigned",
-  SCHOOL_PLACEMENT_SUBMITTED: "Placement Submitted",
-  CLASS_ASSIGNED: "Class Assigned",
+  PENDING_INTAKE: "في انتظار الاختبار",
+  INTAKE_SUBMITTED: "تم تقديم الاختبار",
+  SCHOOL_ASSIGNED: "تم تعيين المدرسة",
+  SCHOOL_PLACEMENT_SUBMITTED: "تم تقديم التوزيع",
+  CLASS_ASSIGNED: "تم تعيين الفصل",
 };
 
 type Tab = "overview" | "teachers" | "students" | "classes";
@@ -51,6 +51,7 @@ export default function OwnerSchoolDetailPage() {
   const [school, setSchool] = useState<SchoolDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<Tab>("overview");
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     if (!id) return;
@@ -60,114 +61,270 @@ export default function OwnerSchoolDetailPage() {
       .finally(() => setLoading(false));
   }, [id]);
 
-  if (loading) return <div className="sd-loading"><div className="spinner" />Loading school…</div>;
-  if (!school) return <div className="sd-error">School not found.</div>;
+  if (loading)
+    return (
+      <div className="sd-loading">
+        <div className="spinner" />
+        جارٍ تحميل بيانات المدرسة…
+      </div>
+    );
+  if (!school) return <div className="sd-loading">المدرسة غير موجودة.</div>;
 
   const tabs: { id: Tab; label: string; count?: number }[] = [
-    { id: "overview", label: "Overview" },
-    { id: "teachers", label: "Teachers", count: school.teachers.length },
-    { id: "students", label: "Students", count: school.students.length },
-    { id: "classes", label: "Classes", count: school.classes.length },
+    { id: "overview", label: "نظرة عامة" },
+    { id: "teachers", label: "المعلمون", count: school.teachers.length },
+    { id: "students", label: "الطلاب", count: school.students.length },
+    { id: "classes", label: "الفصول", count: school.classes.length },
   ];
 
+  const filteredStudents = school.students.filter((s) =>
+    s.profile.full_name.toLowerCase().includes(search.toLowerCase()),
+  );
+  const filteredTeachers = school.teachers.filter((t) =>
+    t.profile.full_name.toLowerCase().includes(search.toLowerCase()),
+  );
+
   return (
-    <div className="sd-page">
+    <div className="sd-page" dir="rtl">
+      {/* Header */}
       <div className="sd-header">
         <Link href="/owner/schools" className="back-link">
-          <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path d="M15 18l-6-6 6-6" />
+          <svg
+            width="15"
+            height="15"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path d="M9 18l6-6-6-6" />
           </svg>
-          All Schools
+          جميع المدارس
         </Link>
         <div className="sd-title-row">
-          <div className="sd-icon">🏫</div>
-          <div>
+          <div className="sd-icon-wrap">🏫</div>
+          <div className="sd-title-body">
             <h1 className="sd-title">{school.name}</h1>
             <p className="sd-sub">
-              Admin: {school.admin?.full_name ?? <span className="no-admin">Unassigned</span>}
+              المدير:{" "}
+              {school.admin ? (
+                <strong>{school.admin.full_name}</strong>
+              ) : (
+                <span className="no-admin">غير معيَّن</span>
+              )}
+              <span className="meta-sep"> · </span>
+              أُنشئت{" "}
+              {new Date(school.created_at).toLocaleDateString("ar-SA", {
+                year: "numeric",
+                month: "long",
+              })}
             </p>
           </div>
           <div className="readonly-badge">
-            <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg
+              width="12"
+              height="12"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
               <path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
             </svg>
-            View Only
+            للعرض فقط
           </div>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="tabs">
-        {tabs.map((t) => (
-          <button
-            key={t.id}
-            className={`tab ${tab === t.id ? "active" : ""}`}
-            onClick={() => setTab(t.id)}
-          >
-            {t.label}
-            {t.count !== undefined && <span className="tab-badge">{t.count}</span>}
-          </button>
-        ))}
+      <div className="tabs-wrap">
+        <div className="tabs">
+          {tabs.map((t) => (
+            <button
+              key={t.id}
+              className={`tab ${tab === t.id ? "active" : ""}`}
+              onClick={() => {
+                setTab(t.id);
+                setSearch("");
+              }}
+            >
+              {t.label}
+              {t.count !== undefined && (
+                <span className="tab-badge">{t.count}</span>
+              )}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Overview Tab */}
+      {/* Overview */}
       {tab === "overview" && (
-        <div className="overview-grid">
-          {[
-            { label: "Teachers", value: school.teachers.length, icon: "👨‍🏫" },
-            { label: "Students", value: school.students.length, icon: "🎓" },
-            { label: "Classes", value: school.classes.length, icon: "📚" },
-            { label: "Created", value: new Date(school.created_at).toLocaleDateString("en-US", { year: "numeric", month: "short" }), icon: "📅" },
-          ].map((s) => (
-            <div key={s.label} className="ov-card">
-              <div className="ov-icon">{s.icon}</div>
-              <div className="ov-val">{s.value}</div>
-              <div className="ov-lab">{s.label}</div>
+        <div className="overview-section">
+          <div className="overview-grid">
+            {[
+              {
+                label: "المعلمون",
+                value: school.teachers.length,
+                icon: "👨‍🏫",
+                color: "#0d7c4f",
+              },
+              {
+                label: "الطلاب",
+                value: school.students.length,
+                icon: "🎓",
+                color: "#1a4fa0",
+              },
+              {
+                label: "الفصول",
+                value: school.classes.length,
+                icon: "📚",
+                color: "#6d28d9",
+              },
+              {
+                label: "تاريخ الإنشاء",
+                value: new Date(school.created_at).toLocaleDateString("ar-SA", {
+                  year: "numeric",
+                  month: "short",
+                }),
+                icon: "📅",
+                color: "#b45309",
+              },
+            ].map((s) => (
+              <div
+                key={s.label}
+                className="ov-card"
+                style={{ "--card-color": s.color } as React.CSSProperties}
+              >
+                <div className="ov-icon-wrap">
+                  <span className="ov-icon">{s.icon}</span>
+                </div>
+                <div className="ov-val">{s.value}</div>
+                <div className="ov-lab">{s.label}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Quick stats about unassigned */}
+          <div className="ov-info-cards">
+            <div className="ov-info-card">
+              <div className="ov-info-title">المعلمون بدون فصول</div>
+              <div className="ov-info-val">
+                {school.teachers.filter((t) => t.classes.length === 0).length}
+              </div>
             </div>
-          ))}
+            <div className="ov-info-card">
+              <div className="ov-info-title">الطلاب بدون فصل</div>
+              <div className="ov-info-val">
+                {school.students.filter((s) => !s.class).length}
+              </div>
+            </div>
+            <div className="ov-info-card">
+              <div className="ov-info-title">الفصول بدون معلم</div>
+              <div className="ov-info-val">
+                {school.classes.filter((c) => !c.teacher).length}
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* Teachers Tab */}
+      {/* Teachers */}
       {tab === "teachers" && (
         <div className="list-section">
-          {school.teachers.length === 0 ? (
-            <div className="empty">No teachers in this school.</div>
+          {school.teachers.length > 4 && (
+            <div className="list-search-wrap">
+              <svg
+                width="15"
+                height="15"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+                className="ls-icon"
+              >
+                <circle cx="11" cy="11" r="8" />
+                <path d="M21 21l-4.35-4.35" />
+              </svg>
+              <input
+                className="list-search"
+                placeholder="ابحث عن معلم…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+          )}
+          {filteredTeachers.length === 0 ? (
+            <div className="empty">لا توجد نتائج مطابقة.</div>
           ) : (
-            school.teachers.map((t) => (
+            filteredTeachers.map((t) => (
               <div key={t.id} className="list-row">
-                <div className="list-avatar">{t.profile.full_name.charAt(0)}</div>
+                <div className="list-avatar teacher">
+                  {t.profile.full_name.charAt(0)}
+                </div>
                 <div className="list-body">
                   <div className="list-name">{t.profile.full_name}</div>
                   <div className="list-sub">
                     {t.classes.length > 0
-                      ? t.classes.map((c) => c.name).join(", ")
-                      : "No classes assigned"}
+                      ? t.classes.map((c) => c.name).join("، ")
+                      : "لا توجد فصول مُعيَّنة"}
                   </div>
                 </div>
-                <div className="list-tag">{t.classes.length} class{t.classes.length !== 1 ? "es" : ""}</div>
+                <div className="list-tag">
+                  {t.classes.length} {t.classes.length === 1 ? "فصل" : "فصول"}
+                </div>
               </div>
             ))
           )}
         </div>
       )}
 
-      {/* Students Tab */}
+      {/* Students */}
       {tab === "students" && (
         <div className="list-section">
-          {school.students.length === 0 ? (
-            <div className="empty">No students in this school.</div>
+          {school.students.length > 4 && (
+            <div className="list-search-wrap">
+              <svg
+                width="15"
+                height="15"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+                className="ls-icon"
+              >
+                <circle cx="11" cy="11" r="8" />
+                <path d="M21 21l-4.35-4.35" />
+              </svg>
+              <input
+                className="list-search"
+                placeholder="ابحث عن طالب…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+          )}
+          {filteredStudents.length === 0 ? (
+            <div className="empty">لا توجد نتائج مطابقة.</div>
           ) : (
-            school.students.map((s) => (
+            filteredStudents.map((s) => (
               <div key={s.id} className="list-row">
-                <div className="list-avatar student">{s.profile.full_name.charAt(0)}</div>
+                <div className="list-avatar student">
+                  {s.profile.full_name.charAt(0)}
+                </div>
                 <div className="list-body">
                   <div className="list-name">{s.profile.full_name}</div>
-                  <div className="list-sub">{s.class?.name ?? "No class assigned"}</div>
+                  <div className="list-sub">
+                    {s.class?.name ?? "لم يُعيَّن فصل"}
+                  </div>
                 </div>
                 <div
-                  className="status-chip"
-                  style={{ "--chip-color": STATUS_COLORS[s.onboarding_status] ?? "#4a5568" } as never}
+                  className="status-chip-sm"
+                  style={
+                    {
+                      "--chip-color":
+                        STATUS_COLORS[s.onboarding_status] ?? "#4a5568",
+                    } as React.CSSProperties
+                  }
                 >
                   {STATUS_LABELS[s.onboarding_status] ?? s.onboarding_status}
                 </div>
@@ -177,11 +334,11 @@ export default function OwnerSchoolDetailPage() {
         </div>
       )}
 
-      {/* Classes Tab */}
+      {/* Classes */}
       {tab === "classes" && (
         <div className="list-section">
           {school.classes.length === 0 ? (
-            <div className="empty">No classes in this school.</div>
+            <div className="empty">لا توجد فصول في هذه المدرسة.</div>
           ) : (
             school.classes.map((c) => (
               <div key={c.id} className="list-row">
@@ -189,10 +346,10 @@ export default function OwnerSchoolDetailPage() {
                 <div className="list-body">
                   <div className="list-name">{c.name}</div>
                   <div className="list-sub">
-                    {c.teacher?.profile.full_name ?? "No teacher assigned"}
+                    {c.teacher?.profile.full_name ?? "لم يُعيَّن معلم"}
                   </div>
                 </div>
-                <div className="list-tag">{c._count.students} students</div>
+                <div className="list-tag">{c._count.students} طالب</div>
               </div>
             ))
           )}
@@ -200,80 +357,133 @@ export default function OwnerSchoolDetailPage() {
       )}
 
       <style>{`
-        .sd-page { display: flex; flex-direction: column; gap: 22px; }
-        .sd-loading, .sd-error { display: flex; align-items: center; gap: 12px; height: 200px; justify-content: center; color: var(--text2); font-size: 14px; }
-        .spinner { width: 18px; height: 18px; border: 2px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        .sd-page { display:flex; flex-direction:column; gap:22px; }
+        .sd-loading { display:flex; align-items:center; gap:12px; height:220px; justify-content:center; color:var(--text2); font-size:14px; }
+        .spinner { width:20px; height:20px; border:2px solid var(--border2); border-top-color:var(--accent); border-radius:50%; animation:spin 0.8s linear infinite; }
+        @keyframes spin { to{transform:rotate(360deg)} }
 
-        .back-link { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; color: var(--text2); text-decoration: none; font-weight: 500; }
-        .back-link:hover { color: var(--accent); }
-        .sd-header { display: flex; flex-direction: column; gap: 10px; }
-        .sd-title-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
-        .sd-icon { font-size: 32px; }
-        .sd-title { font-size: 22px; font-weight: 700; color: var(--text); letter-spacing: -0.4px; }
-        .sd-sub { font-size: 13px; color: var(--text2); margin-top: 2px; }
-        .no-admin { color: var(--danger); }
+        .back-link { display:inline-flex; align-items:center; gap:6px; font-size:13px; color:var(--text2); text-decoration:none; font-weight:600; }
+        .back-link:hover { color:var(--accent); }
+        .sd-header { display:flex; flex-direction:column; gap:12px; padding-bottom:20px; border-bottom:1px solid var(--border); }
+        .sd-title-row { display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+        .sd-icon-wrap {
+          width:52px; height:52px; border-radius:14px; flex-shrink:0;
+          background:var(--accent-muted); border:1px solid var(--accent-muted2);
+          display:flex; align-items:center; justify-content:center; font-size:28px;
+        }
+        .sd-title-body { flex:1; }
+        .sd-title { font-size:22px; font-weight:800; color:var(--text); letter-spacing:-0.4px; }
+        .sd-sub { font-size:13px; color:var(--text2); margin-top:3px; }
+        .meta-sep { opacity:0.4; }
+        .no-admin { color:var(--danger); font-style:italic; }
         .readonly-badge {
-          display: flex; align-items: center; gap: 6px;
-          background: rgba(79,142,247,0.08); border: 1px solid rgba(79,142,247,0.2);
-          color: var(--accent); font-size: 11px; font-weight: 600;
-          padding: 5px 10px; border-radius: 7px; margin-left: auto;
+          display:flex; align-items:center; gap:6px;
+          background:var(--accent-muted); border:1px solid var(--accent-muted2);
+          color:var(--accent); font-size:11.5px; font-weight:700;
+          padding:6px 14px; border-radius:20px; white-space:nowrap;
         }
 
-        .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); padding-bottom: 0; }
+        /* Tabs */
+        .tabs-wrap { border-bottom:2px solid var(--border); }
+        .tabs { display:flex; gap:2px; }
         .tab {
-          display: flex; align-items: center; gap: 6px;
-          background: none; border: none; cursor: pointer;
-          padding: 8px 14px; font-size: 13px; font-weight: 500;
-          color: var(--text2); border-bottom: 2px solid transparent;
-          margin-bottom: -1px; transition: all 0.15s; border-radius: 6px 6px 0 0;
+          display:flex; align-items:center; gap:7px;
+          background:none; border:none; cursor:pointer;
+          padding:10px 16px; font-size:13.5px; font-weight:700;
+          color:var(--text2); border-bottom:2px solid transparent;
+          margin-bottom:-2px; transition:all 0.15s;
+          font-family:'Cairo',sans-serif; border-radius:6px 6px 0 0;
         }
-        .tab:hover { color: var(--text); }
-        .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+        .tab:hover { color:var(--text); background:var(--surface3); }
+        .tab.active { color:var(--accent); border-bottom-color:var(--accent); }
         .tab-badge {
-          background: var(--surface2); border-radius: 99px;
-          padding: 1px 7px; font-size: 10.5px; font-family: 'JetBrains Mono', monospace;
-          color: var(--text2);
+          background:var(--surface3); border-radius:99px;
+          padding:1px 8px; font-size:11px; font-family:'IBM Plex Mono',monospace;
+          color:var(--text3); font-weight:700;
         }
-        .tab.active .tab-badge { background: rgba(79,142,247,0.12); color: var(--accent); }
+        .tab.active .tab-badge { background:var(--accent-muted2); color:var(--accent); }
 
-        .overview-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+        /* Overview */
+        .overview-section { display:flex; flex-direction:column; gap:16px; }
+        .overview-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
         .ov-card {
-          background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
-          padding: 18px; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center;
+          background:var(--surface); border:1px solid var(--border);
+          border-top:3px solid var(--card-color,var(--accent));
+          border-radius:var(--radius); padding:20px 16px;
+          display:flex; flex-direction:column; align-items:center; gap:8px; text-align:center;
+          box-shadow:var(--shadow-sm); transition:box-shadow 0.15s;
         }
-        .ov-icon { font-size: 24px; }
-        .ov-val { font-size: 22px; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: var(--text); }
-        .ov-lab { font-size: 11px; color: var(--text2); font-weight: 500; text-transform: uppercase; letter-spacing: 0.3px; }
+        .ov-card:hover { box-shadow:var(--shadow); }
+        .ov-icon-wrap {
+          width:46px; height:46px; border-radius:12px;
+          background:color-mix(in srgb,var(--card-color,var(--accent)) 10%,transparent);
+          display:flex; align-items:center; justify-content:center;
+        }
+        .ov-icon { font-size:24px; }
+        .ov-val { font-size:26px; font-weight:900; font-family:'IBM Plex Mono',monospace; color:var(--text); letter-spacing:-1px; }
+        .ov-lab { font-size:12px; color:var(--text2); font-weight:700; }
 
-        .list-section { display: flex; flex-direction: column; gap: 8px; }
-        .empty { text-align: center; color: var(--text3); padding: 40px; font-size: 13px; }
+        .ov-info-cards { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+        .ov-info-card {
+          background:var(--surface2); border:1px solid var(--border);
+          border-radius:var(--radius); padding:14px 16px;
+          display:flex; align-items:center; justify-content:space-between;
+        }
+        .ov-info-title { font-size:12.5px; color:var(--text2); font-weight:600; }
+        .ov-info-val { font-size:18px; font-weight:800; color:var(--text); font-family:'IBM Plex Mono',monospace; }
+
+        /* Lists */
+        .list-section { display:flex; flex-direction:column; gap:8px; }
+        .empty { text-align:center; color:var(--text3); padding:48px; font-size:14px; font-weight:500; }
+
+        .list-search-wrap { position:relative; display:flex; align-items:center; }
+        .ls-icon { position:absolute; right:13px; color:var(--text3); pointer-events:none; }
+        .list-search {
+          width:100%; background:var(--surface); border:1px solid var(--border2);
+          border-radius:8px; padding:9px 40px 9px 13px;
+          font-size:13.5px; font-family:'Cairo',sans-serif; color:var(--text); outline:none;
+          transition:border-color 0.15s, box-shadow 0.15s;
+        }
+        .list-search:focus { border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-muted); }
+
         .list-row {
-          display: flex; align-items: center; gap: 12px;
-          background: var(--surface); border: 1px solid var(--border);
-          border-radius: 10px; padding: 13px 16px;
+          display:flex; align-items:center; gap:13px;
+          background:var(--surface); border:1px solid var(--border);
+          border-radius:var(--radius); padding:14px 16px;
+          box-shadow:var(--shadow-sm);
         }
         .list-avatar {
-          width: 36px; height: 36px; border-radius: 9px;
-          background: linear-gradient(135deg, var(--accent), var(--accent2));
-          display: flex; align-items: center; justify-content: center;
-          font-size: 14px; font-weight: 700; color: white; flex-shrink: 0;
+          width:38px; height:38px; border-radius:10px; flex-shrink:0;
+          background:linear-gradient(145deg,var(--accent),#2563c4);
+          display:flex; align-items:center; justify-content:center;
+          font-size:15px; font-weight:800; color:white;
         }
-        .list-avatar.student { background: linear-gradient(135deg, #34d399, #059669); }
-        .list-avatar.class { background: var(--surface2); font-size: 18px; border: 1px solid var(--border); }
-        .list-body { flex: 1; min-width: 0; }
-        .list-name { font-size: 13.5px; font-weight: 600; color: var(--text); }
-        .list-sub { font-size: 11.5px; color: var(--text2); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .list-tag { font-size: 11.5px; font-weight: 600; color: var(--text2); background: var(--surface2); padding: 3px 10px; border-radius: 6px; white-space: nowrap; }
-        .status-chip {
-          font-size: 10.5px; font-weight: 600;
-          color: var(--chip-color, var(--accent));
-          background: color-mix(in srgb, var(--chip-color, var(--accent)) 12%, transparent);
-          border: 1px solid color-mix(in srgb, var(--chip-color, var(--accent)) 30%, transparent);
-          padding: 3px 9px; border-radius: 6px; white-space: nowrap;
+        .list-avatar.teacher { background:linear-gradient(145deg,#0d7c4f,#059669); }
+        .list-avatar.student { background:linear-gradient(145deg,#6d28d9,#7c3aed); }
+        .list-avatar.class { background:var(--surface2); font-size:20px; border:1px solid var(--border); }
+        .list-body { flex:1; min-width:0; }
+        .list-name { font-size:14px; font-weight:700; color:var(--text); }
+        .list-sub { font-size:12px; color:var(--text2); margin-top:2px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .list-tag {
+          font-size:12px; font-weight:700; color:var(--text2);
+          background:var(--surface2); border:1px solid var(--border);
+          padding:4px 12px; border-radius:20px; white-space:nowrap; flex-shrink:0;
         }
-        @media (max-width: 700px) {
-          .overview-grid { grid-template-columns: repeat(2, 1fr); }
+        .status-chip-sm {
+          font-size:11px; font-weight:700; white-space:nowrap;
+          color:var(--chip-color,var(--accent));
+          background:color-mix(in srgb,var(--chip-color,var(--accent)) 10%,transparent);
+          border:1px solid color-mix(in srgb,var(--chip-color,var(--accent)) 25%,transparent);
+          padding:4px 11px; border-radius:20px; flex-shrink:0;
+        }
+
+        @media (max-width:900px) {
+          .overview-grid { grid-template-columns:repeat(2,1fr); }
+          .ov-info-cards { grid-template-columns:1fr; }
+        }
+        @media (max-width:600px) {
+          .overview-grid { grid-template-columns:1fr 1fr; }
+          .tabs { overflow-x:auto; }
         }
       `}</style>
     </div>

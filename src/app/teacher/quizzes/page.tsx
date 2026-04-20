@@ -1,3 +1,4 @@
+// teacher/quizzes/page.tsx
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
@@ -21,7 +22,7 @@ type Attempt = {
 type Quiz = {
   id: string;
   name: string;
-  class: { name: string };
+  class: { id: string; name: string };
   questions: Question[];
   attempts: Attempt[];
 };
@@ -33,35 +34,20 @@ type NewQuestion = {
   correct_answer: string;
 };
 
-function Skeleton({ className = "" }: { className?: string }) {
-  return (
-    <div
-      className={`rounded-lg bg-gray-100 ${className}`}
-      style={{ animation: "pulse 1.5s ease-in-out infinite" }}
-    />
-  );
-}
-
-function Spinner() {
-  return (
-    <span className="inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
-  );
-}
-
 export default function TeacherQuizzesPage() {
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [classes, setClasses] = useState<ClassItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [expandedQuiz, setExpandedQuiz] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [visible, setVisible] = useState(false);
   const [quizName, setQuizName] = useState("");
   const [selectedClass, setSelectedClass] = useState("");
   const [questions, setQuestions] = useState<NewQuestion[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState("");
 
-  const fetchData = useCallback(async () => {
+  const load = useCallback(async () => {
     const [qRes, tRes] = await Promise.all([
       fetch("/api/teacher/quizzes"),
       fetch("/api/teacher"),
@@ -70,27 +56,16 @@ export default function TeacherQuizzesPage() {
     const tData = await tRes.json();
     setClasses(tData.classes ?? []);
     setLoading(false);
-    setTimeout(() => setVisible(true), 50);
   }, []);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
-    async function fetchData() {
-      const [qRes, tRes] = await Promise.all([
-        fetch("/api/teacher/quizzes"),
-        fetch("/api/teacher"),
-      ]);
-      setQuizzes(await qRes.json());
-      const tData = await tRes.json();
-      setClasses(tData.classes ?? []);
-      setLoading(false);
-      setTimeout(() => setVisible(true), 50);
-    }
-    fetchData();
-  }, [fetchData]);
+    load();
+  }, [load]);
 
   const addQuestion = (type: "MCQ" | "TF") => {
-    setQuestions((prev) => [
-      ...prev,
+    setQuestions((p) => [
+      ...p,
       {
         type,
         text: "",
@@ -100,36 +75,48 @@ export default function TeacherQuizzesPage() {
     ]);
   };
 
-  const updateQuestion = (index: number, field: string, value: string) => {
-    setQuestions((prev) =>
-      prev.map((q, i) => (i === index ? { ...q, [field]: value } : q)),
+  const updateQ = (i: number, field: string, val: string) =>
+    setQuestions((p) =>
+      p.map((q, idx) => (idx === i ? { ...q, [field]: val } : q)),
     );
-  };
 
-  const updateOption = (qIndex: number, oIndex: number, value: string) => {
-    setQuestions((prev) =>
-      prev.map((q, i) => {
-        if (i !== qIndex) return q;
+  const updateOpt = (qi: number, oi: number, val: string) =>
+    setQuestions((p) =>
+      p.map((q, i) => {
+        if (i !== qi) return q;
         const opts = [...q.options];
-        opts[oIndex] = value;
+        opts[oi] = val;
         return { ...q, options: opts };
       }),
     );
-  };
 
-  const removeQuestion = (index: number) => {
-    setQuestions((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const handleSubmitQuiz = async () => {
-    if (!quizName.trim()) return alert("أدخل اسم الاختبار");
-    if (!selectedClass) return alert("اختر الفصل");
-    if (questions.length === 0) return alert("أضف سؤالاً على الأقل");
+  async function handleSubmit() {
+    setFormError("");
+    if (!quizName.trim()) {
+      setFormError("أدخل اسم الاختبار");
+      return;
+    }
+    if (!selectedClass) {
+      setFormError("اختر الفصل");
+      return;
+    }
+    if (questions.length === 0) {
+      setFormError("أضف سؤالاً على الأقل");
+      return;
+    }
     for (const q of questions) {
-      if (!q.text.trim()) return alert("أكمل نص جميع الأسئلة");
-      if (!q.correct_answer) return alert("اختر الإجابة الصحيحة لجميع الأسئلة");
-      if (q.type === "MCQ" && q.options.filter((o) => o.trim()).length < 2)
-        return alert("أضف خيارين على الأقل");
+      if (!q.text.trim()) {
+        setFormError("أكمل نص جميع الأسئلة");
+        return;
+      }
+      if (!q.correct_answer) {
+        setFormError("اختر الإجابة الصحيحة لجميع الأسئلة");
+        return;
+      }
+      if (q.type === "MCQ" && q.options.filter((o) => o.trim()).length < 2) {
+        setFormError("أضف خيارين على الأقل لكل سؤال اختيار متعدد");
+        return;
+      }
     }
     setSubmitting(true);
     const res = await fetch("/api/teacher/quizzes", {
@@ -147,102 +134,97 @@ export default function TeacherQuizzesPage() {
     });
     setSubmitting(false);
     if (!res.ok) {
-      const err = await res.json();
-      return alert("فشل: " + err.error);
+      const e = await res.json();
+      setFormError(e.error ?? "فشل الحفظ");
+      return;
     }
     setQuizName("");
     setSelectedClass("");
     setQuestions([]);
     setCreating(false);
-    fetchData();
-  };
+    load();
+  }
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("هل أنت متأكد من حذف هذا الاختبار؟")) return;
+  async function handleDelete(id: string) {
+    if (!confirm("حذف هذا الاختبار نهائياً؟")) return;
     setDeletingId(id);
     await fetch(`/api/teacher/quizzes/${id}`, { method: "DELETE" });
-    await new Promise((r) => setTimeout(r, 350));
     setDeletingId(null);
-    fetchData();
-  };
+    load();
+  }
 
   if (loading)
     return (
-      <div className="space-y-4 p-6" dir="rtl">
-        <div className="flex justify-between items-center">
-          <Skeleton className="h-8 w-32" />
-          <Skeleton className="h-9 w-28" />
+      <div className="tq-shell">
+        <div className="tq-loading">
+          <div className="tq-spin" />
+          جارٍ التحميل...
         </div>
-        {[1, 2, 3].map((i) => (
-          <Skeleton key={i} className="h-20 w-full" />
-        ))}
+        <style>{styles}</style>
       </div>
     );
 
   return (
-    <div
-      dir="rtl"
-      className="space-y-6 p-6"
-      style={{
-        opacity: visible ? 1 : 0,
-        transform: visible ? "translateY(0)" : "translateY(12px)",
-        transition: "opacity 0.4s ease, transform 0.4s ease",
-      }}
-    >
-      <style>{`
-        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-        @keyframes fadeSlideIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
-        @keyframes fadeOut { to{opacity:0;transform:scale(0.97);max-height:0;padding:0;margin:0} }
-        @keyframes slideDown { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
-        .quiz-item { animation: fadeSlideIn 0.3s ease both; }
-        .deleting { animation: fadeOut 0.35s ease forwards; overflow:hidden; }
-        .form-slide { animation: slideDown 0.3s ease; }
-        .q-item { animation: fadeSlideIn 0.25s ease both; }
-      `}</style>
-
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">الاختبارات</h1>
+    <div className="tq-shell" dir="rtl">
+      <div className="tq-header">
+        <div>
+          <h1 className="tq-title">الاختبارات</h1>
+          <p className="tq-sub">
+            {quizzes.length} اختبار ·{" "}
+            {quizzes.reduce((a, q) => a + q.attempts.length, 0)} محاولة
+          </p>
+        </div>
         {!creating && (
-          <button
-            onClick={() => setCreating(true)}
-            className="bg-black text-white px-4 py-2 rounded-lg text-sm transition-all hover:scale-[1.02] active:scale-[0.98]"
-          >
-            + إنشاء اختبار
+          <button className="tq-btn primary" onClick={() => setCreating(true)}>
+            <svg
+              width="14"
+              height="14"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2.5}
+            >
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+            اختبار جديد
           </button>
         )}
       </div>
 
-      {/* Create Form */}
+      {/* Create form */}
       {creating && (
-        <div className="rounded-xl border p-6 space-y-6 bg-gray-50 form-slide">
-          <div className="flex items-center justify-between">
-            <h2 className="font-bold text-lg">اختبار جديد</h2>
+        <div className="tq-form">
+          <div className="tq-form-header">
+            <h2 className="tq-form-title">إنشاء اختبار جديد</h2>
             <button
-              onClick={() => setCreating(false)}
-              className="text-gray-400 hover:text-black text-sm transition-colors"
+              className="tq-ghost-btn"
+              onClick={() => {
+                setCreating(false);
+                setFormError("");
+              }}
             >
               إلغاء
             </button>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm font-medium block mb-1">
-                اسم الاختبار
-              </label>
+          <div className="tq-form-row">
+            <div className="tq-field">
+              <label className="tq-label">اسم الاختبار</label>
               <input
-                className="w-full border rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-black outline-none transition-shadow"
+                className="tq-input"
                 placeholder="مثال: اختبار الفصل الأول"
                 value={quizName}
                 onChange={(e) => setQuizName(e.target.value)}
+                dir="rtl"
               />
             </div>
-            <div>
-              <label className="text-sm font-medium block mb-1">الفصل</label>
+            <div className="tq-field">
+              <label className="tq-label">الفصل</label>
               <select
-                className="w-full border rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-black outline-none transition-shadow"
+                className="tq-input"
                 value={selectedClass}
                 onChange={(e) => setSelectedClass(e.target.value)}
+                dir="rtl"
               >
                 <option value="">اختر الفصل</option>
                 {classes.map((c) => (
@@ -254,84 +236,93 @@ export default function TeacherQuizzesPage() {
             </div>
           </div>
 
-          <div className="space-y-4">
+          {/* Questions */}
+          <div className="tq-questions">
             {questions.map((q, qi) => (
-              <div
-                key={qi}
-                className="rounded-xl border bg-white p-4 space-y-3 q-item"
-                style={{ animationDelay: `${qi * 40}ms` }}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-500">
-                    سؤال {qi + 1} —{" "}
+              <div key={qi} className="tq-q-card">
+                <div className="tq-q-header">
+                  <div className="tq-q-num">س{qi + 1}</div>
+                  <span className="tq-q-type-badge">
                     {q.type === "MCQ" ? "اختيار متعدد" : "صح / خطأ"}
                   </span>
                   <button
-                    onClick={() => removeQuestion(qi)}
-                    className="text-red-400 text-xs hover:text-red-600 transition-colors"
+                    className="tq-del-q-btn"
+                    onClick={() =>
+                      setQuestions((p) => p.filter((_, i) => i !== qi))
+                    }
                   >
-                    حذف
+                    <svg
+                      width="13"
+                      height="13"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                    >
+                      <path d="M18 6L6 18M6 6l12 12" />
+                    </svg>
                   </button>
                 </div>
                 <input
-                  className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-black outline-none transition-shadow"
+                  className="tq-input"
                   placeholder="نص السؤال"
                   value={q.text}
-                  onChange={(e) => updateQuestion(qi, "text", e.target.value)}
+                  onChange={(e) => updateQ(qi, "text", e.target.value)}
+                  dir="rtl"
                 />
+
                 {q.type === "MCQ" ? (
-                  <div className="space-y-2">
-                    <p className="text-xs text-gray-500">الخيارات</p>
+                  <div className="tq-opts">
                     {q.options.map((opt, oi) => (
-                      <div key={oi} className="flex items-center gap-2">
-                        <input
-                          type="radio"
-                          name={`correct-${qi}`}
-                          checked={
-                            q.correct_answer === opt && opt.trim() !== ""
+                      <div key={oi} className="tq-opt-row">
+                        <button
+                          className={`tq-radio ${q.correct_answer === opt && opt.trim() ? "selected" : ""}`}
+                          type="button"
+                          onClick={() =>
+                            opt.trim() && updateQ(qi, "correct_answer", opt)
                           }
-                          onChange={() =>
-                            updateQuestion(qi, "correct_answer", opt)
-                          }
-                          className="cursor-pointer"
-                        />
+                        >
+                          {q.correct_answer === opt && opt.trim() && (
+                            <svg
+                              width="9"
+                              height="9"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                              strokeWidth={3}
+                            >
+                              <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                          )}
+                        </button>
                         <input
-                          className="flex-1 border rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-black outline-none transition-shadow"
-                          placeholder={`الخيار ${oi + 1}`}
+                          className="tq-input opt-inp"
+                          placeholder={`خيار ${oi + 1}`}
                           value={opt}
                           onChange={(e) => {
-                            updateOption(qi, oi, e.target.value);
                             if (q.correct_answer === opt)
-                              updateQuestion(
-                                qi,
-                                "correct_answer",
-                                e.target.value,
-                              );
+                              updateQ(qi, "correct_answer", e.target.value);
+                            updateOpt(qi, oi, e.target.value);
                           }}
+                          dir="rtl"
                         />
                       </div>
                     ))}
-                    <p className="text-xs text-gray-400">
-                      اختر الإجابة الصحيحة بالضغط على الدائرة
-                    </p>
+                    <div className="tq-opt-hint">
+                      اضغط على الدائرة لتحديد الإجابة الصحيحة
+                    </div>
                   </div>
                 ) : (
-                  <div className="flex gap-4">
+                  <div className="tq-tf-row">
                     {["صح", "خطأ"].map((opt) => (
-                      <label
+                      <button
                         key={opt}
-                        className="flex items-center gap-2 cursor-pointer"
+                        className={`tq-tf-btn ${q.correct_answer === opt ? "selected" : ""} ${opt === "صح" ? "true" : "false"}`}
+                        onClick={() => updateQ(qi, "correct_answer", opt)}
+                        type="button"
                       >
-                        <input
-                          type="radio"
-                          name={`correct-${qi}`}
-                          checked={q.correct_answer === opt}
-                          onChange={() =>
-                            updateQuestion(qi, "correct_answer", opt)
-                          }
-                        />
-                        <span className="text-sm">{opt}</span>
-                      </label>
+                        {opt === "صح" ? "✓ صح" : "✗ خطأ"}
+                      </button>
                     ))}
                   </div>
                 )}
@@ -339,29 +330,26 @@ export default function TeacherQuizzesPage() {
             ))}
           </div>
 
-          <div className="flex gap-3">
-            <button
-              onClick={() => addQuestion("MCQ")}
-              className="border px-4 py-2 rounded-lg text-sm hover:bg-white transition-all hover:shadow-sm active:scale-[0.98]"
-            >
+          <div className="tq-add-q-row">
+            <button className="tq-add-q-btn" onClick={() => addQuestion("MCQ")}>
               + اختيار متعدد
             </button>
-            <button
-              onClick={() => addQuestion("TF")}
-              className="border px-4 py-2 rounded-lg text-sm hover:bg-white transition-all hover:shadow-sm active:scale-[0.98]"
-            >
+            <button className="tq-add-q-btn" onClick={() => addQuestion("TF")}>
               + صح / خطأ
             </button>
           </div>
 
+          {formError && <div className="tq-error">{formError}</div>}
+
           <button
-            onClick={handleSubmitQuiz}
+            className="tq-btn primary full"
+            onClick={handleSubmit}
             disabled={submitting}
-            className="w-full bg-black text-white py-2.5 rounded-lg text-sm disabled:opacity-40 transition-all hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-2"
           >
             {submitting ? (
               <>
-                <Spinner /> جارٍ الحفظ...
+                <div className="tq-btn-spin" />
+                جارٍ الحفظ...
               </>
             ) : (
               `حفظ الاختبار (${questions.length} سؤال)`
@@ -370,82 +358,216 @@ export default function TeacherQuizzesPage() {
         </div>
       )}
 
-      {/* Quizzes List */}
-      <div className="space-y-4">
-        {quizzes.length === 0 ? (
-          <div className="rounded-xl border p-8 text-center text-gray-400 text-sm">
-            لا توجد اختبارات بعد
-          </div>
-        ) : (
-          quizzes.map((quiz, i) => (
+      {/* Quizzes list */}
+      {quizzes.length === 0 && !creating ? (
+        <div className="tq-empty">
+          <div className="tq-empty-icon">📝</div>
+          <h3>لا توجد اختبارات بعد</h3>
+          <p>أنشئ أول اختبار لفصلك</p>
+          <button className="tq-btn primary" onClick={() => setCreating(true)}>
+            + إنشاء اختبار
+          </button>
+        </div>
+      ) : (
+        <div className="tq-list">
+          {quizzes.map((quiz) => (
             <div
               key={quiz.id}
-              className={`rounded-xl border p-4 space-y-3 quiz-item transition-all ${deletingId === quiz.id ? "deleting" : ""}`}
-              style={{ animationDelay: `${i * 50}ms` }}
+              className={`tq-quiz-card ${deletingId === quiz.id ? "deleting" : ""}`}
             >
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-semibold">{quiz.name}</h3>
-                  <p className="text-sm text-gray-500">
-                    {quiz.class.name} · {quiz.questions.length} سؤال ·{" "}
-                    {quiz.attempts.length} محاولة
-                  </p>
+              <div className="tq-quiz-top">
+                <div className="tq-quiz-icon">📋</div>
+                <div className="tq-quiz-info">
+                  <div className="tq-quiz-name">{quiz.name}</div>
+                  <div className="tq-quiz-meta">
+                    <span className="tq-tag">{quiz.class.name}</span>
+                    <span className="tq-dot" />
+                    <span>{quiz.questions.length} سؤال</span>
+                    <span className="tq-dot" />
+                    <span>{quiz.attempts.length} محاولة</span>
+                  </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="tq-quiz-actions">
                   <button
+                    className="tq-ghost-btn"
                     onClick={() =>
                       setExpandedQuiz(expandedQuiz === quiz.id ? null : quiz.id)
                     }
-                    className="text-sm border px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors"
                   >
                     {expandedQuiz === quiz.id ? "إخفاء النتائج" : "النتائج"}
                   </button>
                   <button
+                    className="tq-del-btn"
                     onClick={() => handleDelete(quiz.id)}
                     disabled={deletingId === quiz.id}
-                    className="text-sm border border-red-200 text-red-500 px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-40"
                   >
-                    {deletingId === quiz.id ? <Spinner /> : "حذف"}
+                    {deletingId === quiz.id ? (
+                      <div className="tq-spin sm" />
+                    ) : (
+                      "حذف"
+                    )}
                   </button>
                 </div>
               </div>
 
               {expandedQuiz === quiz.id && (
-                <div
-                  className="border-t pt-3 space-y-2"
-                  style={{ animation: "slideDown 0.25s ease" }}
-                >
-                  <h4 className="text-sm font-medium text-gray-600">
-                    نتائج الطلاب
-                  </h4>
+                <div className="tq-results">
+                  <div className="tq-results-header">نتائج الطلاب</div>
                   {quiz.attempts.length === 0 ? (
-                    <p className="text-sm text-gray-400">
+                    <div className="tq-results-empty">
                       لم يؤدِ أي طالب الاختبار بعد
-                    </p>
+                    </div>
                   ) : (
-                    quiz.attempts.map((a, ai) => (
-                      <div
-                        key={a.id}
-                        className="flex justify-between items-center text-sm bg-gray-50 rounded-lg px-3 py-2"
-                        style={{
-                          animation: `fadeSlideIn 0.2s ease ${ai * 30}ms both`,
-                        }}
-                      >
-                        <span>{a.student.profile.full_name}</span>
-                        <span
-                          className={`font-semibold ${a.score / a.total >= 0.5 ? "text-green-600" : "text-red-500"}`}
-                        >
-                          {a.score} / {a.total}
-                        </span>
-                      </div>
-                    ))
+                    <div className="tq-results-list">
+                      {quiz.attempts.map((a) => {
+                        const pct =
+                          a.total > 0
+                            ? Math.round((a.score / a.total) * 100)
+                            : 0;
+                        return (
+                          <div key={a.id} className="tq-result-row">
+                            <div className="tq-result-avatar">
+                              {a.student.profile.full_name.charAt(0)}
+                            </div>
+                            <div className="tq-result-name">
+                              {a.student.profile.full_name}
+                            </div>
+                            <div className="tq-result-bar-wrap">
+                              <div
+                                className="tq-result-bar"
+                                style={{
+                                  width: `${pct}%`,
+                                  background:
+                                    pct >= 70
+                                      ? "#10b981"
+                                      : pct >= 50
+                                        ? "#f59e0b"
+                                        : "#ef4444",
+                                }}
+                              />
+                            </div>
+                            <div
+                              className={`tq-result-score ${pct >= 70 ? "good" : pct >= 50 ? "mid" : "low"}`}
+                            >
+                              {a.score}/{a.total}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   )}
                 </div>
               )}
             </div>
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      )}
+
+      <style>{styles}</style>
     </div>
   );
 }
+
+const styles = `
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  .tq-shell { display: flex; flex-direction: column; gap: 20px; font-family: Tajawal, sans-serif; }
+  .tq-loading { display: flex; align-items: center; gap: 10px; height: 160px; justify-content: center; color: #6b7280; font-size: 14px; }
+  .tq-spin { width: 18px; height: 18px; border: 2px solid #e5e7eb; border-top-color: #2563eb; border-radius: 50%; animation: sp 0.7s linear infinite; flex-shrink: 0; }
+  .tq-spin.sm { width: 14px; height: 14px; }
+  @keyframes sp { to { transform: rotate(360deg); } }
+
+  .tq-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .tq-title { font-size: 21px; font-weight: 800; color: #111827; }
+  .tq-sub { font-size: 13px; color: #6b7280; margin-top: 2px; }
+
+  .tq-btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 9px 18px; border-radius: 9px; font-size: 13px; font-weight: 700;
+    cursor: pointer; border: none; transition: all 0.15s; font-family: Tajawal, sans-serif;
+  }
+  .tq-btn.primary { background: #111827; color: white; }
+  .tq-btn.primary:hover:not(:disabled) { background: #1f2937; }
+  .tq-btn.primary:disabled { opacity: 0.4; cursor: not-allowed; }
+  .tq-btn.full { width: 100%; justify-content: center; padding: 12px; font-size: 14px; }
+  .tq-btn-spin { width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: sp 0.7s linear infinite; }
+  .tq-ghost-btn { background: none; border: 1.5px solid #e5e7eb; color: #6b7280; padding: 6px 12px; border-radius: 8px; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: all 0.15s; font-family: Tajawal, sans-serif; }
+  .tq-ghost-btn:hover { border-color: #9ca3af; color: #374151; }
+
+  /* Form */
+  .tq-form { background: #f7f8fa; border: 1.5px solid #e5e7eb; border-radius: 16px; padding: 22px; display: flex; flex-direction: column; gap: 16px; }
+  .tq-form-header { display: flex; align-items: center; justify-content: space-between; }
+  .tq-form-title { font-size: 16px; font-weight: 800; color: #111827; }
+  .tq-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 600px) { .tq-form-row { grid-template-columns: 1fr; } }
+  .tq-field { display: flex; flex-direction: column; gap: 5px; }
+  .tq-label { font-size: 12px; font-weight: 700; color: #374151; }
+  .tq-input {
+    padding: 9px 12px; background: white; border: 1.5px solid #e5e7eb;
+    border-radius: 8px; font-size: 13px; font-family: Tajawal, sans-serif;
+    color: #111827; outline: none; width: 100%; transition: border-color 0.15s;
+  }
+  .tq-input:focus { border-color: #2563eb; }
+
+  .tq-questions { display: flex; flex-direction: column; gap: 10px; }
+  .tq-q-card { background: white; border: 1.5px solid #e5e7eb; border-radius: 12px; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+  .tq-q-header { display: flex; align-items: center; gap: 8px; }
+  .tq-q-num { font-size: 10.5px; font-weight: 700; color: #9ca3af; background: #f1f3f6; padding: 2px 7px; border-radius: 4px; }
+  .tq-q-type-badge { font-size: 11px; font-weight: 700; color: #2563eb; background: rgba(37,99,235,0.08); padding: 2px 8px; border-radius: 5px; }
+  .tq-del-q-btn { margin-right: auto; background: none; border: none; color: #9ca3af; cursor: pointer; padding: 3px; border-radius: 4px; display: flex; }
+  .tq-del-q-btn:hover { color: #ef4444; }
+
+  .tq-opts { display: flex; flex-direction: column; gap: 6px; }
+  .tq-opt-row { display: flex; align-items: center; gap: 8px; }
+  .tq-radio { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #d1d5db; background: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #10b981; flex-shrink: 0; transition: border-color 0.15s; }
+  .tq-radio.selected { border-color: #10b981; background: rgba(16,185,129,0.08); }
+  .opt-inp { flex: 1; }
+  .tq-opt-hint { font-size: 11px; color: #9ca3af; }
+
+  .tq-tf-row { display: flex; gap: 10px; }
+  .tq-tf-btn { flex: 1; padding: 10px; border-radius: 9px; font-size: 14px; font-weight: 700; cursor: pointer; border: 1.5px solid #e5e7eb; background: #f7f8fa; transition: all 0.15s; font-family: Tajawal, sans-serif; color: #374151; }
+  .tq-tf-btn.selected.true { background: rgba(16,185,129,0.1); border-color: #10b981; color: #065f46; }
+  .tq-tf-btn.selected.false { background: rgba(239,68,68,0.1); border-color: #ef4444; color: #991b1b; }
+
+  .tq-add-q-row { display: flex; gap: 8px; }
+  .tq-add-q-btn { background: none; border: 1.5px dashed #d1d5db; color: #6b7280; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: Tajawal, sans-serif; transition: all 0.15s; }
+  .tq-add-q-btn:hover { border-color: #2563eb; color: #2563eb; }
+  .tq-error { background: rgba(239,68,68,0.07); border: 1px solid rgba(239,68,68,0.2); color: #dc2626; font-size: 13px; padding: 10px 12px; border-radius: 8px; }
+
+  /* Empty */
+  .tq-empty { background: white; border: 1px solid #e5e7eb; border-radius: 16px; padding: 52px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .tq-empty-icon { font-size: 40px; }
+  .tq-empty h3 { font-size: 16px; font-weight: 800; color: #111827; }
+  .tq-empty p { font-size: 13px; color: #6b7280; margin-bottom: 4px; }
+
+  /* Quiz cards */
+  .tq-list { display: flex; flex-direction: column; gap: 10px; }
+  .tq-quiz-card { background: white; border: 1px solid #e5e7eb; border-radius: 14px; overflow: hidden; transition: border-color 0.15s; }
+  .tq-quiz-card:hover { border-color: #d1d5db; }
+  .tq-quiz-card.deleting { opacity: 0; transform: scale(0.97); transition: all 0.3s ease; }
+  .tq-quiz-top { display: flex; align-items: center; gap: 14px; padding: 16px 18px; }
+  .tq-quiz-icon { font-size: 24px; flex-shrink: 0; }
+  .tq-quiz-info { flex: 1; min-width: 0; }
+  .tq-quiz-name { font-size: 14px; font-weight: 800; color: #111827; }
+  .tq-quiz-meta { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #6b7280; margin-top: 3px; flex-wrap: wrap; }
+  .tq-tag { background: rgba(37,99,235,0.08); color: #2563eb; padding: 1px 8px; border-radius: 99px; font-weight: 600; font-size: 11px; }
+  .tq-dot { width: 3px; height: 3px; border-radius: 50%; background: #d1d5db; }
+  .tq-quiz-actions { display: flex; gap: 8px; flex-shrink: 0; }
+  .tq-del-btn { background: none; border: 1.5px solid #fecaca; color: #ef4444; padding: 6px 12px; border-radius: 8px; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: all 0.15s; font-family: Tajawal, sans-serif; display: flex; align-items: center; gap: 4px; }
+  .tq-del-btn:hover:not(:disabled) { background: #fef2f2; }
+  .tq-del-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* Results */
+  .tq-results { border-top: 1px solid #f1f3f6; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; background: #fafafa; }
+  .tq-results-header { font-size: 12px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; }
+  .tq-results-empty { font-size: 13px; color: #9ca3af; text-align: center; padding: 12px 0; }
+  .tq-results-list { display: flex; flex-direction: column; gap: 8px; }
+  .tq-result-row { display: flex; align-items: center; gap: 10px; }
+  .tq-result-avatar { width: 28px; height: 28px; border-radius: 7px; background: linear-gradient(135deg, #2563eb, #7c3aed); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; color: white; flex-shrink: 0; }
+  .tq-result-name { font-size: 13px; font-weight: 600; color: #374151; width: 140px; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tq-result-bar-wrap { flex: 1; height: 5px; background: #e5e7eb; border-radius: 99px; overflow: hidden; }
+  .tq-result-bar { height: 100%; border-radius: 99px; transition: width 0.5s ease; }
+  .tq-result-score { font-size: 12px; font-weight: 800; width: 40px; text-align: left; flex-shrink: 0; }
+  .tq-result-score.good { color: #10b981; }
+  .tq-result-score.mid { color: #f59e0b; }
+  .tq-result-score.low { color: #ef4444; }
+`;
