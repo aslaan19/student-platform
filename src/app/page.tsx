@@ -1,399 +1,678 @@
-// student/page.tsx
-"use client";
-
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 
-type Announcement = {
-  id: string;
-  content: string;
-  created_at: string;
-  teacher: { profile: { full_name: string } };
-};
-
-type StudentData = {
-  profile: { full_name: string };
-  school: { name: string } | null;
-  class: {
-    id: string;
-    name: string;
-    teacher: { profile: { full_name: string } } | null;
-    students: { id: string; profile: { full_name: string } }[];
-  } | null;
-};
-
-export default function StudentPage() {
-  const router = useRouter();
-  const [data, setData] = useState<StudentData | null>(null);
-  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loggingOut, setLoggingOut] = useState(false);
-
-  useEffect(() => {
-    fetch("/api/student")
-      .then((r) => r.json())
-      .then(async (d: StudentData) => {
-        setData(d);
-        if (d.class) {
-          const ann = await fetch(`/api/student/announcements?classId=${d.class.id}`).then((r) => r.json());
-          setAnnouncements(Array.isArray(ann) ? ann : []);
-        }
-      })
-      .finally(() => setLoading(false));
-  }, []);
-
-  async function handleLogout() {
-    setLoggingOut(true);
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    router.push("/login");
-  }
-
-  if (loading) return (
-    <div className="sd-shell">
-      <div className="sd-spinner" />
-      <style>{styles}</style>
-    </div>
-  );
-
-  const initials = data?.profile.full_name
-    ? data.profile.full_name.split(" ").map((w) => w[0]).slice(0, 2).join("")
-    : "ط";
-
+export default function HomePage() {
   return (
-    <div className="sd-shell" dir="rtl">
-      {/* Top nav */}
-      <header className="sd-nav">
-        <div className="sd-nav-inner">
-          <div className="sd-nav-brand">
-            <div className="sd-nav-logo">🎓</div>
-            <div className="sd-nav-titles">
-              <span className="sd-nav-platform">المنصة التعليمية</span>
-              {data?.school && <span className="sd-nav-school">{data.school.name}</span>}
-            </div>
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+          --navy: #0a0f1e;
+          --navy2: #0f1629;
+          --gold: #c9a84c;
+          --gold2: #e8c97a;
+          --gold-muted: rgba(201,168,76,0.12);
+          --white: #f5f3ee;
+          --white2: rgba(245,243,238,0.7);
+          --white3: rgba(245,243,238,0.35);
+          --border: rgba(201,168,76,0.2);
+          --border2: rgba(245,243,238,0.08);
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+          background: var(--navy);
+          color: var(--white);
+          font-family: 'Tajawal', sans-serif;
+          direction: rtl;
+          overflow-x: hidden;
+        }
+
+        /* ── Noise texture overlay ── */
+        body::before {
+          content: '';
+          position: fixed; inset: 0;
+          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+          pointer-events: none;
+          z-index: 0;
+          opacity: 0.4;
+        }
+
+        /* ── Nav ── */
+        nav {
+          position: fixed; top: 0; left: 0; right: 0;
+          z-index: 100;
+          padding: 0 48px;
+          height: 68px;
+          display: flex; align-items: center; justify-content: space-between;
+          border-bottom: 1px solid var(--border2);
+          background: rgba(10,15,30,0.85);
+          backdrop-filter: blur(16px);
+        }
+
+        .nav-brand {
+          display: flex; align-items: center; gap: 12px;
+        }
+        .nav-logo {
+          width: 36px; height: 36px;
+          border: 1.5px solid var(--gold);
+          border-radius: 8px;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 16px; font-weight: 900; color: var(--gold);
+          letter-spacing: -1px;
+          font-family: 'IBM Plex Mono', monospace;
+        }
+        .nav-title {
+          font-size: 16px; font-weight: 800; color: var(--white);
+          letter-spacing: -0.3px;
+        }
+        .nav-title span { color: var(--gold); }
+
+        .nav-links {
+          display: flex; align-items: center; gap: 6px;
+        }
+        .nav-link {
+          font-size: 13.5px; font-weight: 600; color: var(--white2);
+          text-decoration: none; padding: 7px 16px; border-radius: 8px;
+          transition: all 0.2s;
+        }
+        .nav-link:hover { color: var(--white); background: var(--border2); }
+        .nav-cta {
+          font-size: 13.5px; font-weight: 700;
+          background: var(--gold); color: var(--navy);
+          padding: 8px 22px; border-radius: 8px;
+          text-decoration: none;
+          transition: all 0.2s;
+          letter-spacing: -0.2px;
+        }
+        .nav-cta:hover { background: var(--gold2); transform: translateY(-1px); }
+
+        /* ── Hero ── */
+        .hero {
+          min-height: 100vh;
+          display: flex; align-items: center; justify-content: center;
+          padding: 100px 48px 80px;
+          position: relative;
+          overflow: hidden;
+        }
+
+        .hero-bg {
+          position: absolute; inset: 0;
+          background:
+            radial-gradient(ellipse 80% 60% at 50% 0%, rgba(201,168,76,0.08) 0%, transparent 60%),
+            radial-gradient(ellipse 40% 40% at 80% 80%, rgba(201,168,76,0.04) 0%, transparent 50%),
+            linear-gradient(180deg, var(--navy) 0%, var(--navy2) 100%);
+          z-index: 0;
+        }
+
+        /* Decorative grid */
+        .hero-grid {
+          position: absolute; inset: 0; z-index: 0;
+          background-image:
+            linear-gradient(rgba(201,168,76,0.04) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(201,168,76,0.04) 1px, transparent 1px);
+          background-size: 60px 60px;
+          mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 80%);
+        }
+
+        .hero-content {
+          position: relative; z-index: 1;
+          text-align: center;
+          max-width: 820px;
+          display: flex; flex-direction: column; align-items: center; gap: 28px;
+          animation: heroFade 0.9s ease both;
+        }
+
+        @keyframes heroFade {
+          from { opacity: 0; transform: translateY(24px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hero-tag {
+          display: inline-flex; align-items: center; gap: 8px;
+          border: 1px solid var(--border);
+          background: var(--gold-muted);
+          padding: 6px 16px; border-radius: 99px;
+          font-size: 12px; font-weight: 700; color: var(--gold);
+          letter-spacing: 0.5px;
+          text-transform: uppercase;
+        }
+        .hero-tag-dot {
+          width: 6px; height: 6px; border-radius: 50%;
+          background: var(--gold);
+          animation: blink 2s ease infinite;
+        }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+        .hero-title {
+          font-size: clamp(44px, 7vw, 80px);
+          font-weight: 900;
+          line-height: 1.1;
+          letter-spacing: -2px;
+          color: var(--white);
+        }
+        .hero-title .gold { color: var(--gold); }
+        .hero-title .outline {
+          -webkit-text-stroke: 1.5px var(--white3);
+          color: transparent;
+        }
+
+        .hero-sub {
+          font-size: clamp(15px, 2vw, 18px);
+          font-weight: 400;
+          color: var(--white2);
+          line-height: 1.8;
+          max-width: 560px;
+        }
+
+        .hero-actions {
+          display: flex; align-items: center; gap: 12px;
+          flex-wrap: wrap; justify-content: center;
+        }
+        .btn-primary {
+          display: inline-flex; align-items: center; gap: 8px;
+          background: var(--gold); color: var(--navy);
+          padding: 14px 32px; border-radius: 10px;
+          font-size: 15px; font-weight: 800;
+          text-decoration: none; letter-spacing: -0.3px;
+          transition: all 0.2s;
+          box-shadow: 0 0 30px rgba(201,168,76,0.2);
+        }
+        .btn-primary:hover { background: var(--gold2); transform: translateY(-2px); box-shadow: 0 8px 40px rgba(201,168,76,0.3); }
+        .btn-ghost {
+          display: inline-flex; align-items: center; gap: 8px;
+          border: 1px solid var(--border);
+          color: var(--white2);
+          padding: 14px 28px; border-radius: 10px;
+          font-size: 15px; font-weight: 600;
+          text-decoration: none; letter-spacing: -0.3px;
+          transition: all 0.2s;
+        }
+        .btn-ghost:hover { border-color: var(--gold); color: var(--gold); }
+
+        .hero-stats {
+          display: flex; align-items: center; gap: 40px;
+          padding-top: 12px;
+          border-top: 1px solid var(--border2);
+          width: 100%;
+          justify-content: center;
+        }
+        .stat {
+          display: flex; flex-direction: column; align-items: center; gap: 2px;
+        }
+        .stat-val {
+          font-size: 28px; font-weight: 900; color: var(--white);
+          letter-spacing: -1px;
+          font-family: 'IBM Plex Mono', monospace;
+        }
+        .stat-val .accent { color: var(--gold); }
+        .stat-label { font-size: 12px; color: var(--white3); font-weight: 500; }
+        .stat-sep { width: 1px; height: 40px; background: var(--border2); }
+
+        /* ── Roles section ── */
+        .section {
+          padding: 100px 48px;
+          position: relative; z-index: 1;
+          max-width: 1200px; margin: 0 auto;
+        }
+
+        .section-label {
+          font-size: 11px; font-weight: 700;
+          color: var(--gold); letter-spacing: 2px;
+          text-transform: uppercase; margin-bottom: 14px;
+          font-family: 'IBM Plex Mono', monospace;
+        }
+        .section-title {
+          font-size: clamp(28px, 4vw, 44px);
+          font-weight: 900; color: var(--white);
+          letter-spacing: -1px; line-height: 1.2;
+          margin-bottom: 12px;
+        }
+        .section-sub {
+          font-size: 16px; color: var(--white2); line-height: 1.7;
+          max-width: 540px; margin-bottom: 52px;
+        }
+
+        /* Role cards */
+        .roles-grid {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 16px;
+        }
+        @media (max-width: 768px) { .roles-grid { grid-template-columns: 1fr; } }
+
+        .role-card {
+          background: var(--navy2);
+          border: 1px solid var(--border2);
+          border-radius: 18px;
+          padding: 32px;
+          display: flex; flex-direction: column; gap: 18px;
+          transition: all 0.25s;
+          position: relative; overflow: hidden;
+        }
+        .role-card::before {
+          content: '';
+          position: absolute; top: 0; left: 0; right: 0;
+          height: 2px;
+          background: linear-gradient(90deg, transparent, var(--gold), transparent);
+          opacity: 0;
+          transition: opacity 0.25s;
+        }
+        .role-card:hover { border-color: var(--border); transform: translateY(-3px); box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+        .role-card:hover::before { opacity: 1; }
+
+        .role-icon {
+          width: 52px; height: 52px;
+          background: var(--gold-muted);
+          border: 1px solid var(--border);
+          border-radius: 14px;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 24px;
+        }
+        .role-title { font-size: 19px; font-weight: 800; color: var(--white); letter-spacing: -0.4px; }
+        .role-desc { font-size: 14px; color: var(--white2); line-height: 1.7; }
+        .role-features {
+          display: flex; flex-direction: column; gap: 8px;
+          margin-top: 4px;
+        }
+        .role-feat {
+          display: flex; align-items: center; gap: 10px;
+          font-size: 13px; color: var(--white3);
+        }
+        .role-feat::before {
+          content: '';
+          width: 16px; height: 1px;
+          background: var(--gold); flex-shrink: 0;
+        }
+
+        /* ── Pipeline section ── */
+        .pipeline-wrap {
+          background: var(--navy2);
+          border: 1px solid var(--border2);
+          border-radius: 22px;
+          padding: 48px;
+          position: relative; overflow: hidden;
+        }
+        .pipeline-bg {
+          position: absolute; top: -60px; left: -60px;
+          width: 300px; height: 300px;
+          background: radial-gradient(circle, rgba(201,168,76,0.06) 0%, transparent 70%);
+          pointer-events: none;
+        }
+
+        .pipeline-steps {
+          display: flex; flex-direction: column; gap: 0;
+          position: relative; z-index: 1;
+        }
+        .pipeline-step {
+          display: flex; align-items: flex-start; gap: 24px;
+          padding: 24px 0;
+          border-bottom: 1px solid var(--border2);
+          position: relative;
+        }
+        .pipeline-step:last-child { border-bottom: none; }
+        .step-num {
+          width: 40px; height: 40px; flex-shrink: 0;
+          background: var(--gold-muted);
+          border: 1px solid var(--border);
+          border-radius: 10px;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 13px; font-weight: 700;
+          color: var(--gold);
+          font-family: 'IBM Plex Mono', monospace;
+        }
+        .step-body { flex: 1; }
+        .step-title { font-size: 15px; font-weight: 800; color: var(--white); margin-bottom: 4px; }
+        .step-desc { font-size: 13px; color: var(--white2); line-height: 1.6; }
+        .step-badge {
+          font-size: 11px; font-weight: 700;
+          padding: 3px 10px; border-radius: 99px;
+          border: 1px solid;
+          white-space: nowrap; flex-shrink: 0; align-self: center;
+        }
+        .badge-auto { color: #10b981; border-color: rgba(16,185,129,0.3); background: rgba(16,185,129,0.08); }
+        .badge-manual { color: var(--gold); border-color: var(--border); background: var(--gold-muted); }
+
+        /* ── Footer ── */
+        footer {
+          border-top: 1px solid var(--border2);
+          padding: 40px 48px;
+          display: flex; align-items: center; justify-content: space-between;
+          gap: 16px; flex-wrap: wrap;
+          position: relative; z-index: 1;
+        }
+        .footer-brand {
+          font-size: 16px; font-weight: 800; color: var(--white);
+          letter-spacing: -0.3px;
+        }
+        .footer-brand span { color: var(--gold); }
+        .footer-copy { font-size: 12px; color: var(--white3); }
+
+        /* ── Divider line ── */
+        .full-divider {
+          width: 100%; height: 1px;
+          background: linear-gradient(90deg, transparent, var(--border2), transparent);
+        }
+
+        @media (max-width: 768px) {
+          nav { padding: 0 20px; }
+          .hero { padding: 90px 20px 60px; }
+          .section { padding: 60px 20px; }
+          .pipeline-wrap { padding: 28px; }
+          footer { padding: 28px 20px; }
+          .hero-stats { gap: 24px; }
+          .stat-val { font-size: 22px; }
+        }
+      `}</style>
+
+      {/* Nav */}
+      <nav>
+        <div className="nav-brand">
+          <div className="nav-logo">رو</div>
+          <span className="nav-title">
+            منصة <span>الرواد</span>
+          </span>
+        </div>
+        <div className="nav-links">
+          <a href="#roles" className="nav-link">
+            الأدوار
+          </a>
+          <a href="#pipeline" className="nav-link">
+            مسار القبول
+          </a>
+          <Link href="/login" className="nav-link">
+            تسجيل الدخول
+          </Link>
+          <Link href="/signup" className="nav-cta">
+            ابدأ الآن
+          </Link>
+        </div>
+      </nav>
+
+      {/* Hero */}
+      <section className="hero">
+        <div className="hero-bg" />
+        <div className="hero-grid" />
+        <div className="hero-content">
+          <div className="hero-tag">
+            <div className="hero-tag-dot" />
+            منصة تعليمية متكاملة
           </div>
 
-          <div className="sd-nav-right">
-            <Link href="/student/quizzes" className="sd-nav-link">
-              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" />
-                <rect x="9" y="3" width="6" height="4" rx="1" />
-                <path d="M9 12h6M9 16h4" />
+          <h1 className="hero-title">
+            منصة <span className="gold">الرواد</span>
+            <br />
+            <span className="outline">للتعليم المتميز</span>
+          </h1>
+
+          <p className="hero-sub">
+            نظام إداري شامل يربط المدارس والمعلمين والطلاب في بيئة واحدة متكاملة
+            — من قبول الطلاب حتى تعيينهم في الفصول الدراسية.
+          </p>
+
+          <div className="hero-actions">
+            <Link href="/signup" className="btn-primary">
+              ابدأ رحلتك التعليمية
+              <svg
+                width="16"
+                height="16"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2.5}
+              >
+                <path d="M19 12H5M12 5l-7 7 7 7" />
               </svg>
-              الاختبارات
             </Link>
-            <div className="sd-user-pill">
-              <div className="sd-avatar">{initials}</div>
-              <span className="sd-user-name">{data?.profile.full_name}</span>
-            </div>
-            <button className="sd-logout-btn" onClick={handleLogout} disabled={loggingOut}>
-              {loggingOut ? (
-                <div className="sd-btn-spin" />
-              ) : (
-                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-              )}
-              {loggingOut ? "..." : "خروج"}
-            </button>
+            <Link href="/login" className="btn-ghost">
+              تسجيل الدخول
+            </Link>
           </div>
-        </div>
-      </header>
 
-      <main className="sd-main">
-        {/* Welcome banner */}
-        <div className="sd-welcome">
-          <div className="sd-welcome-text">
-            <div className="sd-welcome-greeting">مرحباً،</div>
-            <h1 className="sd-welcome-name">{data?.profile.full_name} 👋</h1>
-            {data?.class ? (
-              <p className="sd-welcome-class">
-                أنت في فصل <strong>{data.class.name}</strong>
-                {data.class.teacher && <> · معلمك <strong>{data.class.teacher.profile.full_name}</strong></>}
-              </p>
-            ) : (
-              <p className="sd-welcome-class">لم يتم تعيينك في فصل بعد</p>
-            )}
-          </div>
-          <div className="sd-welcome-avatar">{initials}</div>
-        </div>
-
-        {!data?.class ? (
-          <div className="sd-no-class">
-            <div className="sd-no-class-icon">📚</div>
-            <h2>لم يتم تعيينك في فصل بعد</h2>
-            <p>تواصل مع مدير المدرسة لإضافتك إلى فصل دراسي</p>
-          </div>
-        ) : (
-          <div className="sd-grid">
-            {/* Announcements */}
-            <div className="sd-card sd-announcements">
-              <div className="sd-card-header">
-                <div className="sd-card-icon">📢</div>
-                <h2 className="sd-card-title">إعلانات الفصل</h2>
-                <span className="sd-card-count">{announcements.length}</span>
+          <div className="hero-stats">
+            <div className="stat">
+              <div className="stat-val">
+                ٤<span className="accent">+</span>
               </div>
-              <div className="sd-ann-list">
-                {announcements.length === 0 ? (
-                  <div className="sd-empty">
-                    <div className="sd-empty-icon">🔔</div>
-                    <p>لا توجد إعلانات حتى الآن</p>
+              <div className="stat-label">أدوار مستقلة</div>
+            </div>
+            <div className="stat-sep" />
+            <div className="stat">
+              <div className="stat-val">
+                ٥<span className="accent">+</span>
+              </div>
+              <div className="stat-label">مراحل تأهيل</div>
+            </div>
+            <div className="stat-sep" />
+            <div className="stat">
+              <div className="stat-val">
+                ١٠٠<span className="accent">٪</span>
+              </div>
+              <div className="stat-label">آمن ومحمي</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div className="full-divider" />
+
+      {/* Roles */}
+      <section className="section" id="roles">
+        <div className="section-label"> الأدوار</div>
+        <h2 className="section-title">
+          نظام متكامل
+          <br />
+          لكل طرف في العملية التعليمية
+        </h2>
+        <p className="section-sub">
+          كل دور يمتلك لوحة تحكم مستقلة وصلاحيات محددة تضمن الأمان والكفاءة.
+        </p>
+
+        <div className="roles-grid">
+          <div className="role-card">
+            <div className="role-icon">👑</div>
+            <div>
+              <div className="role-title">المالك</div>
+              <div className="role-desc">
+                إدارة كاملة للمنصة — من إنشاء اختبار القبول إلى مراجعة الإجابات
+                وتعيين الطلاب في المدارس.
+              </div>
+            </div>
+            <div className="role-features">
+              <div className="role-feat">إنشاء اختبار القبول وإدارة أسئلته</div>
+              <div className="role-feat">
+                مراجعة إجابات الطلاب وتصحيح المكتوب
+              </div>
+              <div className="role-feat">تعيين الطلاب في المدارس المناسبة</div>
+              <div className="role-feat">مراقبة جميع المدارس والإحصائيات</div>
+            </div>
+          </div>
+
+          <div className="role-card">
+            <div className="role-icon">🏫</div>
+            <div>
+              <div className="role-title">مدير المدرسة</div>
+              <div className="role-desc">
+                إدارة المدرسة بالكامل — من اختبار التصنيف إلى تعيين الطلاب في
+                الفصول وإدارة المعلمين.
+              </div>
+            </div>
+            <div className="role-features">
+              <div className="role-feat">إنشاء اختبار التصنيف المدرسي</div>
+              <div className="role-feat">مراجعة إجابات التصنيف وتقييمها</div>
+              <div className="role-feat">تعيين الطلاب في الفصول الدراسية</div>
+              <div className="role-feat">إدارة المعلمين والفصول</div>
+            </div>
+          </div>
+
+          <div className="role-card">
+            <div className="role-icon">👨‍🏫</div>
+            <div>
+              <div className="role-title">المعلم</div>
+              <div className="role-desc">
+                إدارة الفصول الدراسية وإنشاء الاختبارات ونشر الإعلانات للطلاب
+                بسهولة وسرعة.
+              </div>
+            </div>
+            <div className="role-features">
+              <div className="role-feat">إنشاء اختبارات MCQ وصح/خطأ</div>
+              <div className="role-feat">نشر الإعلانات لفصله</div>
+              <div className="role-feat">متابعة نتائج الطلاب</div>
+              <div className="role-feat">إدارة قائمة طلاب الفصل</div>
+            </div>
+          </div>
+
+          <div className="role-card">
+            <div className="role-icon">🎓</div>
+            <div>
+              <div className="role-title">الطالب</div>
+              <div className="role-desc">
+                رحلة تعليمية واضحة من اختبار القبول حتى الانضمام للفصل وأداء
+                الاختبارات.
+              </div>
+            </div>
+            <div className="role-features">
+              <div className="role-feat">أداء اختبار القبول عند التسجيل</div>
+              <div className="role-feat">أداء اختبار التصنيف بعد القبول</div>
+              <div className="role-feat">متابعة إعلانات الفصل والاختبارات</div>
+              <div className="role-feat">لوحة بيانات شخصية كاملة</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div className="full-divider" />
+
+      {/* Pipeline */}
+      <section className="section" id="pipeline">
+        <div className="section-label"> مسار القبول</div>
+        <h2 className="section-title">
+          خمس مراحل
+          <br />
+          لتأهيل الطالب بدقة
+        </h2>
+        <p className="section-sub">
+          مسار منظم ومؤتمت يضمن وصول كل طالب إلى الفصل المناسب بكفاءة عالية.
+        </p>
+
+        <div className="pipeline-wrap">
+          <div className="pipeline-bg" />
+          <div className="pipeline-steps">
+            {[
+              {
+                num: "٠١",
+                title: "التسجيل في المنصة",
+                desc: "يسجل الطالب حسابه ويدخل بياناته الأساسية.",
+                badge: null,
+              },
+              {
+                num: "٠٢",
+                title: "اختبار القبول",
+                desc: "يؤدي الطالب اختبار القبول الذي يحدده مالك المنصة، ويشمل أسئلة MCQ وصح/خطأ وإجابات مكتوبة.",
+                badge: { label: "تلقائي + يدوي", cls: "badge-auto" },
+              },
+              {
+                num: "٠٣",
+                title: "مراجعة المالك وتعيين المدرسة",
+                desc: "يراجع المالك الإجابات ويصحح المكتوب ويحدد المدرسة المناسبة للطالب بناءً على النتيجة.",
+                badge: { label: "يدوي", cls: "badge-manual" },
+              },
+              {
+                num: "٠٤",
+                title: "اختبار التصنيف المدرسي",
+                desc: "يؤدي الطالب اختبار التصنيف الذي تعده المدرسة لتحديد الفصل الدراسي المناسب.",
+                badge: { label: "تلقائي + يدوي", cls: "badge-auto" },
+              },
+              {
+                num: "٠٥",
+                title: "تعيين الفصل والانطلاق",
+                desc: "يراجع مدير المدرسة النتيجة ويعين الطالب في الفصل المناسب — يبدأ الطالب رحلته التعليمية.",
+                badge: { label: "مكتمل", cls: "badge-manual" },
+              },
+            ].map((step) => (
+              <div key={step.num} className="pipeline-step">
+                <div className="step-num">{step.num}</div>
+                <div className="step-body">
+                  <div className="step-title">{step.title}</div>
+                  <div className="step-desc">{step.desc}</div>
+                </div>
+                {step.badge && (
+                  <div className={`step-badge ${step.badge.cls}`}>
+                    {step.badge.label}
                   </div>
-                ) : (
-                  announcements.map((a, i) => (
-                    <div key={a.id} className="sd-ann-item" style={{ animationDelay: `${i * 60}ms` }}>
-                      <div className="sd-ann-content">{a.content}</div>
-                      <div className="sd-ann-meta">
-                        <span className="sd-ann-teacher">
-                          <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" /><circle cx="12" cy="7" r="4" />
-                          </svg>
-                          {a.teacher.profile.full_name}
-                        </span>
-                        <span className="sd-ann-date">
-                          {new Date(a.created_at).toLocaleDateString("ar-SA", { month: "short", day: "numeric" })}
-                        </span>
-                      </div>
-                    </div>
-                  ))
                 )}
               </div>
-            </div>
-
-            {/* Classmates */}
-            <div className="sd-card sd-classmates">
-              <div className="sd-card-header">
-                <div className="sd-card-icon">👥</div>
-                <h2 className="sd-card-title">زملائي</h2>
-                <span className="sd-card-count">{data.class.students.length}</span>
-              </div>
-              <div className="sd-students-list">
-                {data.class.students.map((s, i) => {
-                  const isMe = s.profile.full_name === data.profile.full_name;
-                  return (
-                    <div key={s.id} className={`sd-student-row ${isMe ? "me" : ""}`} style={{ animationDelay: `${i * 40}ms` }}>
-                      <div className="sd-student-avatar">
-                        {s.profile.full_name.charAt(0)}
-                      </div>
-                      <span className="sd-student-name">{s.profile.full_name}</span>
-                      {isMe && <span className="sd-me-badge">أنت</span>}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+            ))}
           </div>
-        )}
-
-        {/* Quick actions */}
-        <div className="sd-actions">
-          <Link href="/student/quizzes" className="sd-action-card">
-            <div className="sd-action-icon">📝</div>
-            <div className="sd-action-body">
-              <div className="sd-action-title">الاختبارات</div>
-              <div className="sd-action-sub">أداء الاختبارات المتاحة</div>
-            </div>
-            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} style={{ transform: "rotate(180deg)" }}>
-              <path d="M9 18l6-6-6-6" />
-            </svg>
-          </Link>
-          <Link href="/student/classes" className="sd-action-card">
-            <div className="sd-action-icon">📚</div>
-            <div className="sd-action-body">
-              <div className="sd-action-title">فصلي</div>
-              <div className="sd-action-sub">تفاصيل فصلك الدراسي</div>
-            </div>
-            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} style={{ transform: "rotate(180deg)" }}>
-              <path d="M9 18l6-6-6-6" />
-            </svg>
-          </Link>
         </div>
-      </main>
+      </section>
 
-      <style>{styles}</style>
-    </div>
+      <div className="full-divider" />
+
+      {/* CTA */}
+      <section
+        style={{
+          padding: "100px 48px",
+          textAlign: "center",
+          position: "relative",
+          zIndex: 1,
+        }}
+      >
+        <div
+          style={{
+            maxWidth: 600,
+            margin: "0 auto",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 24,
+          }}
+        >
+          <div className="hero-tag">
+            <div className="hero-tag-dot" />
+            انضم اليوم
+          </div>
+          <h2
+            style={{
+              fontSize: "clamp(32px, 5vw, 52px)",
+              fontWeight: 900,
+              color: "var(--white)",
+              letterSpacing: -1.5,
+              lineHeight: 1.15,
+            }}
+          >
+            ابدأ رحلتك مع
+            <br />
+            <span style={{ color: "var(--gold)" }}>منصة الرواد</span>
+          </h2>
+          <p style={{ fontSize: 16, color: "var(--white2)", lineHeight: 1.7 }}>
+            سجّل حسابك الآن وانضم إلى منظومة تعليمية متكاملة تضع الطالب في
+            المكان المناسب.
+          </p>
+          <div className="hero-actions">
+            <Link href="/signup" className="btn-primary">
+              إنشاء حساب طالب
+            </Link>
+            <Link href="/login" className="btn-ghost">
+              لدي حساب بالفعل
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer>
+        <div className="footer-brand">
+          منصة <span>الرواد</span>
+        </div>
+        <div className="footer-copy">
+          جميع الحقوق محفوظة © {new Date().getFullYear()} — منصة الرواد
+          التعليمية
+        </div>
+      </footer>
+    </>
   );
 }
-
-const styles = `
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  .sd-shell {
-    min-height: 100vh; background: #f7f8fa;
-    font-family: Tajawal, sans-serif;
-    display: flex; flex-direction: column;
-  }
-  .sd-shell:not(:has(.sd-nav)) {
-    align-items: center; justify-content: center;
-  }
-  .sd-spinner {
-    width: 32px; height: 32px;
-    border: 3px solid #e5e7eb; border-top-color: #2563eb;
-    border-radius: 50%; animation: spin 0.7s linear infinite;
-    margin: auto;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-
-  /* Nav */
-  .sd-nav {
-    background: white; border-bottom: 1px solid #e5e7eb;
-    position: sticky; top: 0; z-index: 40;
-  }
-  .sd-nav-inner {
-    max-width: 1100px; margin: 0 auto;
-    padding: 0 24px; height: 58px;
-    display: flex; align-items: center; justify-content: space-between; gap: 16px;
-  }
-  .sd-nav-brand { display: flex; align-items: center; gap: 10px; }
-  .sd-nav-logo { font-size: 24px; }
-  .sd-nav-titles { display: flex; flex-direction: column; }
-  .sd-nav-platform { font-size: 13px; font-weight: 800; color: #111827; }
-  .sd-nav-school { font-size: 11px; color: #2563eb; font-weight: 600; }
-  .sd-nav-right { display: flex; align-items: center; gap: 10px; }
-  .sd-nav-link {
-    display: flex; align-items: center; gap: 6px;
-    font-size: 13px; font-weight: 600; color: #6b7280;
-    text-decoration: none; padding: 6px 12px; border-radius: 8px;
-    transition: all 0.15s;
-  }
-  .sd-nav-link:hover { background: #f1f3f6; color: #111827; }
-  .sd-user-pill {
-    display: flex; align-items: center; gap: 8px;
-    background: #f1f3f6; border-radius: 99px; padding: 4px 12px 4px 4px;
-  }
-  .sd-avatar {
-    width: 28px; height: 28px; border-radius: 50%;
-    background: linear-gradient(135deg, #2563eb, #7c3aed);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 11px; font-weight: 800; color: white;
-  }
-  .sd-user-name { font-size: 12.5px; font-weight: 700; color: #111827; max-width: 120px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .sd-logout-btn {
-    display: flex; align-items: center; gap: 6px;
-    background: none; border: 1.5px solid #e5e7eb;
-    color: #6b7280; padding: 6px 12px; border-radius: 8px;
-    font-size: 13px; font-weight: 700; cursor: pointer;
-    transition: all 0.15s; font-family: Tajawal, sans-serif;
-  }
-  .sd-logout-btn:hover:not(:disabled) { border-color: #ef4444; color: #ef4444; }
-  .sd-logout-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-  .sd-btn-spin { width: 14px; height: 14px; border: 2px solid #d1d5db; border-top-color: #6b7280; border-radius: 50%; animation: spin 0.7s linear infinite; }
-
-  /* Main */
-  .sd-main { max-width: 1100px; margin: 0 auto; padding: 28px 24px; width: 100%; display: flex; flex-direction: column; gap: 22px; }
-
-  /* Welcome */
-  .sd-welcome {
-    background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
-    border-radius: 18px; padding: 28px 32px;
-    display: flex; align-items: center; justify-content: space-between; gap: 16px;
-    animation: fadeUp 0.4s ease both;
-  }
-  .sd-welcome-greeting { font-size: 13px; color: rgba(255,255,255,0.75); font-weight: 500; margin-bottom: 4px; }
-  .sd-welcome-name { font-size: 26px; font-weight: 800; color: white; letter-spacing: -0.5px; }
-  .sd-welcome-class { font-size: 13.5px; color: rgba(255,255,255,0.8); margin-top: 6px; }
-  .sd-welcome-class strong { color: white; }
-  .sd-welcome-avatar {
-    width: 64px; height: 64px; border-radius: 50%; flex-shrink: 0;
-    background: rgba(255,255,255,0.2); backdrop-filter: blur(4px);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 22px; font-weight: 800; color: white;
-    border: 2px solid rgba(255,255,255,0.3);
-  }
-
-  /* No class */
-  .sd-no-class {
-    background: white; border: 1px solid #e5e7eb; border-radius: 16px;
-    padding: 48px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 10px;
-  }
-  .sd-no-class-icon { font-size: 40px; }
-  .sd-no-class h2 { font-size: 17px; font-weight: 800; color: #111827; }
-  .sd-no-class p { font-size: 13px; color: #6b7280; }
-
-  /* Grid */
-  .sd-grid { display: grid; grid-template-columns: 1fr 280px; gap: 16px; align-items: start; }
-  @media (max-width: 768px) { .sd-grid { grid-template-columns: 1fr; } }
-
-  /* Cards */
-  .sd-card { background: white; border: 1px solid #e5e7eb; border-radius: 16px; overflow: hidden; animation: fadeUp 0.4s ease both; }
-  .sd-card-header {
-    display: flex; align-items: center; gap: 10px;
-    padding: 16px 20px; border-bottom: 1px solid #f1f3f6;
-  }
-  .sd-card-icon { font-size: 20px; }
-  .sd-card-title { font-size: 15px; font-weight: 800; color: #111827; flex: 1; }
-  .sd-card-count {
-    font-size: 11px; font-weight: 700; color: #6b7280;
-    background: #f1f3f6; padding: 2px 8px; border-radius: 99px;
-  }
-
-  /* Announcements */
-  .sd-ann-list { padding: 12px 16px; display: flex; flex-direction: column; gap: 10px; max-height: 420px; overflow-y: auto; }
-  .sd-ann-item {
-    padding: 14px 16px; border-radius: 12px; border: 1px solid #f1f3f6;
-    background: #fafafa; animation: fadeUp 0.3s ease both;
-    transition: border-color 0.15s;
-  }
-  .sd-ann-item:hover { border-color: #e5e7eb; }
-  .sd-ann-content { font-size: 14px; color: #111827; line-height: 1.6; margin-bottom: 10px; }
-  .sd-ann-meta { display: flex; align-items: center; justify-content: space-between; }
-  .sd-ann-teacher { display: flex; align-items: center; gap: 5px; font-size: 11.5px; color: #6b7280; font-weight: 600; }
-  .sd-ann-date { font-size: 11px; color: #9ca3af; }
-
-  /* Empty */
-  .sd-empty { padding: 36px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 8px; }
-  .sd-empty-icon { font-size: 32px; }
-  .sd-empty p { font-size: 13px; color: #9ca3af; }
-
-  /* Classmates */
-  .sd-students-list { padding: 10px 14px; display: flex; flex-direction: column; gap: 4px; max-height: 360px; overflow-y: auto; }
-  .sd-student-row {
-    display: flex; align-items: center; gap: 10px;
-    padding: 8px 10px; border-radius: 9px;
-    animation: fadeUp 0.25s ease both; transition: background 0.15s;
-  }
-  .sd-student-row:hover { background: #f7f8fa; }
-  .sd-student-row.me { background: #111827; }
-  .sd-student-row.me:hover { background: #1f2937; }
-  .sd-student-avatar {
-    width: 30px; height: 30px; border-radius: 8px; flex-shrink: 0;
-    background: linear-gradient(135deg, #2563eb, #7c3aed);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 12px; font-weight: 800; color: white;
-  }
-  .sd-student-row.me .sd-student-avatar { background: rgba(255,255,255,0.2); }
-  .sd-student-name { flex: 1; font-size: 13px; font-weight: 600; color: #374151; }
-  .sd-student-row.me .sd-student-name { color: white; }
-  .sd-me-badge {
-    font-size: 10px; font-weight: 700; color: #2563eb;
-    background: rgba(37,99,235,0.15); padding: 2px 8px; border-radius: 99px;
-  }
-  .sd-student-row.me .sd-me-badge { color: white; background: rgba(255,255,255,0.2); }
-
-  /* Actions */
-  .sd-actions { display: flex; gap: 12px; flex-wrap: wrap; }
-  .sd-action-card {
-    display: flex; align-items: center; gap: 14px;
-    background: white; border: 1px solid #e5e7eb; border-radius: 14px;
-    padding: 16px 20px; text-decoration: none; color: #111827;
-    flex: 1; min-width: 200px;
-    transition: border-color 0.15s, transform 0.15s;
-    animation: fadeUp 0.4s ease both;
-  }
-  .sd-action-card:hover { border-color: #2563eb; transform: translateY(-1px); }
-  .sd-action-icon { font-size: 26px; }
-  .sd-action-body { flex: 1; }
-  .sd-action-title { font-size: 14px; font-weight: 800; color: #111827; }
-  .sd-action-sub { font-size: 12px; color: #6b7280; margin-top: 2px; }
-
-  @media (max-width: 600px) {
-    .sd-welcome { padding: 20px; }
-    .sd-welcome-name { font-size: 20px; }
-    .sd-welcome-avatar { width: 48px; height: 48px; font-size: 16px; }
-    .sd-user-name { display: none; }
-    .sd-main { padding: 16px; }
-  }
-`;
