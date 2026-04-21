@@ -49,22 +49,22 @@ function SubmissionsContent() {
     <div className="sub-page" dir="rtl">
       <div className="sub-header">
         <div>
-          <h1 className="sub-title">????? ?????? ???????</h1>
-          <p className="sub-sub">??????? ?????? ?????? ???????? ?? ??????</p>
+          <h1 className="sub-title">نتائج اختبار التصنيف</h1>
+          <p className="sub-sub">استعراض إجابات الطلاب وتعيينهم في الفصول</p>
         </div>
         {pending > 0 && (
           <div className="pending-pill">
             <span className="pending-dot" />
-            {pending} ??????? ????????
+            {pending} بانتظار المراجعة
           </div>
         )}
       </div>
 
       <div className="filter-row">
         {[
-          { val: "", label: "????" },
-          { val: "PENDING", label: "??? ????????" },
-          { val: "REVIEWED", label: "??? ????????" },
+          { val: "", label: "الكل" },
+          { val: "PENDING", label: "قيد الانتظار" },
+          { val: "REVIEWED", label: "تمت المراجعة" },
         ].map((f) => (
           <button
             key={f.val}
@@ -79,10 +79,10 @@ function SubmissionsContent() {
       {loading ? (
         <div className="sub-loading">
           <div className="spin" />
-          ???? ???????...
+          جارٍ التحميل...
         </div>
       ) : submissions.length === 0 ? (
-        <div className="sub-empty">?? ???? ?????.</div>
+        <div className="sub-empty">لا توجد نتائج.</div>
       ) : (
         <div className="sub-list">
           {submissions.map((s) => (
@@ -102,7 +102,7 @@ function SubmissionsContent() {
                     day: "numeric",
                     year: "numeric",
                   })}
-                  {" � "}
+                  {" · "}
                   {s.assessment.title}
                 </div>
               </div>
@@ -114,7 +114,7 @@ function SubmissionsContent() {
                         {s.score}/{s.total}
                       </span>
                     )}
-                    <span className="chip reviewed">??? ????????</span>
+                    <span className="chip reviewed">تمت المراجعة</span>
                     {s.assigned_class && (
                       <span className="chip class-chip">
                         {s.assigned_class.name}
@@ -122,7 +122,7 @@ function SubmissionsContent() {
                     )}
                   </>
                 ) : (
-                  <span className="chip pending">??? ????????</span>
+                  <span className="chip pending">قيد الانتظار</span>
                 )}
                 <svg
                   width="13"
@@ -180,7 +180,7 @@ export default function SchoolAdminSubmissionsPage() {
     <Suspense
       fallback={
         <div style={{ padding: 40, color: "var(--text2)" }}>
-          ???? ???????...
+          جارٍ التحميل...
         </div>
       }
     >
