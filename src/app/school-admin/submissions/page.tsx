@@ -1,5 +1,5 @@
-// school-admin/submissions/page.tsx
-"use client";
+﻿"use client";
+export const dynamic = 'force-dynamic';
 
 import { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
@@ -47,21 +47,21 @@ function SubmissionsContent() {
     <div className="sub-page">
       <div className="sub-header">
         <div>
-          <h1 className="sub-title">نتائج اختبار التصنيف</h1>
-          <p className="sub-sub">استعراض إجابات الطلاب وتعيينهم في الفصول</p>
+          <h1 className="sub-title">Ù†ØªØ§Ø¦Ø¬ Ø§Ø®ØªØ¨Ø§Ø± Ø§Ù„ØªØµÙ†ÙŠÙ</h1>
+          <p className="sub-sub">Ø§Ø³ØªØ¹Ø±Ø§Ø¶ Ø¥Ø¬Ø§Ø¨Ø§Øª Ø§Ù„Ø·Ù„Ø§Ø¨ ÙˆØªØ¹ÙŠÙŠÙ†Ù‡Ù… ÙÙŠ Ø§Ù„ÙØµÙˆÙ„</p>
         </div>
         {pending > 0 && (
           <div className="pending-pill">
-            <span className="pending-dot" />{pending} بانتظار المراجعة
+            <span className="pending-dot" />{pending} Ø¨Ø§Ù†ØªØ¸Ø§Ø± Ø§Ù„Ù…Ø±Ø§Ø¬Ø¹Ø©
           </div>
         )}
       </div>
 
       <div className="filter-row">
         {[
-          { val: "", label: "الكل" },
-          { val: "PENDING", label: "قيد الانتظار" },
-          { val: "REVIEWED", label: "تمت المراجعة" },
+          { val: "", label: "Ø§Ù„ÙƒÙ„" },
+          { val: "PENDING", label: "Ù‚ÙŠØ¯ Ø§Ù„Ø§Ù†ØªØ¸Ø§Ø±" },
+          { val: "REVIEWED", label: "ØªÙ…Øª Ø§Ù„Ù…Ø±Ø§Ø¬Ø¹Ø©" },
         ].map((f) => (
           <button
             key={f.val}
@@ -74,9 +74,9 @@ function SubmissionsContent() {
       </div>
 
       {loading ? (
-        <div className="sub-loading"><div className="spin" />جارٍ التحميل...</div>
+        <div className="sub-loading"><div className="spin" />Ø¬Ø§Ø±Ù Ø§Ù„ØªØ­Ù…ÙŠÙ„...</div>
       ) : submissions.length === 0 ? (
-        <div className="sub-empty">لا توجد نتائج.</div>
+        <div className="sub-empty">Ù„Ø§ ØªÙˆØ¬Ø¯ Ù†ØªØ§Ø¦Ø¬.</div>
       ) : (
         <div className="sub-list">
           {submissions.map((s) => (
@@ -86,7 +86,7 @@ function SubmissionsContent() {
                 <div className="sub-name">{s.student.profile.full_name}</div>
                 <div className="sub-meta">
                   {new Date(s.submitted_at).toLocaleDateString("ar-SA", { month: "short", day: "numeric", year: "numeric" })}
-                  {" · "}{s.assessment.title}
+                  {" Â· "}{s.assessment.title}
                 </div>
               </div>
               <div className="sub-right">
@@ -95,11 +95,11 @@ function SubmissionsContent() {
                     {s.score !== null && s.total !== null && (
                       <span className="sub-score">{s.score}/{s.total}</span>
                     )}
-                    <span className="chip reviewed">تمت المراجعة</span>
+                    <span className="chip reviewed">ØªÙ…Øª Ø§Ù„Ù…Ø±Ø§Ø¬Ø¹Ø©</span>
                     {s.assigned_class && <span className="chip class-chip">{s.assigned_class.name}</span>}
                   </>
                 ) : (
-                  <span className="chip pending">قيد الانتظار</span>
+                  <span className="chip pending">Ù‚ÙŠØ¯ Ø§Ù„Ø§Ù†ØªØ¸Ø§Ø±</span>
                 )}
                 <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} style={{ color: "var(--text3)", transform: "rotate(180deg)" }}>
                   <path d="M9 18l6-6-6-6" />
@@ -149,8 +149,10 @@ function SubmissionsContent() {
 
 export default function SchoolAdminSubmissionsPage() {
   return (
-    <Suspense fallback={<div style={{ padding: 40, color: "var(--text2)" }}>جارٍ التحميل...</div>}>
+    <Suspense fallback={<div style={{ padding: 40, color: "var(--text2)" }}>Ø¬Ø§Ø±Ù Ø§Ù„ØªØ­Ù…ÙŠÙ„...</div>}>
       <SubmissionsContent />
     </Suspense>
   );
 }
+
+

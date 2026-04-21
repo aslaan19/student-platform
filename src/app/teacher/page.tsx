@@ -1,4 +1,5 @@
-"use client";
+﻿"use client";
+export const dynamic = 'force-dynamic';
 
 import { useEffect, useState, useCallback } from "react";
 
@@ -91,7 +92,7 @@ export default function TeacherPage() {
         .map((w) => w[0])
         .slice(0, 2)
         .join("")
-    : "م";
+    : "Ù…";
 
   const totalStudents = data?.classes.reduce(
     (acc, c) => acc + c.students.length,
@@ -132,40 +133,40 @@ export default function TeacherPage() {
       }}
     >
       <div className="td-inner">
-        {/* ── Banner ── */}
+        {/* â”€â”€ Banner â”€â”€ */}
         <div className="td-banner">
           <div className="td-banner-left">
-            <p className="td-banner-greeting">مرحباً بك،</p>
-            <h1 className="td-banner-name">{data?.profile.full_name} 👋</h1>
+            <p className="td-banner-greeting">Ù…Ø±Ø­Ø¨Ø§Ù‹ Ø¨ÙƒØŒ</p>
+            <h1 className="td-banner-name">{data?.profile.full_name} ðŸ‘‹</h1>
             <p className="td-banner-sub">
-              أنت تشرف على <strong>{data?.classes.length} فصل</strong> و{" "}
-              <strong>{totalStudents} طالب</strong>
+              Ø£Ù†Øª ØªØ´Ø±Ù Ø¹Ù„Ù‰ <strong>{data?.classes.length} ÙØµÙ„</strong> Ùˆ{" "}
+              <strong>{totalStudents} Ø·Ø§Ù„Ø¨</strong>
             </p>
           </div>
           <div className="td-banner-stats">
             <div className="td-stat">
               <span className="td-stat-val">{data?.classes.length}</span>
-              <span className="td-stat-label">فصل</span>
+              <span className="td-stat-label">ÙØµÙ„</span>
             </div>
             <div className="td-stat-sep" />
             <div className="td-stat">
               <span className="td-stat-val">{totalStudents}</span>
-              <span className="td-stat-label">طالب</span>
+              <span className="td-stat-label">Ø·Ø§Ù„Ø¨</span>
             </div>
           </div>
         </div>
 
         {!data?.classes.length ? (
           <div className="td-empty-state">
-            <div className="td-empty-icon">📋</div>
-            <h2>لم يتم تعيينك في أي فصل بعد</h2>
-            <p>تواصل مع مدير المدرسة لإضافتك إلى فصول دراسية</p>
+            <div className="td-empty-icon">ðŸ“‹</div>
+            <h2>Ù„Ù… ÙŠØªÙ… ØªØ¹ÙŠÙŠÙ†Ùƒ ÙÙŠ Ø£ÙŠ ÙØµÙ„ Ø¨Ø¹Ø¯</h2>
+            <p>ØªÙˆØ§ØµÙ„ Ù…Ø¹ Ù…Ø¯ÙŠØ± Ø§Ù„Ù…Ø¯Ø±Ø³Ø© Ù„Ø¥Ø¶Ø§ÙØªÙƒ Ø¥Ù„Ù‰ ÙØµÙˆÙ„ Ø¯Ø±Ø§Ø³ÙŠØ©</p>
           </div>
         ) : (
           <div className="td-grid">
-            {/* ── Sidebar ── */}
+            {/* â”€â”€ Sidebar â”€â”€ */}
             <aside className="td-sidebar">
-              <p className="td-col-label">الفصول الدراسية</p>
+              <p className="td-col-label">Ø§Ù„ÙØµÙˆÙ„ Ø§Ù„Ø¯Ø±Ø§Ø³ÙŠØ©</p>
               <div className="td-classes-list">
                 {data?.classes.map((cls, i) => (
                   <button
@@ -192,7 +193,7 @@ export default function TeacherPage() {
                     <div className="td-class-info">
                       <span className="td-class-name">{cls.name}</span>
                       <span className="td-class-count">
-                        {cls.students.length} طالب
+                        {cls.students.length} Ø·Ø§Ù„Ø¨
                       </span>
                     </div>
                     {selectedClass?.id === cls.id && (
@@ -205,9 +206,9 @@ export default function TeacherPage() {
               {selectedClass && (
                 <div className="td-students-card">
                   <div className="td-card-header">
-                    <span className="td-card-icon">👥</span>
+                    <span className="td-card-icon">ðŸ‘¥</span>
                     <span className="td-card-title">
-                      طلاب {selectedClass.name}
+                      Ø·Ù„Ø§Ø¨ {selectedClass.name}
                     </span>
                     <span className="td-badge">
                       {selectedClass.students.length}
@@ -215,7 +216,7 @@ export default function TeacherPage() {
                   </div>
                   <div className="td-students-list">
                     {selectedClass.students.length === 0 ? (
-                      <p className="td-no-students">لا يوجد طلاب مسجلون</p>
+                      <p className="td-no-students">Ù„Ø§ ÙŠÙˆØ¬Ø¯ Ø·Ù„Ø§Ø¨ Ù…Ø³Ø¬Ù„ÙˆÙ†</p>
                     ) : (
                       selectedClass.students.map((s, i) => (
                         <div
@@ -237,10 +238,10 @@ export default function TeacherPage() {
               )}
             </aside>
 
-            {/* ── Announcements ── */}
+            {/* â”€â”€ Announcements â”€â”€ */}
             <section className="td-content">
               <p className="td-col-label">
-                إعلانات{" "}
+                Ø¥Ø¹Ù„Ø§Ù†Ø§Øª{" "}
                 {selectedClass && (
                   <span className="td-col-label-accent">
                     {selectedClass.name}
@@ -251,18 +252,18 @@ export default function TeacherPage() {
               <div className="td-compose">
                 <div className="td-compose-head">
                   <div className="td-compose-av">{initials}</div>
-                  <span className="td-compose-label">إعلان جديد للفصل</span>
+                  <span className="td-compose-label">Ø¥Ø¹Ù„Ø§Ù† Ø¬Ø¯ÙŠØ¯ Ù„Ù„ÙØµÙ„</span>
                 </div>
                 <textarea
                   className="td-textarea"
                   rows={3}
-                  placeholder="اكتب إعلاناً، تنبيهاً، أو رسالة للطلاب..."
+                  placeholder="Ø§ÙƒØªØ¨ Ø¥Ø¹Ù„Ø§Ù†Ø§Ù‹ØŒ ØªÙ†Ø¨ÙŠÙ‡Ø§Ù‹ØŒ Ø£Ùˆ Ø±Ø³Ø§Ù„Ø© Ù„Ù„Ø·Ù„Ø§Ø¨..."
                   value={newAnnouncement}
                   onChange={(e) => setNewAnnouncement(e.target.value)}
                 />
                 <div className="td-compose-foot">
                   <span className="td-char-count">
-                    {newAnnouncement.length} حرف
+                    {newAnnouncement.length} Ø­Ø±Ù
                   </span>
                   <button
                     onClick={handlePost}
@@ -272,7 +273,7 @@ export default function TeacherPage() {
                     {posting ? (
                       <>
                         <span className="td-spin" />
-                        جارٍ النشر...
+                        Ø¬Ø§Ø±Ù Ø§Ù„Ù†Ø´Ø±...
                       </>
                     ) : (
                       <>
@@ -289,7 +290,7 @@ export default function TeacherPage() {
                           <line x1="22" y1="2" x2="11" y2="13" />
                           <polygon points="22 2 15 22 11 13 2 9 22 2" />
                         </svg>
-                        نشر الإعلان
+                        Ù†Ø´Ø± Ø§Ù„Ø¥Ø¹Ù„Ø§Ù†
                       </>
                     )}
                   </button>
@@ -303,9 +304,9 @@ export default function TeacherPage() {
                   ))
                 ) : announcements.length === 0 ? (
                   <div className="td-ann-empty">
-                    <span className="td-ann-empty-icon">📣</span>
-                    <p>لا توجد إعلانات منشورة بعد</p>
-                    <span>ابدأ بكتابة إعلانك أعلاه</span>
+                    <span className="td-ann-empty-icon">ðŸ“£</span>
+                    <p>Ù„Ø§ ØªÙˆØ¬Ø¯ Ø¥Ø¹Ù„Ø§Ù†Ø§Øª Ù…Ù†Ø´ÙˆØ±Ø© Ø¨Ø¹Ø¯</p>
+                    <span>Ø§Ø¨Ø¯Ø£ Ø¨ÙƒØªØ§Ø¨Ø© Ø¥Ø¹Ù„Ø§Ù†Ùƒ Ø£Ø¹Ù„Ø§Ù‡</span>
                   </div>
                 ) : (
                   announcements.map((a) => (
@@ -319,7 +320,7 @@ export default function TeacherPage() {
                           <span className="td-ann-author">
                             {a.teacher.profile.full_name}
                           </span>
-                          <span className="td-ann-sep">·</span>
+                          <span className="td-ann-sep">Â·</span>
                           <span className="td-ann-date">
                             {new Date(a.created_at).toLocaleDateString(
                               "ar-SA",
@@ -352,7 +353,7 @@ export default function TeacherPage() {
                           <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
                           <path d="M10 11v6M14 11v6M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2" />
                         </svg>
-                        حذف
+                        Ø­Ø°Ù
                       </button>
                     </div>
                   ))
@@ -595,3 +596,5 @@ const styles = `
     .td-banner-stats { display:none; }
   }
 `;
+
+

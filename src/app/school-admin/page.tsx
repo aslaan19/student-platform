@@ -1,5 +1,5 @@
-// school-admin/page.tsx
-"use client";
+﻿"use client";
+export const dynamic = 'force-dynamic';
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -15,11 +15,11 @@ interface Stats {
 }
 
 const STATUS_LABELS: Record<string, string> = {
-  PENDING_INTAKE: "انتظار اختبار القبول",
-  INTAKE_SUBMITTED: "قيد مراجعة المسؤول",
-  SCHOOL_ASSIGNED: "في انتظار اختبار التصنيف",
-  SCHOOL_PLACEMENT_SUBMITTED: "قيد المراجعة",
-  CLASS_ASSIGNED: "في الفصل",
+  PENDING_INTAKE: "Ø§Ù†ØªØ¸Ø§Ø± Ø§Ø®ØªØ¨Ø§Ø± Ø§Ù„Ù‚Ø¨ÙˆÙ„",
+  INTAKE_SUBMITTED: "Ù‚ÙŠØ¯ Ù…Ø±Ø§Ø¬Ø¹Ø© Ø§Ù„Ù…Ø³Ø¤ÙˆÙ„",
+  SCHOOL_ASSIGNED: "ÙÙŠ Ø§Ù†ØªØ¸Ø§Ø± Ø§Ø®ØªØ¨Ø§Ø± Ø§Ù„ØªØµÙ†ÙŠÙ",
+  SCHOOL_PLACEMENT_SUBMITTED: "Ù‚ÙŠØ¯ Ø§Ù„Ù…Ø±Ø§Ø¬Ø¹Ø©",
+  CLASS_ASSIGNED: "ÙÙŠ Ø§Ù„ÙØµÙ„",
 };
 const STATUS_COLORS: Record<string, string> = {
   PENDING_INTAKE: "#9ca3af",
@@ -44,38 +44,38 @@ export default function SchoolAdminDashboard() {
     return (
       <div className="dash-loading">
         <div className="spin" />
-        جارٍ التحميل...
+        Ø¬Ø§Ø±Ù Ø§Ù„ØªØ­Ù…ÙŠÙ„...
       </div>
     );
 
-  if (!stats) return <div className="dash-loading">فشل تحميل البيانات</div>;
+  if (!stats) return <div className="dash-loading">ÙØ´Ù„ ØªØ­Ù…ÙŠÙ„ Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª</div>;
 
   const statCards = [
     {
-      label: "المعلمون",
+      label: "Ø§Ù„Ù…Ø¹Ù„Ù…ÙˆÙ†",
       value: stats.teacherCount,
-      icon: "👨‍🏫",
+      icon: "ðŸ‘¨â€ðŸ«",
       href: "/school-admin/teachers",
       color: "#2563eb",
     },
     {
-      label: "الطلاب",
+      label: "Ø§Ù„Ø·Ù„Ø§Ø¨",
       value: stats.studentCount,
-      icon: "🎓",
+      icon: "ðŸŽ“",
       href: "/school-admin/students",
       color: "#7c3aed",
     },
     {
-      label: "الفصول",
+      label: "Ø§Ù„ÙØµÙˆÙ„",
       value: stats.classCount,
-      icon: "📚",
+      icon: "ðŸ“š",
       href: "/school-admin/classes",
       color: "#10b981",
     },
     {
-      label: "بانتظار التصنيف",
+      label: "Ø¨Ø§Ù†ØªØ¸Ø§Ø± Ø§Ù„ØªØµÙ†ÙŠÙ",
       value: stats.pendingPlacements,
-      icon: "⏳",
+      icon: "â³",
       href: "/school-admin/submissions",
       color: stats.pendingPlacements > 0 ? "#f59e0b" : "#10b981",
       alert: stats.pendingPlacements > 0,
@@ -87,7 +87,7 @@ export default function SchoolAdminDashboard() {
       <div className="dash-header">
         <div>
           <h1 className="dash-title">{stats.school.name}</h1>
-          <p className="dash-sub">لوحة تحكم مدير المدرسة</p>
+          <p className="dash-sub">Ù„ÙˆØ­Ø© ØªØ­ÙƒÙ… Ù…Ø¯ÙŠØ± Ø§Ù„Ù…Ø¯Ø±Ø³Ø©</p>
         </div>
         {!stats.hasPlacementAssessment && (
           <Link href="/school-admin/placement-assessment" className="dash-cta">
@@ -101,7 +101,7 @@ export default function SchoolAdminDashboard() {
             >
               <path d="M12 5v14M5 12h14" />
             </svg>
-            إنشاء اختبار التصنيف
+            Ø¥Ù†Ø´Ø§Ø¡ Ø§Ø®ØªØ¨Ø§Ø± Ø§Ù„ØªØµÙ†ÙŠÙ
           </Link>
         )}
       </div>
@@ -118,12 +118,12 @@ export default function SchoolAdminDashboard() {
           >
             <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
           </svg>
-          لم يتم إنشاء اختبار التصنيف بعد. لن يتمكن الطلاب من إجراء الاختبار.
+          Ù„Ù… ÙŠØªÙ… Ø¥Ù†Ø´Ø§Ø¡ Ø§Ø®ØªØ¨Ø§Ø± Ø§Ù„ØªØµÙ†ÙŠÙ Ø¨Ø¹Ø¯. Ù„Ù† ÙŠØªÙ…ÙƒÙ† Ø§Ù„Ø·Ù„Ø§Ø¨ Ù…Ù† Ø¥Ø¬Ø±Ø§Ø¡ Ø§Ù„Ø§Ø®ØªØ¨Ø§Ø±.
           <Link
             href="/school-admin/placement-assessment"
             className="alert-link"
           >
-            إنشاء الآن ←
+            Ø¥Ù†Ø´Ø§Ø¡ Ø§Ù„Ø¢Ù† â†
           </Link>
         </div>
       )}
@@ -141,13 +141,13 @@ export default function SchoolAdminDashboard() {
             <circle cx="12" cy="12" r="10" />
             <path d="M12 8v4m0 4h.01" />
           </svg>
-          {stats.pendingPlacements} طالب في انتظار مراجعة اختبار التصنيف وتعيين
-          الفصل.
+          {stats.pendingPlacements} Ø·Ø§Ù„Ø¨ ÙÙŠ Ø§Ù†ØªØ¸Ø§Ø± Ù…Ø±Ø§Ø¬Ø¹Ø© Ø§Ø®ØªØ¨Ø§Ø± Ø§Ù„ØªØµÙ†ÙŠÙ ÙˆØªØ¹ÙŠÙŠÙ†
+          Ø§Ù„ÙØµÙ„.
           <Link
             href="/school-admin/submissions?status=PENDING"
             className="alert-link"
           >
-            مراجعة ←
+            Ù…Ø±Ø§Ø¬Ø¹Ø© â†
           </Link>
         </div>
       )}
@@ -173,7 +173,7 @@ export default function SchoolAdminDashboard() {
 
       {stats.studentsByStatus.length > 0 && (
         <div className="section">
-          <h2 className="section-title">توزيع الطلاب حسب الحالة</h2>
+          <h2 className="section-title">ØªÙˆØ²ÙŠØ¹ Ø§Ù„Ø·Ù„Ø§Ø¨ Ø­Ø³Ø¨ Ø§Ù„Ø­Ø§Ù„Ø©</h2>
           <div className="pipeline">
             {stats.studentsByStatus.map((s) => (
               <div key={s.status} className="pipe-row">
@@ -266,3 +266,6 @@ export default function SchoolAdminDashboard() {
     </div>
   );
 }
+
+
+

@@ -1,5 +1,5 @@
-// student/page.tsx
-"use client";
+﻿"use client";
+export const dynamic = 'force-dynamic';
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -67,7 +67,7 @@ export default function StudentPage() {
         .map((w) => w[0])
         .slice(0, 2)
         .join("")
-    : "ط";
+    : "Ø·";
 
   return (
     <div className="sd-shell" dir="rtl">
@@ -75,9 +75,9 @@ export default function StudentPage() {
       <header className="sd-nav">
         <div className="sd-nav-inner">
           <div className="sd-nav-brand">
-            <div className="sd-nav-logo">🎓</div>
+            <div className="sd-nav-logo">ðŸŽ“</div>
             <div className="sd-nav-titles">
-              <span className="sd-nav-platform">المنصة التعليمية</span>
+              <span className="sd-nav-platform">Ø§Ù„Ù…Ù†ØµØ© Ø§Ù„ØªØ¹Ù„ÙŠÙ…ÙŠØ©</span>
               {data?.school && (
                 <span className="sd-nav-school">{data.school.name}</span>
               )}
@@ -98,7 +98,7 @@ export default function StudentPage() {
                 <rect x="9" y="3" width="6" height="4" rx="1" />
                 <path d="M9 12h6M9 16h4" />
               </svg>
-              الاختبارات
+              Ø§Ù„Ø§Ø®ØªØ¨Ø§Ø±Ø§Øª
             </Link>
             <div className="sd-user-pill">
               <div className="sd-avatar">{initials}</div>
@@ -123,7 +123,7 @@ export default function StudentPage() {
                   <path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                 </svg>
               )}
-              {loggingOut ? "..." : "خروج"}
+              {loggingOut ? "..." : "Ø®Ø±ÙˆØ¬"}
             </button>
           </div>
         </div>
@@ -133,21 +133,21 @@ export default function StudentPage() {
         {/* Welcome banner */}
         <div className="sd-welcome">
           <div className="sd-welcome-text">
-            <div className="sd-welcome-greeting">مرحباً،</div>
-            <h1 className="sd-welcome-name">{data?.profile.full_name} 👋</h1>
+            <div className="sd-welcome-greeting">Ù…Ø±Ø­Ø¨Ø§Ù‹ØŒ</div>
+            <h1 className="sd-welcome-name">{data?.profile.full_name} ðŸ‘‹</h1>
             {data?.class ? (
               <p className="sd-welcome-class">
-                أنت في فصل <strong>{data.class.name}</strong>
+                Ø£Ù†Øª ÙÙŠ ÙØµÙ„ <strong>{data.class.name}</strong>
                 {data.class.teacher && (
                   <>
                     {" "}
-                    · معلمك{" "}
+                    Â· Ù…Ø¹Ù„Ù…Ùƒ{" "}
                     <strong>{data.class.teacher.profile.full_name}</strong>
                   </>
                 )}
               </p>
             ) : (
-              <p className="sd-welcome-class">لم يتم تعيينك في فصل بعد</p>
+              <p className="sd-welcome-class">Ù„Ù… ÙŠØªÙ… ØªØ¹ÙŠÙŠÙ†Ùƒ ÙÙŠ ÙØµÙ„ Ø¨Ø¹Ø¯</p>
             )}
           </div>
           <div className="sd-welcome-avatar">{initials}</div>
@@ -155,24 +155,24 @@ export default function StudentPage() {
 
         {!data?.class ? (
           <div className="sd-no-class">
-            <div className="sd-no-class-icon">📚</div>
-            <h2>لم يتم تعيينك في فصل بعد</h2>
-            <p>تواصل مع مدير المدرسة لإضافتك إلى فصل دراسي</p>
+            <div className="sd-no-class-icon">ðŸ“š</div>
+            <h2>Ù„Ù… ÙŠØªÙ… ØªØ¹ÙŠÙŠÙ†Ùƒ ÙÙŠ ÙØµÙ„ Ø¨Ø¹Ø¯</h2>
+            <p>ØªÙˆØ§ØµÙ„ Ù…Ø¹ Ù…Ø¯ÙŠØ± Ø§Ù„Ù…Ø¯Ø±Ø³Ø© Ù„Ø¥Ø¶Ø§ÙØªÙƒ Ø¥Ù„Ù‰ ÙØµÙ„ Ø¯Ø±Ø§Ø³ÙŠ</p>
           </div>
         ) : (
           <div className="sd-grid">
             {/* Announcements */}
             <div className="sd-card sd-announcements">
               <div className="sd-card-header">
-                <div className="sd-card-icon">📢</div>
-                <h2 className="sd-card-title">إعلانات الفصل</h2>
+                <div className="sd-card-icon">ðŸ“¢</div>
+                <h2 className="sd-card-title">Ø¥Ø¹Ù„Ø§Ù†Ø§Øª Ø§Ù„ÙØµÙ„</h2>
                 <span className="sd-card-count">{announcements.length}</span>
               </div>
               <div className="sd-ann-list">
                 {announcements.length === 0 ? (
                   <div className="sd-empty">
-                    <div className="sd-empty-icon">🔔</div>
-                    <p>لا توجد إعلانات حتى الآن</p>
+                    <div className="sd-empty-icon">ðŸ””</div>
+                    <p>Ù„Ø§ ØªÙˆØ¬Ø¯ Ø¥Ø¹Ù„Ø§Ù†Ø§Øª Ø­ØªÙ‰ Ø§Ù„Ø¢Ù†</p>
                   </div>
                 ) : (
                   announcements.map((a, i) => (
@@ -213,8 +213,8 @@ export default function StudentPage() {
             {/* Classmates */}
             <div className="sd-card sd-classmates">
               <div className="sd-card-header">
-                <div className="sd-card-icon">👥</div>
-                <h2 className="sd-card-title">زملائي</h2>
+                <div className="sd-card-icon">ðŸ‘¥</div>
+                <h2 className="sd-card-title">Ø²Ù…Ù„Ø§Ø¦ÙŠ</h2>
                 <span className="sd-card-count">
                   {data.class.students.length}
                 </span>
@@ -234,7 +234,7 @@ export default function StudentPage() {
                       <span className="sd-student-name">
                         {s.profile.full_name}
                       </span>
-                      {isMe && <span className="sd-me-badge">أنت</span>}
+                      {isMe && <span className="sd-me-badge">Ø£Ù†Øª</span>}
                     </div>
                   );
                 })}
@@ -246,10 +246,10 @@ export default function StudentPage() {
         {/* Quick actions */}
         <div className="sd-actions">
           <Link href="/student/quizzes" className="sd-action-card">
-            <div className="sd-action-icon">📝</div>
+            <div className="sd-action-icon">ðŸ“</div>
             <div className="sd-action-body">
-              <div className="sd-action-title">الاختبارات</div>
-              <div className="sd-action-sub">أداء الاختبارات المتاحة</div>
+              <div className="sd-action-title">Ø§Ù„Ø§Ø®ØªØ¨Ø§Ø±Ø§Øª</div>
+              <div className="sd-action-sub">Ø£Ø¯Ø§Ø¡ Ø§Ù„Ø§Ø®ØªØ¨Ø§Ø±Ø§Øª Ø§Ù„Ù…ØªØ§Ø­Ø©</div>
             </div>
             <svg
               width="14"
@@ -264,10 +264,10 @@ export default function StudentPage() {
             </svg>
           </Link>
           <Link href="/student/classes" className="sd-action-card">
-            <div className="sd-action-icon">📚</div>
+            <div className="sd-action-icon">ðŸ“š</div>
             <div className="sd-action-body">
-              <div className="sd-action-title">فصلي</div>
-              <div className="sd-action-sub">تفاصيل فصلك الدراسي</div>
+              <div className="sd-action-title">ÙØµÙ„ÙŠ</div>
+              <div className="sd-action-sub">ØªÙØ§ØµÙŠÙ„ ÙØµÙ„Ùƒ Ø§Ù„Ø¯Ø±Ø§Ø³ÙŠ</div>
             </div>
             <svg
               width="14"
@@ -469,3 +469,6 @@ const styles = `
     .sd-main { padding: 16px; }
   }
 `;
+
+
+

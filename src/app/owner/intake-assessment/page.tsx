@@ -1,4 +1,5 @@
-"use client";
+﻿"use client";
+export const dynamic = 'force-dynamic';
 
 import { useEffect, useState } from "react";
 
@@ -26,9 +27,9 @@ type QuestionType = "MCQ" | "TF" | "WRITTEN";
 type ModalMode = "add" | "edit";
 
 const TYPE_LABELS: Record<QuestionType, string> = {
-  MCQ: "اختيار من متعدد",
-  TF: "صح أو خطأ",
-  WRITTEN: "إجابة مكتوبة",
+  MCQ: "Ø§Ø®ØªÙŠØ§Ø± Ù…Ù† Ù…ØªØ¹Ø¯Ø¯",
+  TF: "ØµØ­ Ø£Ùˆ Ø®Ø·Ø£",
+  WRITTEN: "Ø¥Ø¬Ø§Ø¨Ø© Ù…ÙƒØªÙˆØ¨Ø©",
 };
 const TYPE_COLORS: Record<QuestionType, string> = {
   MCQ: "#1a4fa0",
@@ -47,7 +48,7 @@ export default function OwnerIntakeAssessmentPage() {
   const [assessment, setAssessment] = useState<Assessment | null>(null);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
-  const [newTitle, setNewTitle] = useState("اختبار القبول في المنصة");
+  const [newTitle, setNewTitle] = useState("Ø§Ø®ØªØ¨Ø§Ø± Ø§Ù„Ù‚Ø¨ÙˆÙ„ ÙÙŠ Ø§Ù„Ù…Ù†ØµØ©");
 
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<ModalMode>("add");
@@ -183,7 +184,7 @@ export default function OwnerIntakeAssessmentPage() {
   }
 
   async function handleDeleteQuestion(qid: string) {
-    if (!confirm("هل أنت متأكد من حذف هذا السؤال؟")) return;
+    if (!confirm("Ù‡Ù„ Ø£Ù†Øª Ù…ØªØ£ÙƒØ¯ Ù…Ù† Ø­Ø°Ù Ù‡Ø°Ø§ Ø§Ù„Ø³Ø¤Ø§Ù„ØŸ")) return;
     setDeleting(qid);
     await fetch(
       `/api/owner/intake-assessment/${assessment?.id}/questions/${qid}`,
@@ -212,7 +213,7 @@ export default function OwnerIntakeAssessmentPage() {
     return (
       <div className="ia-loading">
         <div className="spinner" />
-        <span>جارٍ التحميل…</span>
+        <span>Ø¬Ø§Ø±Ù Ø§Ù„ØªØ­Ù…ÙŠÙ„â€¦</span>
       </div>
     );
 
@@ -220,8 +221,8 @@ export default function OwnerIntakeAssessmentPage() {
     return (
       <div className="ia-page" dir="rtl">
         <div className="ia-page-header">
-          <h1 className="ia-page-title">اختبار القبول</h1>
-          <p className="ia-page-sub">لم يتم إنشاء اختبار القبول بعد.</p>
+          <h1 className="ia-page-title">Ø§Ø®ØªØ¨Ø§Ø± Ø§Ù„Ù‚Ø¨ÙˆÙ„</h1>
+          <p className="ia-page-sub">Ù„Ù… ÙŠØªÙ… Ø¥Ù†Ø´Ø§Ø¡ Ø§Ø®ØªØ¨Ø§Ø± Ø§Ù„Ù‚Ø¨ÙˆÙ„ Ø¨Ø¹Ø¯.</p>
         </div>
         <div className="create-card">
           <div className="create-icon-wrap">
@@ -238,19 +239,19 @@ export default function OwnerIntakeAssessmentPage() {
               <path d="M9 12h6M9 16h4" />
             </svg>
           </div>
-          <h2 className="create-title">إنشاء اختبار القبول</h2>
+          <h2 className="create-title">Ø¥Ù†Ø´Ø§Ø¡ Ø§Ø®ØªØ¨Ø§Ø± Ø§Ù„Ù‚Ø¨ÙˆÙ„</h2>
           <p className="create-desc">
-            سيتم إجراء هذا الاختبار لجميع الطلاب الجدد قبل تعيينهم في المدرسة
-            المناسبة. يدعم الاختبار أسئلة الاختيار من متعدد، وصح أو خطأ،
-            والإجابات المكتوبة.
+            Ø³ÙŠØªÙ… Ø¥Ø¬Ø±Ø§Ø¡ Ù‡Ø°Ø§ Ø§Ù„Ø§Ø®ØªØ¨Ø§Ø± Ù„Ø¬Ù…ÙŠØ¹ Ø§Ù„Ø·Ù„Ø§Ø¨ Ø§Ù„Ø¬Ø¯Ø¯ Ù‚Ø¨Ù„ ØªØ¹ÙŠÙŠÙ†Ù‡Ù… ÙÙŠ Ø§Ù„Ù…Ø¯Ø±Ø³Ø©
+            Ø§Ù„Ù…Ù†Ø§Ø³Ø¨Ø©. ÙŠØ¯Ø¹Ù… Ø§Ù„Ø§Ø®ØªØ¨Ø§Ø± Ø£Ø³Ø¦Ù„Ø© Ø§Ù„Ø§Ø®ØªÙŠØ§Ø± Ù…Ù† Ù…ØªØ¹Ø¯Ø¯ØŒ ÙˆØµØ­ Ø£Ùˆ Ø®Ø·Ø£ØŒ
+            ÙˆØ§Ù„Ø¥Ø¬Ø§Ø¨Ø§Øª Ø§Ù„Ù…ÙƒØªÙˆØ¨Ø©.
           </p>
           <div className="create-input-wrap">
-            <label className="field-label">عنوان الاختبار</label>
+            <label className="field-label">Ø¹Ù†ÙˆØ§Ù† Ø§Ù„Ø§Ø®ØªØ¨Ø§Ø±</label>
             <input
               className="ia-input"
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
-              placeholder="أدخل عنوان الاختبار"
+              placeholder="Ø£Ø¯Ø®Ù„ Ø¹Ù†ÙˆØ§Ù† Ø§Ù„Ø§Ø®ØªØ¨Ø§Ø±"
             />
           </div>
           <button
@@ -258,7 +259,7 @@ export default function OwnerIntakeAssessmentPage() {
             onClick={handleCreate}
             disabled={creating || !newTitle.trim()}
           >
-            {creating ? "جارٍ الإنشاء…" : "إنشاء الاختبار"}
+            {creating ? "Ø¬Ø§Ø±Ù Ø§Ù„Ø¥Ù†Ø´Ø§Ø¡â€¦" : "Ø¥Ù†Ø´Ø§Ø¡ Ø§Ù„Ø§Ø®ØªØ¨Ø§Ø±"}
           </button>
         </div>
         <style>{sharedStyles}</style>
@@ -280,13 +281,13 @@ export default function OwnerIntakeAssessmentPage() {
                 autoFocus
               />
               <button className="ia-btn primary sm" onClick={handleTitleSave}>
-                حفظ
+                Ø­ÙØ¸
               </button>
               <button
                 className="ia-btn ghost sm"
                 onClick={() => setEditingTitle(false)}
               >
-                إلغاء
+                Ø¥Ù„ØºØ§Ø¡
               </button>
             </div>
           ) : (
@@ -298,7 +299,7 @@ export default function OwnerIntakeAssessmentPage() {
                   setTitleDraft(assessment.title);
                   setEditingTitle(true);
                 }}
-                title="تعديل العنوان"
+                title="ØªØ¹Ø¯ÙŠÙ„ Ø§Ù„Ø¹Ù†ÙˆØ§Ù†"
               >
                 <svg
                   width="13"
@@ -319,12 +320,12 @@ export default function OwnerIntakeAssessmentPage() {
               className={`active-badge ${assessment.is_active ? "active" : "inactive"}`}
             >
               <div className="active-dot" />
-              {assessment.is_active ? "نشط" : "غير نشط"}
+              {assessment.is_active ? "Ù†Ø´Ø·" : "ØºÙŠØ± Ù†Ø´Ø·"}
             </div>
             <button className="ia-btn ghost sm" onClick={handleToggleActive}>
-              {assessment.is_active ? "إيقاف التفعيل" : "تفعيل"}
+              {assessment.is_active ? "Ø¥ÙŠÙ‚Ø§Ù Ø§Ù„ØªÙØ¹ÙŠÙ„" : "ØªÙØ¹ÙŠÙ„"}
             </button>
-            <span className="ia-count">{assessment.questions.length} سؤال</span>
+            <span className="ia-count">{assessment.questions.length} Ø³Ø¤Ø§Ù„</span>
           </div>
         </div>
         <button className="add-q-top-btn" onClick={openAdd}>
@@ -338,7 +339,7 @@ export default function OwnerIntakeAssessmentPage() {
           >
             <path d="M12 5v14M5 12h14" />
           </svg>
-          إضافة سؤال
+          Ø¥Ø¶Ø§ÙØ© Ø³Ø¤Ø§Ù„
         </button>
       </div>
 
@@ -359,13 +360,13 @@ export default function OwnerIntakeAssessmentPage() {
               <rect x="9" y="3" width="6" height="4" rx="1" />
               <path d="M9 12h6M9 16h4" />
             </svg>
-            <p>لا توجد أسئلة بعد. أضف سؤالك الأول باستخدام الزر أعلاه.</p>
+            <p>Ù„Ø§ ØªÙˆØ¬Ø¯ Ø£Ø³Ø¦Ù„Ø© Ø¨Ø¹Ø¯. Ø£Ø¶Ù Ø³Ø¤Ø§Ù„Ùƒ Ø§Ù„Ø£ÙˆÙ„ Ø¨Ø§Ø³ØªØ®Ø¯Ø§Ù… Ø§Ù„Ø²Ø± Ø£Ø¹Ù„Ø§Ù‡.</p>
           </div>
         )}
         {assessment.questions.map((q, idx) => (
           <div key={q.id} className="q-card">
             <div className="q-card-header">
-              <div className="q-num">س{idx + 1}</div>
+              <div className="q-num">Ø³{idx + 1}</div>
               <div
                 className="q-type-badge"
                 style={{ "--type-color": TYPE_COLORS[q.type] } as any}
@@ -376,7 +377,7 @@ export default function OwnerIntakeAssessmentPage() {
                 <button
                   className="icon-btn"
                   onClick={() => openEdit(q)}
-                  title="تعديل السؤال"
+                  title="ØªØ¹Ø¯ÙŠÙ„ Ø§Ù„Ø³Ø¤Ø§Ù„"
                 >
                   <svg
                     width="13"
@@ -394,7 +395,7 @@ export default function OwnerIntakeAssessmentPage() {
                   className="icon-btn danger"
                   onClick={() => handleDeleteQuestion(q.id)}
                   disabled={deleting === q.id}
-                  title="حذف السؤال"
+                  title="Ø­Ø°Ù Ø§Ù„Ø³Ø¤Ø§Ù„"
                 >
                   <svg
                     width="13"
@@ -439,9 +440,9 @@ export default function OwnerIntakeAssessmentPage() {
             )}
             {q.type === "TF" && (
               <div className="q-tf-answer">
-                الإجابة الصحيحة:{" "}
+                Ø§Ù„Ø¥Ø¬Ø§Ø¨Ø© Ø§Ù„ØµØ­ÙŠØ­Ø©:{" "}
                 <strong>
-                  {q.correct_answer === "true" ? "صح ✓" : "خطأ ✓"}
+                  {q.correct_answer === "true" ? "ØµØ­ âœ“" : "Ø®Ø·Ø£ âœ“"}
                 </strong>
               </div>
             )}
@@ -457,7 +458,7 @@ export default function OwnerIntakeAssessmentPage() {
                 >
                   <path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" />
                 </svg>
-                يتم تصحيح هذا السؤال يدوياً من قِبل المالك
+                ÙŠØªÙ… ØªØµØ­ÙŠØ­ Ù‡Ø°Ø§ Ø§Ù„Ø³Ø¤Ø§Ù„ ÙŠØ¯ÙˆÙŠØ§Ù‹ Ù…Ù† Ù‚ÙØ¨Ù„ Ø§Ù„Ù…Ø§Ù„Ùƒ
               </div>
             )}
           </div>
@@ -477,7 +478,7 @@ export default function OwnerIntakeAssessmentPage() {
           >
             <path d="M12 5v14M5 12h14" />
           </svg>
-          إضافة سؤال آخر
+          Ø¥Ø¶Ø§ÙØ© Ø³Ø¤Ø§Ù„ Ø¢Ø®Ø±
         </button>
       )}
 
@@ -490,7 +491,7 @@ export default function OwnerIntakeAssessmentPage() {
           <div className="modal">
             <div className="modal-header">
               <h2 className="modal-title">
-                {modalMode === "add" ? "إضافة سؤال جديد" : "تعديل السؤال"}
+                {modalMode === "add" ? "Ø¥Ø¶Ø§ÙØ© Ø³Ø¤Ø§Ù„ Ø¬Ø¯ÙŠØ¯" : "ØªØ¹Ø¯ÙŠÙ„ Ø§Ù„Ø³Ø¤Ø§Ù„"}
               </h2>
               <button className="icon-btn" onClick={() => setModalOpen(false)}>
                 <svg
@@ -507,7 +508,7 @@ export default function OwnerIntakeAssessmentPage() {
             </div>
 
             <div className="modal-field">
-              <label className="field-label">نوع السؤال</label>
+              <label className="field-label">Ù†ÙˆØ¹ Ø§Ù„Ø³Ø¤Ø§Ù„</label>
               <div className="type-selector">
                 {(["MCQ", "TF", "WRITTEN"] as QuestionType[]).map((t) => (
                   <button
@@ -531,10 +532,10 @@ export default function OwnerIntakeAssessmentPage() {
             </div>
 
             <div className="modal-field">
-              <label className="field-label">نص السؤال</label>
+              <label className="field-label">Ù†Øµ Ø§Ù„Ø³Ø¤Ø§Ù„</label>
               <textarea
                 className="ia-textarea"
-                placeholder="اكتب السؤال هنا…"
+                placeholder="Ø§ÙƒØªØ¨ Ø§Ù„Ø³Ø¤Ø§Ù„ Ù‡Ù†Ø§â€¦"
                 value={form.text}
                 onChange={(e) =>
                   setForm((f) => ({ ...f, text: e.target.value }))
@@ -546,8 +547,8 @@ export default function OwnerIntakeAssessmentPage() {
             {form.type === "MCQ" && (
               <div className="modal-field">
                 <label className="field-label">
-                  خيارات الإجابة{" "}
-                  <span className="field-hint">(حدد الإجابة الصحيحة)</span>
+                  Ø®ÙŠØ§Ø±Ø§Øª Ø§Ù„Ø¥Ø¬Ø§Ø¨Ø©{" "}
+                  <span className="field-hint">(Ø­Ø¯Ø¯ Ø§Ù„Ø¥Ø¬Ø§Ø¨Ø© Ø§Ù„ØµØ­ÙŠØ­Ø©)</span>
                 </label>
                 <div className="options-list">
                   {form.options.map((o, i) => (
@@ -558,7 +559,7 @@ export default function OwnerIntakeAssessmentPage() {
                           o.text &&
                           setForm((f) => ({ ...f, correct_answer: o.text }))
                         }
-                        title="تحديد كإجابة صحيحة"
+                        title="ØªØ­Ø¯ÙŠØ¯ ÙƒØ¥Ø¬Ø§Ø¨Ø© ØµØ­ÙŠØ­Ø©"
                         type="button"
                       >
                         {form.correct_answer === o.text && o.text && (
@@ -576,7 +577,7 @@ export default function OwnerIntakeAssessmentPage() {
                       </button>
                       <input
                         className="ia-input option-input"
-                        placeholder={`الخيار ${i + 1}`}
+                        placeholder={`Ø§Ù„Ø®ÙŠØ§Ø± ${i + 1}`}
                         value={o.text}
                         onChange={(e) => updateOption(i, e.target.value)}
                       />
@@ -611,7 +612,7 @@ export default function OwnerIntakeAssessmentPage() {
                       >
                         <path d="M12 5v14M5 12h14" />
                       </svg>
-                      إضافة خيار
+                      Ø¥Ø¶Ø§ÙØ© Ø®ÙŠØ§Ø±
                     </button>
                   )}
                 </div>
@@ -620,11 +621,11 @@ export default function OwnerIntakeAssessmentPage() {
 
             {form.type === "TF" && (
               <div className="modal-field">
-                <label className="field-label">الإجابة الصحيحة</label>
+                <label className="field-label">Ø§Ù„Ø¥Ø¬Ø§Ø¨Ø© Ø§Ù„ØµØ­ÙŠØ­Ø©</label>
                 <div className="tf-selector">
                   {[
-                    { val: "true", label: "✓ صح" },
-                    { val: "false", label: "✗ خطأ" },
+                    { val: "true", label: "âœ“ ØµØ­" },
+                    { val: "false", label: "âœ— Ø®Ø·Ø£" },
                   ].map(({ val, label }) => (
                     <button
                       key={val}
@@ -653,8 +654,8 @@ export default function OwnerIntakeAssessmentPage() {
                   <circle cx="12" cy="12" r="10" />
                   <path d="M12 8v4m0 4h.01" />
                 </svg>
-                الأسئلة المكتوبة يتم تصحيحها يدوياً من قِبلك عند مراجعة
-                الإجابات.
+                Ø§Ù„Ø£Ø³Ø¦Ù„Ø© Ø§Ù„Ù…ÙƒØªÙˆØ¨Ø© ÙŠØªÙ… ØªØµØ­ÙŠØ­Ù‡Ø§ ÙŠØ¯ÙˆÙŠØ§Ù‹ Ù…Ù† Ù‚ÙØ¨Ù„Ùƒ Ø¹Ù†Ø¯ Ù…Ø±Ø§Ø¬Ø¹Ø©
+                Ø§Ù„Ø¥Ø¬Ø§Ø¨Ø§Øª.
               </div>
             )}
 
@@ -663,7 +664,7 @@ export default function OwnerIntakeAssessmentPage() {
                 className="ia-btn ghost"
                 onClick={() => setModalOpen(false)}
               >
-                إلغاء
+                Ø¥Ù„ØºØ§Ø¡
               </button>
               <button
                 className="ia-btn primary"
@@ -671,10 +672,10 @@ export default function OwnerIntakeAssessmentPage() {
                 disabled={saving || !form.text.trim()}
               >
                 {saving
-                  ? "جارٍ الحفظ…"
+                  ? "Ø¬Ø§Ø±Ù Ø§Ù„Ø­ÙØ¸â€¦"
                   : modalMode === "add"
-                    ? "إضافة السؤال"
-                    : "حفظ التعديلات"}
+                    ? "Ø¥Ø¶Ø§ÙØ© Ø§Ù„Ø³Ø¤Ø§Ù„"
+                    : "Ø­ÙØ¸ Ø§Ù„ØªØ¹Ø¯ÙŠÙ„Ø§Øª"}
               </button>
             </div>
           </div>
@@ -893,3 +894,5 @@ const sharedStyles = `
   }
   .modal-actions { display:flex; justify-content:flex-end; gap:8px; padding-top:4px; border-top:1px solid var(--border); }
 `;
+
+

@@ -1,5 +1,5 @@
-// student/intake/page.tsx
-"use client";
+﻿"use client";
+export const dynamic = 'force-dynamic';
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -55,7 +55,7 @@ export default function StudentIntakePage() {
     if (!assessment) return;
     const unanswered = questions.filter((q) => !answers[q.id]);
     if (unanswered.length > 0) {
-      setError(`يوجد ${unanswered.length} سؤال لم تجب عليه بعد`);
+      setError(`ÙŠÙˆØ¬Ø¯ ${unanswered.length} Ø³Ø¤Ø§Ù„ Ù„Ù… ØªØ¬Ø¨ Ø¹Ù„ÙŠÙ‡ Ø¨Ø¹Ø¯`);
       // Jump to first unanswered
       const idx = questions.findIndex((q) => !answers[q.id]);
       setCurrentQ(idx);
@@ -80,7 +80,7 @@ export default function StudentIntakePage() {
       if (d.success) {
         router.push("/student/waiting");
       } else {
-        setError(d.error ?? "حدث خطأ أثناء التقديم");
+        setError(d.error ?? "Ø­Ø¯Ø« Ø®Ø·Ø£ Ø£Ø«Ù†Ø§Ø¡ Ø§Ù„ØªÙ‚Ø¯ÙŠÙ…");
       }
     } finally {
       setSubmitting(false);
@@ -92,9 +92,9 @@ export default function StudentIntakePage() {
   if (noAssessment) return (
     <PageShell>
       <div className="intake-empty">
-        <div className="empty-icon">📋</div>
-        <h2>لا يوجد اختبار متاح حالياً</h2>
-        <p>سيتم إخطارك عندما يكون الاختبار جاهزاً</p>
+        <div className="empty-icon">ðŸ“‹</div>
+        <h2>Ù„Ø§ ÙŠÙˆØ¬Ø¯ Ø§Ø®ØªØ¨Ø§Ø± Ù…ØªØ§Ø­ Ø­Ø§Ù„ÙŠØ§Ù‹</h2>
+        <p>Ø³ÙŠØªÙ… Ø¥Ø®Ø·Ø§Ø±Ùƒ Ø¹Ù†Ø¯Ù…Ø§ ÙŠÙƒÙˆÙ† Ø§Ù„Ø§Ø®ØªØ¨Ø§Ø± Ø¬Ø§Ù‡Ø²Ø§Ù‹</p>
       </div>
     </PageShell>
   );
@@ -107,12 +107,12 @@ export default function StudentIntakePage() {
         {/* Header */}
         <div className="intake-header">
           <div className="intake-title-row">
-            <div className="intake-label">اختبار القبول</div>
+            <div className="intake-label">Ø§Ø®ØªØ¨Ø§Ø± Ø§Ù„Ù‚Ø¨ÙˆÙ„</div>
             <h1 className="intake-title">{assessment.title}</h1>
           </div>
           <div className="intake-meta">
             <span className="q-counter">{currentQ + 1} / {questions.length}</span>
-            <span className="answered-count">{answeredCount} مجاب</span>
+            <span className="answered-count">{answeredCount} Ù…Ø¬Ø§Ø¨</span>
           </div>
         </div>
 
@@ -128,7 +128,7 @@ export default function StudentIntakePage() {
               key={q.id}
               className={`q-dot ${i === currentQ ? "current" : ""} ${answers[q.id] ? "answered" : ""}`}
               onClick={() => setCurrentQ(i)}
-              title={`سؤال ${i + 1}`}
+              title={`Ø³Ø¤Ø§Ù„ ${i + 1}`}
             />
           ))}
         </div>
@@ -137,7 +137,7 @@ export default function StudentIntakePage() {
         {current && (
           <div className="q-card" key={current.id}>
             <div className="q-type-badge">
-              {current.type === "MCQ" ? "اختيار من متعدد" : current.type === "TF" ? "صح أم خطأ" : "إجابة مكتوبة"}
+              {current.type === "MCQ" ? "Ø§Ø®ØªÙŠØ§Ø± Ù…Ù† Ù…ØªØ¹Ø¯Ø¯" : current.type === "TF" ? "ØµØ­ Ø£Ù… Ø®Ø·Ø£" : "Ø¥Ø¬Ø§Ø¨Ø© Ù…ÙƒØªÙˆØ¨Ø©"}
             </div>
             <div className="q-text">{current.text}</div>
 
@@ -165,8 +165,8 @@ export default function StudentIntakePage() {
             {current.type === "TF" && (
               <div className="tf-row">
                 {[
-                  { val: "true", label: "✓ صحيح" },
-                  { val: "false", label: "✗ خطأ" },
+                  { val: "true", label: "âœ“ ØµØ­ÙŠØ­" },
+                  { val: "false", label: "âœ— Ø®Ø·Ø£" },
                 ].map((opt) => (
                   <button
                     key={opt.val}
@@ -183,7 +183,7 @@ export default function StudentIntakePage() {
             {current.type === "WRITTEN" && (
               <textarea
                 className="written-input"
-                placeholder="اكتب إجابتك هنا..."
+                placeholder="Ø§ÙƒØªØ¨ Ø¥Ø¬Ø§Ø¨ØªÙƒ Ù‡Ù†Ø§..."
                 value={answers[current.id] ?? ""}
                 onChange={(e) => setAnswer(current.id, e.target.value)}
                 rows={5}
@@ -200,7 +200,7 @@ export default function StudentIntakePage() {
             onClick={() => setCurrentQ((q) => Math.max(0, q - 1))}
             disabled={currentQ === 0}
           >
-            ← السابق
+            â† Ø§Ù„Ø³Ø§Ø¨Ù‚
           </button>
 
           {currentQ < questions.length - 1 ? (
@@ -208,7 +208,7 @@ export default function StudentIntakePage() {
               className="nav-btn primary"
               onClick={() => setCurrentQ((q) => q + 1)}
             >
-              التالي →
+              Ø§Ù„ØªØ§Ù„ÙŠ â†’
             </button>
           ) : (
             <button
@@ -216,7 +216,7 @@ export default function StudentIntakePage() {
               onClick={handleSubmit}
               disabled={submitting}
             >
-              {submitting ? "جارٍ التقديم..." : "تقديم الاختبار ✓"}
+              {submitting ? "Ø¬Ø§Ø±Ù Ø§Ù„ØªÙ‚Ø¯ÙŠÙ…..." : "ØªÙ‚Ø¯ÙŠÙ… Ø§Ù„Ø§Ø®ØªØ¨Ø§Ø± âœ“"}
             </button>
           )}
         </div>
@@ -255,7 +255,7 @@ function LoadingSpinner() {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 12, color: "#6b7280", fontSize: 14, padding: "80px 0" }}>
       <div style={{ width: 20, height: 20, border: "2px solid #e5e7eb", borderTopColor: "#4f8ef7", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
-      جارٍ تحميل الاختبار...
+      Ø¬Ø§Ø±Ù ØªØ­Ù…ÙŠÙ„ Ø§Ù„Ø§Ø®ØªØ¨Ø§Ø±...
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
@@ -393,3 +393,5 @@ const intakeStyles = `
   .intake-empty h2 { font-size: 18px; font-weight: 700; color: #111827; }
   .intake-empty p { font-size: 14px; color: #6b7280; }
 `;
+
+

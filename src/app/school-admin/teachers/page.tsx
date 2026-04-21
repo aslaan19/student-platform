@@ -1,5 +1,5 @@
-// school-admin/teachers/page.tsx
-"use client";
+﻿"use client";
+export const dynamic = 'force-dynamic';
 
 import { useEffect, useState } from "react";
 
@@ -23,14 +23,14 @@ export default function SchoolAdminTeachersPage() {
   return (
     <div className="te-page">
       <div className="te-header">
-        <h1 className="te-title">المعلمون</h1>
-        <p className="te-sub">{teachers.length} معلم في مدرستك</p>
+        <h1 className="te-title">Ø§Ù„Ù…Ø¹Ù„Ù…ÙˆÙ†</h1>
+        <p className="te-sub">{teachers.length} Ù…Ø¹Ù„Ù… ÙÙŠ Ù…Ø¯Ø±Ø³ØªÙƒ</p>
       </div>
 
       {loading ? (
-        <div className="te-loading"><div className="spin" />جارٍ التحميل...</div>
+        <div className="te-loading"><div className="spin" />Ø¬Ø§Ø±Ù Ø§Ù„ØªØ­Ù…ÙŠÙ„...</div>
       ) : teachers.length === 0 ? (
-        <div className="te-empty">لا يوجد معلمون بعد.</div>
+        <div className="te-empty">Ù„Ø§ ÙŠÙˆØ¬Ø¯ Ù…Ø¹Ù„Ù…ÙˆÙ† Ø¨Ø¹Ø¯.</div>
       ) : (
         <div className="te-list">
           {teachers.map((t) => (
@@ -40,11 +40,11 @@ export default function SchoolAdminTeachersPage() {
                 <div className="te-name">{t.profile.full_name}</div>
                 <div className="te-classes">
                   {t.classes.length > 0
-                    ? t.classes.map((c) => c.name).join("، ")
-                    : "لا فصول معينة"}
+                    ? t.classes.map((c) => c.name).join("ØŒ ")
+                    : "Ù„Ø§ ÙØµÙˆÙ„ Ù…Ø¹ÙŠÙ†Ø©"}
                 </div>
               </div>
-              <div className="te-count">{t.classes.length} فصل</div>
+              <div className="te-count">{t.classes.length} ÙØµÙ„</div>
             </div>
           ))}
         </div>
@@ -70,3 +70,5 @@ export default function SchoolAdminTeachersPage() {
     </div>
   );
 }
+
+

@@ -1,4 +1,5 @@
-"use client";
+﻿"use client";
+export const dynamic = 'force-dynamic';
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -14,11 +15,11 @@ interface Stats {
 }
 
 const STATUS_LABELS: Record<string, string> = {
-  PENDING_INTAKE: "في انتظار الاختبار",
-  INTAKE_SUBMITTED: "تم تقديم الاختبار",
-  SCHOOL_ASSIGNED: "تم تعيين المدرسة",
-  SCHOOL_PLACEMENT_SUBMITTED: "تم تقديم التوزيع",
-  CLASS_ASSIGNED: "تم تعيين الفصل",
+  PENDING_INTAKE: "ÙÙŠ Ø§Ù†ØªØ¸Ø§Ø± Ø§Ù„Ø§Ø®ØªØ¨Ø§Ø±",
+  INTAKE_SUBMITTED: "ØªÙ… ØªÙ‚Ø¯ÙŠÙ… Ø§Ù„Ø§Ø®ØªØ¨Ø§Ø±",
+  SCHOOL_ASSIGNED: "ØªÙ… ØªØ¹ÙŠÙŠÙ† Ø§Ù„Ù…Ø¯Ø±Ø³Ø©",
+  SCHOOL_PLACEMENT_SUBMITTED: "ØªÙ… ØªÙ‚Ø¯ÙŠÙ… Ø§Ù„ØªÙˆØ²ÙŠØ¹",
+  CLASS_ASSIGNED: "ØªÙ… ØªØ¹ÙŠÙŠÙ† Ø§Ù„ÙØµÙ„",
 };
 
 const STATUS_COLORS: Record<string, string> = {
@@ -44,46 +45,46 @@ export default function OwnerDashboardPage() {
     return (
       <div className="dash-loading">
         <div className="spinner" />
-        <span>جارٍ تحميل البيانات…</span>
+        <span>Ø¬Ø§Ø±Ù ØªØ­Ù…ÙŠÙ„ Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øªâ€¦</span>
       </div>
     );
   }
 
-  if (!stats) return <div className="dash-error">تعذّر تحميل البيانات.</div>;
+  if (!stats) return <div className="dash-error">ØªØ¹Ø°Ù‘Ø± ØªØ­Ù…ÙŠÙ„ Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª.</div>;
 
   const statCards = [
     {
-      label: "المدارس",
+      label: "Ø§Ù„Ù…Ø¯Ø§Ø±Ø³",
       value: stats.schoolCount,
-      icon: "🏫",
+      icon: "ðŸ«",
       href: "/owner/schools",
       accent: "#1a4fa0",
-      desc: "مدرسة مسجّلة",
+      desc: "Ù…Ø¯Ø±Ø³Ø© Ù…Ø³Ø¬Ù‘Ù„Ø©",
     },
     {
-      label: "المعلمون",
+      label: "Ø§Ù„Ù…Ø¹Ù„Ù…ÙˆÙ†",
       value: stats.teacherCount,
-      icon: "👨‍🏫",
+      icon: "ðŸ‘¨â€ðŸ«",
       href: "/owner/schools",
       accent: "#0d7c4f",
-      desc: "معلم نشط",
+      desc: "Ù…Ø¹Ù„Ù… Ù†Ø´Ø·",
     },
     {
-      label: "الطلاب",
+      label: "Ø§Ù„Ø·Ù„Ø§Ø¨",
       value: stats.studentCount,
-      icon: "🎓",
+      icon: "ðŸŽ“",
       href: "/owner/submissions",
       accent: "#6d28d9",
-      desc: "طالب مسجّل",
+      desc: "Ø·Ø§Ù„Ø¨ Ù…Ø³Ø¬Ù‘Ù„",
     },
     {
-      label: "بانتظار المراجعة",
+      label: "Ø¨Ø§Ù†ØªØ¸Ø§Ø± Ø§Ù„Ù…Ø±Ø§Ø¬Ø¹Ø©",
       value: stats.pendingSubmissions,
-      icon: "⏳",
+      icon: "â³",
       href: "/owner/submissions?status=PENDING",
       accent: stats.pendingSubmissions > 0 ? "#b45309" : "#0d7c4f",
       alert: stats.pendingSubmissions > 0,
-      desc: "إجابة معلّقة",
+      desc: "Ø¥Ø¬Ø§Ø¨Ø© Ù…Ø¹Ù„Ù‘Ù‚Ø©",
     },
   ];
 
@@ -92,8 +93,8 @@ export default function OwnerDashboardPage() {
       {/* Page header */}
       <div className="dash-header">
         <div className="dash-header-text">
-          <h1 className="dash-title">لوحة التحكم</h1>
-          <p className="dash-subtitle">نظرة عامة شاملة على المنصة التعليمية</p>
+          <h1 className="dash-title">Ù„ÙˆØ­Ø© Ø§Ù„ØªØ­ÙƒÙ…</h1>
+          <p className="dash-subtitle">Ù†Ø¸Ø±Ø© Ø¹Ø§Ù…Ø© Ø´Ø§Ù…Ù„Ø© Ø¹Ù„Ù‰ Ø§Ù„Ù…Ù†ØµØ© Ø§Ù„ØªØ¹Ù„ÙŠÙ…ÙŠØ©</p>
         </div>
         {!stats.hasIntakeAssessment && (
           <Link href="/owner/intake-assessment" className="dash-cta-btn">
@@ -107,7 +108,7 @@ export default function OwnerDashboardPage() {
             >
               <path d="M12 5v14M5 12h14" />
             </svg>
-            إنشاء اختبار القبول
+            Ø¥Ù†Ø´Ø§Ø¡ Ø§Ø®ØªØ¨Ø§Ø± Ø§Ù„Ù‚Ø¨ÙˆÙ„
           </Link>
         )}
       </div>
@@ -128,13 +129,13 @@ export default function OwnerDashboardPage() {
             </svg>
           </div>
           <div className="alert-body">
-            <span className="alert-title">لم يتم إنشاء اختبار القبول بعد</span>
+            <span className="alert-title">Ù„Ù… ÙŠØªÙ… Ø¥Ù†Ø´Ø§Ø¡ Ø§Ø®ØªØ¨Ø§Ø± Ø§Ù„Ù‚Ø¨ÙˆÙ„ Ø¨Ø¹Ø¯</span>
             <span className="alert-desc">
-              لن يتمكن الطلاب الجدد من إجراء الاختبار الأوّلي.
+              Ù„Ù† ÙŠØªÙ…ÙƒÙ† Ø§Ù„Ø·Ù„Ø§Ø¨ Ø§Ù„Ø¬Ø¯Ø¯ Ù…Ù† Ø¥Ø¬Ø±Ø§Ø¡ Ø§Ù„Ø§Ø®ØªØ¨Ø§Ø± Ø§Ù„Ø£ÙˆÙ‘Ù„ÙŠ.
             </span>
           </div>
           <Link href="/owner/intake-assessment" className="alert-action">
-            إنشاء الآن ←
+            Ø¥Ù†Ø´Ø§Ø¡ Ø§Ù„Ø¢Ù† â†
           </Link>
         </div>
       )}
@@ -155,18 +156,18 @@ export default function OwnerDashboardPage() {
             </svg>
           </div>
           <div className="alert-body">
-            <span className="alert-title">إجابات تنتظر المراجعة</span>
+            <span className="alert-title">Ø¥Ø¬Ø§Ø¨Ø§Øª ØªÙ†ØªØ¸Ø± Ø§Ù„Ù…Ø±Ø§Ø¬Ø¹Ø©</span>
             <span className="alert-desc">
-              يوجد {stats.pendingSubmissions} إجابة{" "}
-              {stats.pendingSubmissions > 1 ? "معلّقة" : "معلّقة"} تحتاج إلى
-              اتخاذ قرار.
+              ÙŠÙˆØ¬Ø¯ {stats.pendingSubmissions} Ø¥Ø¬Ø§Ø¨Ø©{" "}
+              {stats.pendingSubmissions > 1 ? "Ù…Ø¹Ù„Ù‘Ù‚Ø©" : "Ù…Ø¹Ù„Ù‘Ù‚Ø©"} ØªØ­ØªØ§Ø¬ Ø¥Ù„Ù‰
+              Ø§ØªØ®Ø§Ø° Ù‚Ø±Ø§Ø±.
             </span>
           </div>
           <Link
             href="/owner/submissions?status=PENDING"
             className="alert-action"
           >
-            مراجعة الآن ←
+            Ù…Ø±Ø§Ø¬Ø¹Ø© Ø§Ù„Ø¢Ù† â†
           </Link>
         </div>
       )}
@@ -206,14 +207,14 @@ export default function OwnerDashboardPage() {
         {/* Pipeline */}
         <div className="section-card">
           <div className="section-card-header">
-            <h2 className="section-card-title">مسار تأهيل الطلاب</h2>
+            <h2 className="section-card-title">Ù…Ø³Ø§Ø± ØªØ£Ù‡ÙŠÙ„ Ø§Ù„Ø·Ù„Ø§Ø¨</h2>
             <span className="section-card-badge">
-              {stats.studentCount} طالب
+              {stats.studentCount} Ø·Ø§Ù„Ø¨
             </span>
           </div>
           <div className="pipeline">
             {stats.studentsByStatus.length === 0 ? (
-              <div className="empty-state">لا يوجد طلاب مسجّلون بعد.</div>
+              <div className="empty-state">Ù„Ø§ ÙŠÙˆØ¬Ø¯ Ø·Ù„Ø§Ø¨ Ù…Ø³Ø¬Ù‘Ù„ÙˆÙ† Ø¨Ø¹Ø¯.</div>
             ) : (
               stats.studentsByStatus.map((s) => {
                 const pct = stats.studentCount
@@ -252,17 +253,17 @@ export default function OwnerDashboardPage() {
         {/* Quick actions */}
         <div className="section-card">
           <div className="section-card-header">
-            <h2 className="section-card-title">الوصول السريع</h2>
+            <h2 className="section-card-title">Ø§Ù„ÙˆØµÙˆÙ„ Ø§Ù„Ø³Ø±ÙŠØ¹</h2>
           </div>
           <div className="quick-links">
             <Link href="/owner/intake-assessment" className="quick-link">
-              <div className="ql-icon-wrap">📋</div>
+              <div className="ql-icon-wrap">ðŸ“‹</div>
               <div className="ql-body">
-                <div className="ql-title">اختبار القبول</div>
+                <div className="ql-title">Ø§Ø®ØªØ¨Ø§Ø± Ø§Ù„Ù‚Ø¨ÙˆÙ„</div>
                 <div className="ql-sub">
                   {stats.hasIntakeAssessment
-                    ? "عرض وتعديل الاختبار"
-                    : "إنشاء اختبار جديد"}
+                    ? "Ø¹Ø±Ø¶ ÙˆØªØ¹Ø¯ÙŠÙ„ Ø§Ù„Ø§Ø®ØªØ¨Ø§Ø±"
+                    : "Ø¥Ù†Ø´Ø§Ø¡ Ø§Ø®ØªØ¨Ø§Ø± Ø¬Ø¯ÙŠØ¯"}
                 </div>
               </div>
               <svg
@@ -278,12 +279,12 @@ export default function OwnerDashboardPage() {
               </svg>
             </Link>
             <Link href="/owner/submissions" className="quick-link">
-              <div className="ql-icon-wrap">📝</div>
+              <div className="ql-icon-wrap">ðŸ“</div>
               <div className="ql-body">
-                <div className="ql-title">الإجابات المُقدَّمة</div>
+                <div className="ql-title">Ø§Ù„Ø¥Ø¬Ø§Ø¨Ø§Øª Ø§Ù„Ù…ÙÙ‚Ø¯ÙŽÙ‘Ù…Ø©</div>
                 <div className="ql-sub">
-                  {stats.totalSubmissions} إجمالي · {stats.pendingSubmissions}{" "}
-                  معلّق
+                  {stats.totalSubmissions} Ø¥Ø¬Ù…Ø§Ù„ÙŠ Â· {stats.pendingSubmissions}{" "}
+                  Ù…Ø¹Ù„Ù‘Ù‚
                 </div>
               </div>
               <svg
@@ -299,11 +300,11 @@ export default function OwnerDashboardPage() {
               </svg>
             </Link>
             <Link href="/owner/schools" className="quick-link">
-              <div className="ql-icon-wrap">🏫</div>
+              <div className="ql-icon-wrap">ðŸ«</div>
               <div className="ql-body">
-                <div className="ql-title">المدارس المسجّلة</div>
+                <div className="ql-title">Ø§Ù„Ù…Ø¯Ø§Ø±Ø³ Ø§Ù„Ù…Ø³Ø¬Ù‘Ù„Ø©</div>
                 <div className="ql-sub">
-                  {stats.schoolCount} مدارس في النظام
+                  {stats.schoolCount} Ù…Ø¯Ø§Ø±Ø³ ÙÙŠ Ø§Ù„Ù†Ø¸Ø§Ù…
                 </div>
               </div>
               <svg
@@ -490,3 +491,5 @@ export default function OwnerDashboardPage() {
     </div>
   );
 }
+
+

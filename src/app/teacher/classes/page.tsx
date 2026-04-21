@@ -1,4 +1,5 @@
-"use client";
+﻿"use client";
+export const dynamic = 'force-dynamic';
 
 import { useEffect, useState } from "react";
 
@@ -67,16 +68,16 @@ export default function TeacherClassesPage() {
   if (!data)
     return (
       <div className="p-6" dir="rtl">
-        جارٍ التحميل...
+        Ø¬Ø§Ø±Ù Ø§Ù„ØªØ­Ù…ÙŠÙ„...
       </div>
     );
 
   return (
     <div className="space-y-6 p-6" dir="rtl">
-      <h1 className="text-2xl font-bold">فصولي</h1>
+      <h1 className="text-2xl font-bold">ÙØµÙˆÙ„ÙŠ</h1>
 
       {data.classes.length === 0 ? (
-        <p className="text-gray-500">لم يتم تعيينك في أي فصل بعد.</p>
+        <p className="text-gray-500">Ù„Ù… ÙŠØªÙ… ØªØ¹ÙŠÙŠÙ†Ùƒ ÙÙŠ Ø£ÙŠ ÙØµÙ„ Ø¨Ø¹Ø¯.</p>
       ) : (
         <>
           {/* Class Tabs */}
@@ -97,11 +98,11 @@ export default function TeacherClassesPage() {
               {/* Students */}
               <div className="rounded-xl border p-4 space-y-3">
                 <h2 className="font-semibold">
-                  الطلاب ({selectedClass.students.length})
+                  Ø§Ù„Ø·Ù„Ø§Ø¨ ({selectedClass.students.length})
                 </h2>
                 {selectedClass.students.length === 0 ? (
                   <p className="text-sm text-gray-400">
-                    لا يوجد طلاب في هذا الفصل
+                    Ù„Ø§ ÙŠÙˆØ¬Ø¯ Ø·Ù„Ø§Ø¨ ÙÙŠ Ù‡Ø°Ø§ Ø§Ù„ÙØµÙ„
                   </p>
                 ) : (
                   selectedClass.students.map((s) => (
@@ -117,12 +118,12 @@ export default function TeacherClassesPage() {
 
               {/* Announcements */}
               <div className="rounded-xl border p-4 space-y-3">
-                <h2 className="font-semibold">الإعلانات</h2>
+                <h2 className="font-semibold">Ø§Ù„Ø¥Ø¹Ù„Ø§Ù†Ø§Øª</h2>
 
                 <div className="flex gap-2">
                   <input
                     className="flex-1 border rounded px-3 py-2 text-sm"
-                    placeholder="اكتب إعلاناً..."
+                    placeholder="Ø§ÙƒØªØ¨ Ø¥Ø¹Ù„Ø§Ù†Ø§Ù‹..."
                     value={newAnnouncement}
                     onChange={(e) => setNewAnnouncement(e.target.value)}
                   />
@@ -131,13 +132,13 @@ export default function TeacherClassesPage() {
                     disabled={posting}
                     className="bg-black text-white px-3 py-2 rounded text-sm disabled:opacity-50"
                   >
-                    نشر
+                    Ù†Ø´Ø±
                   </button>
                 </div>
 
                 <div className="space-y-2">
                   {announcements.length === 0 ? (
-                    <p className="text-sm text-gray-400">لا توجد إعلانات</p>
+                    <p className="text-sm text-gray-400">Ù„Ø§ ØªÙˆØ¬Ø¯ Ø¥Ø¹Ù„Ø§Ù†Ø§Øª</p>
                   ) : (
                     announcements.map((a) => (
                       <div
@@ -153,7 +154,7 @@ export default function TeacherClassesPage() {
                             onClick={() => handleDeleteAnnouncement(a.id)}
                             className="text-xs text-red-500"
                           >
-                            حذف
+                            Ø­Ø°Ù
                           </button>
                         </div>
                       </div>
@@ -168,3 +169,5 @@ export default function TeacherClassesPage() {
     </div>
   );
 }
+
+

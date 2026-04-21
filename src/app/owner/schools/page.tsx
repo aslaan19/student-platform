@@ -1,4 +1,5 @@
-"use client";
+﻿"use client";
+export const dynamic = 'force-dynamic';
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -35,14 +36,14 @@ export default function OwnerSchoolsPage() {
     <div className="schools-page" dir="rtl">
       <div className="page-header">
         <div>
-          <h1 className="page-title">المدارس المسجّلة</h1>
-          <p className="page-sub">نظرة عامة على جميع المدارس في المنصة</p>
+          <h1 className="page-title">Ø§Ù„Ù…Ø¯Ø§Ø±Ø³ Ø§Ù„Ù…Ø³Ø¬Ù‘Ù„Ø©</h1>
+          <p className="page-sub">Ù†Ø¸Ø±Ø© Ø¹Ø§Ù…Ø© Ø¹Ù„Ù‰ Ø¬Ù…ÙŠØ¹ Ø§Ù„Ù…Ø¯Ø§Ø±Ø³ ÙÙŠ Ø§Ù„Ù…Ù†ØµØ©</p>
         </div>
         <div className="readonly-badge">
           <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
           </svg>
-          للعرض فقط
+          Ù„Ù„Ø¹Ø±Ø¶ ÙÙ‚Ø·
         </div>
       </div>
 
@@ -51,17 +52,17 @@ export default function OwnerSchoolsPage() {
         <div className="summary-strip">
           <div className="summary-item">
             <span className="summary-num">{schools.length}</span>
-            <span className="summary-lab">مدرسة</span>
+            <span className="summary-lab">Ù…Ø¯Ø±Ø³Ø©</span>
           </div>
           <div className="summary-divider" />
           <div className="summary-item">
             <span className="summary-num">{totalTeachers}</span>
-            <span className="summary-lab">معلم</span>
+            <span className="summary-lab">Ù…Ø¹Ù„Ù…</span>
           </div>
           <div className="summary-divider" />
           <div className="summary-item">
             <span className="summary-num">{totalStudents}</span>
-            <span className="summary-lab">طالب</span>
+            <span className="summary-lab">Ø·Ø§Ù„Ø¨</span>
           </div>
         </div>
       )}
@@ -74,7 +75,7 @@ export default function OwnerSchoolsPage() {
           </svg>
           <input
             className="search-input"
-            placeholder="ابحث عن مدرسة أو مدير…"
+            placeholder="Ø§Ø¨Ø­Ø« Ø¹Ù† Ù…Ø¯Ø±Ø³Ø© Ø£Ùˆ Ù…Ø¯ÙŠØ±â€¦"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -84,18 +85,18 @@ export default function OwnerSchoolsPage() {
       {loading ? (
         <div className="loading-row">
           <div className="spinner" />
-          جارٍ تحميل المدارس…
+          Ø¬Ø§Ø±Ù ØªØ­Ù…ÙŠÙ„ Ø§Ù„Ù…Ø¯Ø§Ø±Ø³â€¦
         </div>
       ) : filtered.length === 0 ? (
         <div className="empty">
-          {search ? "لا توجد نتائج مطابقة لبحثك." : "لا توجد مدارس مسجّلة."}
+          {search ? "Ù„Ø§ ØªÙˆØ¬Ø¯ Ù†ØªØ§Ø¦Ø¬ Ù…Ø·Ø§Ø¨Ù‚Ø© Ù„Ø¨Ø­Ø«Ùƒ." : "Ù„Ø§ ØªÙˆØ¬Ø¯ Ù…Ø¯Ø§Ø±Ø³ Ù…Ø³Ø¬Ù‘Ù„Ø©."}
         </div>
       ) : (
         <div className="schools-grid">
           {filtered.map((school) => (
             <Link key={school.id} href={`/owner/schools/${school.id}`} className="school-card">
               <div className="school-card-top">
-                <div className="school-icon-wrap">🏫</div>
+                <div className="school-icon-wrap">ðŸ«</div>
                 <div className="school-card-meta">
                   {new Date(school.created_at).toLocaleDateString("ar-SA", { year: "numeric", month: "short" })}
                 </div>
@@ -108,28 +109,28 @@ export default function OwnerSchoolsPage() {
                 </svg>
                 {school.admin
                   ? <span className="admin-name">{school.admin.full_name}</span>
-                  : <span className="no-admin">لم يُعيَّن مدير</span>
+                  : <span className="no-admin">Ù„Ù… ÙŠÙØ¹ÙŠÙŽÙ‘Ù† Ù…Ø¯ÙŠØ±</span>
                 }
               </div>
               <div className="school-divider" />
               <div className="school-stats">
                 <div className="s-stat">
                   <span className="s-val">{school._count.teachers}</span>
-                  <span className="s-lab">معلم</span>
+                  <span className="s-lab">Ù…Ø¹Ù„Ù…</span>
                 </div>
                 <div className="s-divider" />
                 <div className="s-stat">
                   <span className="s-val">{school._count.students}</span>
-                  <span className="s-lab">طالب</span>
+                  <span className="s-lab">Ø·Ø§Ù„Ø¨</span>
                 </div>
                 <div className="s-divider" />
                 <div className="s-stat">
                   <span className="s-val">{school._count.classes}</span>
-                  <span className="s-lab">فصل</span>
+                  <span className="s-lab">ÙØµÙ„</span>
                 </div>
               </div>
               <div className="view-row">
-                <span>عرض التفاصيل</span>
+                <span>Ø¹Ø±Ø¶ Ø§Ù„ØªÙØ§ØµÙŠÙ„</span>
                 <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path d="M15 18l-6-6 6-6"/>
                 </svg>
@@ -225,3 +226,4 @@ export default function OwnerSchoolsPage() {
     </div>
   );
 }
+

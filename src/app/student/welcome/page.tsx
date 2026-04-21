@@ -1,5 +1,5 @@
-// student/page.tsx  (or student/welcome/page.tsx for CLASS_ASSIGNED state)
-"use client";
+﻿"use client";
+export const dynamic = 'force-dynamic';
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -63,16 +63,16 @@ export default function StudentWelcomePage() {
       >
         {/* Header celebration */}
         <div className="top-banner">
-          <div className="stars">⭐ ⭐ ⭐</div>
-          <div className="banner-title">تم تعيينك في فصلك!</div>
-          <div className="banner-sub">أهلاً وسهلاً، {student?.profile.full_name}</div>
+          <div className="stars">â­ â­ â­</div>
+          <div className="banner-title">ØªÙ… ØªØ¹ÙŠÙŠÙ†Ùƒ ÙÙŠ ÙØµÙ„Ùƒ!</div>
+          <div className="banner-sub">Ø£Ù‡Ù„Ø§Ù‹ ÙˆØ³Ù‡Ù„Ø§Ù‹ØŒ {student?.profile.full_name}</div>
         </div>
 
         {/* Class card - main highlight */}
         <div className="class-highlight">
-          <div className="class-big-icon">📚</div>
-          <div className="class-big-label">فصلك الدراسي</div>
-          <div className="class-big-name">{student?.class?.name ?? "—"}</div>
+          <div className="class-big-icon">ðŸ“š</div>
+          <div className="class-big-label">ÙØµÙ„Ùƒ Ø§Ù„Ø¯Ø±Ø§Ø³ÙŠ</div>
+          <div className="class-big-name">{student?.class?.name ?? "â€”"}</div>
           {student?.school && (
             <div className="class-school">{student.school.name}</div>
           )}
@@ -81,9 +81,9 @@ export default function StudentWelcomePage() {
         {/* Teacher */}
         {student?.class?.teacher && (
           <div className="info-row">
-            <div className="info-icon">👨‍🏫</div>
+            <div className="info-icon">ðŸ‘¨â€ðŸ«</div>
             <div className="info-body">
-              <div className="info-label">معلمك</div>
+              <div className="info-label">Ù…Ø¹Ù„Ù…Ùƒ</div>
               <div className="info-value">{student.class.teacher.profile.full_name}</div>
             </div>
           </div>
@@ -92,10 +92,10 @@ export default function StudentWelcomePage() {
         {/* Classmates count */}
         {student?.class && (
           <div className="info-row">
-            <div className="info-icon">👥</div>
+            <div className="info-icon">ðŸ‘¥</div>
             <div className="info-body">
-              <div className="info-label">زملاؤك في الفصل</div>
-              <div className="info-value">{student.class.students.length} طالب</div>
+              <div className="info-label">Ø²Ù…Ù„Ø§Ø¤Ùƒ ÙÙŠ Ø§Ù„ÙØµÙ„</div>
+              <div className="info-value">{student.class.students.length} Ø·Ø§Ù„Ø¨</div>
             </div>
           </div>
         )}
@@ -104,7 +104,7 @@ export default function StudentWelcomePage() {
         {pct !== null && attempt && (
           <div className="score-section">
             <div className="score-header">
-              <span className="score-title">نتيجة اختبار التصنيف</span>
+              <span className="score-title">Ù†ØªÙŠØ¬Ø© Ø§Ø®ØªØ¨Ø§Ø± Ø§Ù„ØªØµÙ†ÙŠÙ</span>
               <span
                 className="score-pct-badge"
                 style={{ background: pct >= 70 ? "rgba(16,185,129,0.1)" : pct >= 50 ? "rgba(245,158,11,0.1)" : "rgba(239,68,68,0.1)", color: pct >= 70 ? "#10b981" : pct >= 50 ? "#b45309" : "#dc2626" }}
@@ -131,11 +131,11 @@ export default function StudentWelcomePage() {
 
         {/* CTA */}
         <button className="go-btn" onClick={() => router.push("/student")}>
-          انتقل إلى الفصل الآن ←
+          Ø§Ù†ØªÙ‚Ù„ Ø¥Ù„Ù‰ Ø§Ù„ÙØµÙ„ Ø§Ù„Ø¢Ù† â†
         </button>
 
         <div className="footer-note">
-          يمكنك الآن رؤية إعلانات فصلك وأداء الاختبارات
+          ÙŠÙ…ÙƒÙ†Ùƒ Ø§Ù„Ø¢Ù† Ø±Ø¤ÙŠØ© Ø¥Ø¹Ù„Ø§Ù†Ø§Øª ÙØµÙ„Ùƒ ÙˆØ£Ø¯Ø§Ø¡ Ø§Ù„Ø§Ø®ØªØ¨Ø§Ø±Ø§Øª
         </div>
       </div>
 
@@ -212,3 +212,5 @@ const baseStyles = `
     box-shadow: 0 8px 32px rgba(0,0,0,0.07);
   }
 `;
+
+

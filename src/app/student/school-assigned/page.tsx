@@ -1,5 +1,5 @@
-﻿// student/school-assigned/page.tsx
-"use client";
+﻿"use client";
+export const dynamic = 'force-dynamic';
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -203,3 +203,6 @@ const pageStyles = `
   .btn-spin { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: sp 0.7s linear infinite; }
   .footer-note { text-align: center; font-size: 12px; color: #9ca3af; }
 `;
+
+
+

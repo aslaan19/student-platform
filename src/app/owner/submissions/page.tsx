@@ -1,4 +1,5 @@
-"use client";
+﻿"use client";
+export const dynamic = 'force-dynamic';
 
 import { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
@@ -52,13 +53,13 @@ function SubmissionsContent() {
     <div className="sub-page" dir="rtl">
       <div className="sub-header">
         <div className="sub-header-text">
-          <h1 className="sub-title">الإجابات المُقدَّمة</h1>
-          <p className="sub-sub">إجابات اختبار القبول بانتظار المراجعة أو التي تمت مراجعتها</p>
+          <h1 className="sub-title">Ø§Ù„Ø¥Ø¬Ø§Ø¨Ø§Øª Ø§Ù„Ù…ÙÙ‚Ø¯ÙŽÙ‘Ù…Ø©</h1>
+          <p className="sub-sub">Ø¥Ø¬Ø§Ø¨Ø§Øª Ø§Ø®ØªØ¨Ø§Ø± Ø§Ù„Ù‚Ø¨ÙˆÙ„ Ø¨Ø§Ù†ØªØ¸Ø§Ø± Ø§Ù„Ù…Ø±Ø§Ø¬Ø¹Ø© Ø£Ùˆ Ø§Ù„ØªÙŠ ØªÙ…Øª Ù…Ø±Ø§Ø¬Ø¹ØªÙ‡Ø§</p>
         </div>
         {pending > 0 && (
           <div className="pending-alert">
             <div className="pending-dot" />
-            {pending} في الانتظار
+            {pending} ÙÙŠ Ø§Ù„Ø§Ù†ØªØ¸Ø§Ø±
           </div>
         )}
       </div>
@@ -67,26 +68,26 @@ function SubmissionsContent() {
       <div className="summary-strip">
         <div className="summary-item">
           <span className="summary-num">{submissions.length}</span>
-          <span className="summary-lab">إجمالي الإجابات</span>
+          <span className="summary-lab">Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ø¥Ø¬Ø§Ø¨Ø§Øª</span>
         </div>
         <div className="summary-divider" />
         <div className="summary-item">
           <span className="summary-num warning">{pending}</span>
-          <span className="summary-lab">في انتظار المراجعة</span>
+          <span className="summary-lab">ÙÙŠ Ø§Ù†ØªØ¸Ø§Ø± Ø§Ù„Ù…Ø±Ø§Ø¬Ø¹Ø©</span>
         </div>
         <div className="summary-divider" />
         <div className="summary-item">
           <span className="summary-num success">{reviewed}</span>
-          <span className="summary-lab">تمت المراجعة</span>
+          <span className="summary-lab">ØªÙ…Øª Ø§Ù„Ù…Ø±Ø§Ø¬Ø¹Ø©</span>
         </div>
       </div>
 
       {/* Filter tabs */}
       <div className="filter-row">
         {[
-          { val: "", label: "جميع الإجابات" },
-          { val: "PENDING", label: "في الانتظار" },
-          { val: "REVIEWED", label: "تمت المراجعة" },
+          { val: "", label: "Ø¬Ù…ÙŠØ¹ Ø§Ù„Ø¥Ø¬Ø§Ø¨Ø§Øª" },
+          { val: "PENDING", label: "ÙÙŠ Ø§Ù„Ø§Ù†ØªØ¸Ø§Ø±" },
+          { val: "REVIEWED", label: "ØªÙ…Øª Ø§Ù„Ù…Ø±Ø§Ø¬Ø¹Ø©" },
         ].map((f) => (
           <button
             key={f.val}
@@ -101,7 +102,7 @@ function SubmissionsContent() {
       {loading ? (
         <div className="sub-loading">
           <div className="spinner" />
-          جارٍ تحميل الإجابات…
+          Ø¬Ø§Ø±Ù ØªØ­Ù…ÙŠÙ„ Ø§Ù„Ø¥Ø¬Ø§Ø¨Ø§Øªâ€¦
         </div>
       ) : submissions.length === 0 ? (
         <div className="sub-empty">
@@ -109,7 +110,7 @@ function SubmissionsContent() {
             <path d="M17 21H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z"/>
             <path d="M12 11v6M9 14l3 3 3-3"/>
           </svg>
-          <p>لا توجد إجابات مطابقة.</p>
+          <p>Ù„Ø§ ØªÙˆØ¬Ø¯ Ø¥Ø¬Ø§Ø¨Ø§Øª Ù…Ø·Ø§Ø¨Ù‚Ø©.</p>
         </div>
       ) : (
         <div className="sub-list">
@@ -126,11 +127,11 @@ function SubmissionsContent() {
                       month: "long", day: "numeric", year: "numeric",
                     })}
                   </span>
-                  <span className="meta-dot">·</span>
+                  <span className="meta-dot">Â·</span>
                   <span>{s.assessment.title}</span>
                   {s.assigned_school && (
                     <>
-                      <span className="meta-dot">·</span>
+                      <span className="meta-dot">Â·</span>
                       <span className="meta-school">{s.assigned_school.name}</span>
                     </>
                   )}
@@ -146,7 +147,7 @@ function SubmissionsContent() {
                   </div>
                 )}
                 <div className={`status-chip ${s.review_status === "REVIEWED" ? "reviewed" : "pending"}`}>
-                  {s.review_status === "REVIEWED" ? "تمت المراجعة" : "في الانتظار"}
+                  {s.review_status === "REVIEWED" ? "ØªÙ…Øª Ø§Ù„Ù…Ø±Ø§Ø¬Ø¹Ø©" : "ÙÙŠ Ø§Ù„Ø§Ù†ØªØ¸Ø§Ø±"}
                 </div>
                 <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} style={{color:"var(--text3)",flexShrink:0}}>
                   <path d="M15 18l-6-6 6-6" />
@@ -234,8 +235,9 @@ function SubmissionsContent() {
 
 export default function OwnerSubmissionsPage() {
   return (
-    <Suspense fallback={<div style={{padding:40,color:"var(--text2)"}}>جارٍ التحميل…</div>}>
+    <Suspense fallback={<div style={{padding:40,color:"var(--text2)"}}>Ø¬Ø§Ø±Ù Ø§Ù„ØªØ­Ù…ÙŠÙ„â€¦</div>}>
       <SubmissionsContent />
     </Suspense>
   );
 }
+

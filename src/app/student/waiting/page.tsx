@@ -1,5 +1,5 @@
-// student/waiting/page.tsx
-"use client";
+﻿"use client";
+export const dynamic = 'force-dynamic';
 
 import { useEffect, useState } from "react";
 
@@ -29,23 +29,23 @@ export default function StudentWaitingPage() {
         {/* Animated envelope / check */}
         <div className="wait-icon-wrap">
           <div className="wait-icon-ring" />
-          <div className="wait-icon">✓</div>
+          <div className="wait-icon">âœ“</div>
         </div>
 
         <div className="wait-body">
           <h1 className="wait-title">
-            {studentName ? `شكراً، ${studentName}!` : "تم التقديم بنجاح!"}
+            {studentName ? `Ø´ÙƒØ±Ø§Ù‹ØŒ ${studentName}!` : "ØªÙ… Ø§Ù„ØªÙ‚Ø¯ÙŠÙ… Ø¨Ù†Ø¬Ø§Ø­!"}
           </h1>
           <p className="wait-desc">
-            تم استلام إجاباتك بنجاح. سيقوم المسؤول بمراجعة اختبارك وتحديد المدرسة المناسبة لك قريباً.
+            ØªÙ… Ø§Ø³ØªÙ„Ø§Ù… Ø¥Ø¬Ø§Ø¨Ø§ØªÙƒ Ø¨Ù†Ø¬Ø§Ø­. Ø³ÙŠÙ‚ÙˆÙ… Ø§Ù„Ù…Ø³Ø¤ÙˆÙ„ Ø¨Ù…Ø±Ø§Ø¬Ø¹Ø© Ø§Ø®ØªØ¨Ø§Ø±Ùƒ ÙˆØªØ­Ø¯ÙŠØ¯ Ø§Ù„Ù…Ø¯Ø±Ø³Ø© Ø§Ù„Ù…Ù†Ø§Ø³Ø¨Ø© Ù„Ùƒ Ù‚Ø±ÙŠØ¨Ø§Ù‹.
           </p>
 
           <div className="wait-steps">
             <div className="step done">
-              <div className="step-dot">✓</div>
+              <div className="step-dot">âœ“</div>
               <div className="step-text">
-                <div className="step-title">تقديم اختبار القبول</div>
-                <div className="step-sub">تم بنجاح</div>
+                <div className="step-title">ØªÙ‚Ø¯ÙŠÙ… Ø§Ø®ØªØ¨Ø§Ø± Ø§Ù„Ù‚Ø¨ÙˆÙ„</div>
+                <div className="step-sub">ØªÙ… Ø¨Ù†Ø¬Ø§Ø­</div>
               </div>
             </div>
             <div className="step-line" />
@@ -54,24 +54,24 @@ export default function StudentWaitingPage() {
                 <span />
               </div>
               <div className="step-text">
-                <div className="step-title">مراجعة المسؤول</div>
-                <div className="step-sub">قيد الانتظار...</div>
+                <div className="step-title">Ù…Ø±Ø§Ø¬Ø¹Ø© Ø§Ù„Ù…Ø³Ø¤ÙˆÙ„</div>
+                <div className="step-sub">Ù‚ÙŠØ¯ Ø§Ù„Ø§Ù†ØªØ¸Ø§Ø±...</div>
               </div>
             </div>
             <div className="step-line faded" />
             <div className="step">
               <div className="step-dot empty" />
               <div className="step-text">
-                <div className="step-title">تحديد المدرسة</div>
-                <div className="step-sub">قريباً</div>
+                <div className="step-title">ØªØ­Ø¯ÙŠØ¯ Ø§Ù„Ù…Ø¯Ø±Ø³Ø©</div>
+                <div className="step-sub">Ù‚Ø±ÙŠØ¨Ø§Ù‹</div>
               </div>
             </div>
             <div className="step-line faded" />
             <div className="step">
               <div className="step-dot empty" />
               <div className="step-text">
-                <div className="step-title">الانضمام للفصل</div>
-                <div className="step-sub">قريباً</div>
+                <div className="step-title">Ø§Ù„Ø§Ù†Ø¶Ù…Ø§Ù… Ù„Ù„ÙØµÙ„</div>
+                <div className="step-sub">Ù‚Ø±ÙŠØ¨Ø§Ù‹</div>
               </div>
             </div>
           </div>
@@ -80,7 +80,7 @@ export default function StudentWaitingPage() {
             <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <circle cx="12" cy="12" r="10" /><path d="M12 8v4m0 4h.01" />
             </svg>
-            ستظهر هذه الصفحة حتى يتم تعيينك في مدرسة. لا حاجة لفعل أي شيء الآن.
+            Ø³ØªØ¸Ù‡Ø± Ù‡Ø°Ù‡ Ø§Ù„ØµÙØ­Ø© Ø­ØªÙ‰ ÙŠØªÙ… ØªØ¹ÙŠÙŠÙ†Ùƒ ÙÙŠ Ù…Ø¯Ø±Ø³Ø©. Ù„Ø§ Ø­Ø§Ø¬Ø© Ù„ÙØ¹Ù„ Ø£ÙŠ Ø´ÙŠØ¡ Ø§Ù„Ø¢Ù†.
           </div>
         </div>
       </div>
@@ -177,3 +177,5 @@ export default function StudentWaitingPage() {
     </div>
   );
 }
+
+
