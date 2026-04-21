@@ -8,7 +8,7 @@ import { createClient } from "../../lib/supabase/client";
 const navItems = [
   {
     href: "/owner",
-    label: "???? ??????",
+    label: "لوحة التحكم",
     icon: (
       <svg
         width="18"
@@ -28,7 +28,7 @@ const navItems = [
   },
   {
     href: "/owner/schools",
-    label: "???????",
+    label: "المدارس",
     icon: (
       <svg
         width="18"
@@ -45,7 +45,7 @@ const navItems = [
   },
   {
     href: "/owner/intake-assessment",
-    label: "?????? ??????",
+    label: "تقييم القبول",
     icon: (
       <svg
         width="18"
@@ -63,7 +63,7 @@ const navItems = [
   },
   {
     href: "/owner/submissions",
-    label: "???????? ??????????",
+    label: "الطلبات المقدمة",
     icon: (
       <svg
         width="18"
@@ -87,7 +87,7 @@ export default function OwnerLayout({
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  const [ownerName, setOwnerName] = useState("???????");
+  const [ownerName, setOwnerName] = useState("المالك");
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
@@ -140,15 +140,15 @@ export default function OwnerLayout({
             </svg>
           </div>
           <div className="brand-text">
-            <span className="brand-name">?????? ?????????</span>
-            <span className="brand-role">???? ????? ??????</span>
+            <span className="brand-name">منصة المدارس</span>
+            <span className="brand-role">بوابة مالك المدرسة</span>
           </div>
         </div>
 
         <div className="sidebar-divider" />
 
         <nav className="sidebar-nav">
-          <div className="nav-section-label">??????? ????????</div>
+          <div className="nav-section-label">القائمة الرئيسية</div>
           {navItems.map((item) => (
             <Link
               key={item.href}
@@ -168,13 +168,13 @@ export default function OwnerLayout({
             <div className="owner-avatar">{ownerName.charAt(0)}</div>
             <div className="owner-info">
               <span className="owner-name">{ownerName}</span>
-              <span className="owner-tag">???? ??????</span>
+              <span className="owner-tag">مالك المدرسة</span>
             </div>
           </div>
           <button
             className="logout-btn"
             onClick={handleLogout}
-            title="????? ??????"
+            title="تسجيل الخروج"
           >
             <svg
               width="16"
@@ -208,7 +208,7 @@ export default function OwnerLayout({
             </svg>
           </button>
           <div className="topbar-breadcrumb">
-            <span className="breadcrumb-prefix">??????</span>
+            <span className="breadcrumb-prefix">الرئيسية</span>
             <svg
               width="14"
               height="14"
@@ -220,14 +220,12 @@ export default function OwnerLayout({
             >
               <path d="M15 18l-6-6 6-6" />
             </svg>
-            <span>
-              {navItems.find((n) => isActive(n))?.label ?? "????????"}
-            </span>
+            <span>{navItems.find((n) => isActive(n))?.label ?? "الصفحة"}</span>
           </div>
           <div className="topbar-actions">
             <div className="status-indicator">
               <div className="status-dot" />
-              <span className="status-text">?????? ????</span>
+              <span className="status-text">متصل الآن</span>
             </div>
           </div>
         </header>
@@ -283,7 +281,7 @@ export default function OwnerLayout({
           background: var(--bg);
         }
 
-        /* ?? Sidebar ?? */
+        /* ── Sidebar ── */
         .owner-sidebar {
           width: var(--sidebar-w);
           min-height: 100vh;
@@ -393,7 +391,7 @@ export default function OwnerLayout({
         }
         .logout-btn:hover { border-color: var(--danger); color: var(--danger); background: var(--danger-bg); }
 
-        /* ?? Main ?? */
+        /* ── Main ── */
         .owner-main {
           flex: 1;
           margin-right: var(--sidebar-w);
