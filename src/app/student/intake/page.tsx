@@ -1,10 +1,14 @@
 ﻿"use client";
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-interface Option { id: string; text: string; order: number; }
+interface Option {
+  id: string;
+  text: string;
+  order: number;
+}
 interface Question {
   id: string;
   type: "MCQ" | "TF" | "WRITTEN";
@@ -49,14 +53,14 @@ export default function StudentIntakePage() {
   const current = questions[currentQ];
   const answeredCount = Object.keys(answers).length;
   const allAnswered = answeredCount === questions.length;
-  const progress = questions.length > 0 ? (answeredCount / questions.length) * 100 : 0;
+  const progress =
+    questions.length > 0 ? (answeredCount / questions.length) * 100 : 0;
 
   async function handleSubmit() {
     if (!assessment) return;
     const unanswered = questions.filter((q) => !answers[q.id]);
     if (unanswered.length > 0) {
-      setError(`ÙŠÙˆØ¬Ø¯ ${unanswered.length} Ø³Ø¤Ø§Ù„ Ù„Ù… ØªØ¬Ø¨ Ø¹Ù„ÙŠÙ‡ Ø¨Ø¹Ø¯`);
-      // Jump to first unanswered
+      setError(`يوجد ${unanswered.length} سؤال لم تجب عليه بعد`);
       const idx = questions.findIndex((q) => !answers[q.id]);
       setCurrentQ(idx);
       return;
@@ -80,24 +84,30 @@ export default function StudentIntakePage() {
       if (d.success) {
         router.push("/student/waiting");
       } else {
-        setError(d.error ?? "Ø­Ø¯Ø« Ø®Ø·Ø£ Ø£Ø«Ù†Ø§Ø¡ Ø§Ù„ØªÙ‚Ø¯ÙŠÙ…");
+        setError(d.error ?? "حدث خطأ أثناء التقديم");
       }
     } finally {
       setSubmitting(false);
     }
   }
 
-  if (loading) return <PageShell><LoadingSpinner /></PageShell>;
+  if (loading)
+    return (
+      <PageShell>
+        <LoadingSpinner />
+      </PageShell>
+    );
 
-  if (noAssessment) return (
-    <PageShell>
-      <div className="intake-empty">
-        <div className="empty-icon">ðŸ“‹</div>
-        <h2>Ù„Ø§ ÙŠÙˆØ¬Ø¯ Ø§Ø®ØªØ¨Ø§Ø± Ù…ØªØ§Ø­ Ø­Ø§Ù„ÙŠØ§Ù‹</h2>
-        <p>Ø³ÙŠØªÙ… Ø¥Ø®Ø·Ø§Ø±Ùƒ Ø¹Ù†Ø¯Ù…Ø§ ÙŠÙƒÙˆÙ† Ø§Ù„Ø§Ø®ØªØ¨Ø§Ø± Ø¬Ø§Ù‡Ø²Ø§Ù‹</p>
-      </div>
-    </PageShell>
-  );
+  if (noAssessment)
+    return (
+      <PageShell>
+        <div className="intake-empty">
+          <div className="empty-icon">📋</div>
+          <h2>لا يوجد اختبار متاح حالياً</h2>
+          <p>سيتم إخطارك عندما يكون الاختبار جاهزاً</p>
+        </div>
+      </PageShell>
+    );
 
   if (!assessment) return null;
 
@@ -107,12 +117,14 @@ export default function StudentIntakePage() {
         {/* Header */}
         <div className="intake-header">
           <div className="intake-title-row">
-            <div className="intake-label">Ø§Ø®ØªØ¨Ø§Ø± Ø§Ù„Ù‚Ø¨ÙˆÙ„</div>
+            <div className="intake-label">اختبار القبول</div>
             <h1 className="intake-title">{assessment.title}</h1>
           </div>
           <div className="intake-meta">
-            <span className="q-counter">{currentQ + 1} / {questions.length}</span>
-            <span className="answered-count">{answeredCount} Ù…Ø¬Ø§Ø¨</span>
+            <span className="q-counter">
+              {currentQ + 1} / {questions.length}
+            </span>
+            <span className="answered-count">{answeredCount} مجاب</span>
           </div>
         </div>
 
@@ -128,7 +140,7 @@ export default function StudentIntakePage() {
               key={q.id}
               className={`q-dot ${i === currentQ ? "current" : ""} ${answers[q.id] ? "answered" : ""}`}
               onClick={() => setCurrentQ(i)}
-              title={`Ø³Ø¤Ø§Ù„ ${i + 1}`}
+              title={`سؤال ${i + 1}`}
             />
           ))}
         </div>
@@ -137,7 +149,11 @@ export default function StudentIntakePage() {
         {current && (
           <div className="q-card" key={current.id}>
             <div className="q-type-badge">
-              {current.type === "MCQ" ? "Ø§Ø®ØªÙŠØ§Ø± Ù…Ù† Ù…ØªØ¹Ø¯Ø¯" : current.type === "TF" ? "ØµØ­ Ø£Ù… Ø®Ø·Ø£" : "Ø¥Ø¬Ø§Ø¨Ø© Ù…ÙƒØªÙˆØ¨Ø©"}
+              {current.type === "MCQ"
+                ? "اختيار من متعدد"
+                : current.type === "TF"
+                  ? "صح أم خطأ"
+                  : "إجابة مكتوبة"}
             </div>
             <div className="q-text">{current.text}</div>
 
@@ -165,8 +181,8 @@ export default function StudentIntakePage() {
             {current.type === "TF" && (
               <div className="tf-row">
                 {[
-                  { val: "true", label: "âœ“ ØµØ­ÙŠØ­" },
-                  { val: "false", label: "âœ— Ø®Ø·Ø£" },
+                  { val: "true", label: "✔ صحيح" },
+                  { val: "false", label: "✘ خطأ" },
                 ].map((opt) => (
                   <button
                     key={opt.val}
@@ -183,7 +199,7 @@ export default function StudentIntakePage() {
             {current.type === "WRITTEN" && (
               <textarea
                 className="written-input"
-                placeholder="Ø§ÙƒØªØ¨ Ø¥Ø¬Ø§Ø¨ØªÙƒ Ù‡Ù†Ø§..."
+                placeholder="اكتب إجابتك هنا..."
                 value={answers[current.id] ?? ""}
                 onChange={(e) => setAnswer(current.id, e.target.value)}
                 rows={5}
@@ -200,7 +216,7 @@ export default function StudentIntakePage() {
             onClick={() => setCurrentQ((q) => Math.max(0, q - 1))}
             disabled={currentQ === 0}
           >
-            â† Ø§Ù„Ø³Ø§Ø¨Ù‚
+            → السابق
           </button>
 
           {currentQ < questions.length - 1 ? (
@@ -208,7 +224,7 @@ export default function StudentIntakePage() {
               className="nav-btn primary"
               onClick={() => setCurrentQ((q) => q + 1)}
             >
-              Ø§Ù„ØªØ§Ù„ÙŠ â†’
+              التالي ←
             </button>
           ) : (
             <button
@@ -216,7 +232,7 @@ export default function StudentIntakePage() {
               onClick={handleSubmit}
               disabled={submitting}
             >
-              {submitting ? "Ø¬Ø§Ø±Ù Ø§Ù„ØªÙ‚Ø¯ÙŠÙ…..." : "ØªÙ‚Ø¯ÙŠÙ… Ø§Ù„Ø§Ø®ØªØ¨Ø§Ø± âœ“"}
+              {submitting ? "جارٍ التقديم..." : "تقديم الاختبار ✔"}
             </button>
           )}
         </div>
@@ -253,9 +269,27 @@ function PageShell({ children }: { children: React.ReactNode }) {
 
 function LoadingSpinner() {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 12, color: "#6b7280", fontSize: 14, padding: "80px 0" }}>
-      <div style={{ width: 20, height: 20, border: "2px solid #e5e7eb", borderTopColor: "#4f8ef7", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
-      Ø¬Ø§Ø±Ù ØªØ­Ù…ÙŠÙ„ Ø§Ù„Ø§Ø®ØªØ¨Ø§Ø±...
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 12,
+        color: "#6b7280",
+        fontSize: 14,
+        padding: "80px 0",
+      }}
+    >
+      <div
+        style={{
+          width: 20,
+          height: 20,
+          border: "2px solid #e5e7eb",
+          borderTopColor: "#4f8ef7",
+          borderRadius: "50%",
+          animation: "spin 0.7s linear infinite",
+        }}
+      />
+      جارٍ تحميل الاختبار...
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
@@ -393,5 +427,3 @@ const intakeStyles = `
   .intake-empty h2 { font-size: 18px; font-weight: 700; color: #111827; }
   .intake-empty p { font-size: 14px; color: #6b7280; }
 `;
-
-

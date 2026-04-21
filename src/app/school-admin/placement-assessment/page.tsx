@@ -1,4 +1,5 @@
-﻿"use client";
+﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+"use client";
 export const dynamic = "force-dynamic";
 
 import { useEffect, useState } from "react";
@@ -185,7 +186,7 @@ export default function PlacementAssessmentPage() {
               <label className="field-label">نوع السؤال</label>
               <div style={{ display: "flex", gap: 7 }}>
                 {(["MCQ", "TF", "WRITTEN"] as QuestionType[]).map((t) => (
-                  <button key={t} className={`type-btn ${form.type === t ? "sel" : ""}`} style={{ "--tc": TYPE_COLORS[t] } as any}
+                  <button key={t} className={`type-btn ${form.type === t ? "sel" : ""}`} style={{ "--tc": TYPE_COLORS[t] } as never}
                     onClick={() => setForm((f) => ({ ...f, type: t, correct_answer: "", options: t === "MCQ" ? [{ text: "" }, { text: "" }] : [] }))}>
                     {TYPE_LABELS[t]}
                   </button>

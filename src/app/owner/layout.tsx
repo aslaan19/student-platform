@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -8,7 +8,7 @@ import { createClient } from "../../lib/supabase/client";
 const navItems = [
   {
     href: "/owner",
-    label: "لوحة التحكم",
+    label: "???? ??????",
     icon: (
       <svg
         width="18"
@@ -28,7 +28,7 @@ const navItems = [
   },
   {
     href: "/owner/schools",
-    label: "المدارس",
+    label: "???????",
     icon: (
       <svg
         width="18"
@@ -45,7 +45,7 @@ const navItems = [
   },
   {
     href: "/owner/intake-assessment",
-    label: "اختبار القبول",
+    label: "?????? ??????",
     icon: (
       <svg
         width="18"
@@ -63,7 +63,7 @@ const navItems = [
   },
   {
     href: "/owner/submissions",
-    label: "الإجابات المُقدَّمة",
+    label: "???????? ??????????",
     icon: (
       <svg
         width="18"
@@ -87,7 +87,7 @@ export default function OwnerLayout({
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  const [ownerName, setOwnerName] = useState("المسؤول");
+  const [ownerName, setOwnerName] = useState("???????");
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
@@ -140,15 +140,15 @@ export default function OwnerLayout({
             </svg>
           </div>
           <div className="brand-text">
-            <span className="brand-name">المنصة التعليمية</span>
-            <span className="brand-role">لوحة إدارة المالك</span>
+            <span className="brand-name">?????? ?????????</span>
+            <span className="brand-role">???? ????? ??????</span>
           </div>
         </div>
 
         <div className="sidebar-divider" />
 
         <nav className="sidebar-nav">
-          <div className="nav-section-label">القائمة الرئيسية</div>
+          <div className="nav-section-label">??????? ????????</div>
           {navItems.map((item) => (
             <Link
               key={item.href}
@@ -168,13 +168,13 @@ export default function OwnerLayout({
             <div className="owner-avatar">{ownerName.charAt(0)}</div>
             <div className="owner-info">
               <span className="owner-name">{ownerName}</span>
-              <span className="owner-tag">مالك المنصة</span>
+              <span className="owner-tag">???? ??????</span>
             </div>
           </div>
           <button
             className="logout-btn"
             onClick={handleLogout}
-            title="تسجيل الخروج"
+            title="????? ??????"
           >
             <svg
               width="16"
@@ -208,7 +208,7 @@ export default function OwnerLayout({
             </svg>
           </button>
           <div className="topbar-breadcrumb">
-            <span className="breadcrumb-prefix">المنصة</span>
+            <span className="breadcrumb-prefix">??????</span>
             <svg
               width="14"
               height="14"
@@ -221,13 +221,13 @@ export default function OwnerLayout({
               <path d="M15 18l-6-6 6-6" />
             </svg>
             <span>
-              {navItems.find((n) => isActive(n))?.label ?? "الرئيسية"}
+              {navItems.find((n) => isActive(n))?.label ?? "????????"}
             </span>
           </div>
           <div className="topbar-actions">
             <div className="status-indicator">
               <div className="status-dot" />
-              <span className="status-text">النظام يعمل</span>
+              <span className="status-text">?????? ????</span>
             </div>
           </div>
         </header>
@@ -283,7 +283,7 @@ export default function OwnerLayout({
           background: var(--bg);
         }
 
-        /* ── Sidebar ── */
+        /* ?? Sidebar ?? */
         .owner-sidebar {
           width: var(--sidebar-w);
           min-height: 100vh;
@@ -393,7 +393,7 @@ export default function OwnerLayout({
         }
         .logout-btn:hover { border-color: var(--danger); color: var(--danger); background: var(--danger-bg); }
 
-        /* ── Main ── */
+        /* ?? Main ?? */
         .owner-main {
           flex: 1;
           margin-right: var(--sidebar-w);

@@ -1,5 +1,5 @@
 ﻿"use client";
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -15,12 +15,13 @@ interface Stats {
 }
 
 const STATUS_LABELS: Record<string, string> = {
-  PENDING_INTAKE: "Ø§Ù†ØªØ¸Ø§Ø± Ø§Ø®ØªØ¨Ø§Ø± Ø§Ù„Ù‚Ø¨ÙˆÙ„",
-  INTAKE_SUBMITTED: "Ù‚ÙŠØ¯ Ù…Ø±Ø§Ø¬Ø¹Ø© Ø§Ù„Ù…Ø³Ø¤ÙˆÙ„",
-  SCHOOL_ASSIGNED: "ÙÙŠ Ø§Ù†ØªØ¸Ø§Ø± Ø§Ø®ØªØ¨Ø§Ø± Ø§Ù„ØªØµÙ†ÙŠÙ",
-  SCHOOL_PLACEMENT_SUBMITTED: "Ù‚ÙŠØ¯ Ø§Ù„Ù…Ø±Ø§Ø¬Ø¹Ø©",
-  CLASS_ASSIGNED: "ÙÙŠ Ø§Ù„ÙØµÙ„",
+  PENDING_INTAKE: "انتظار اختبار القبول",
+  INTAKE_SUBMITTED: "قيد مراجعة المسؤول",
+  SCHOOL_ASSIGNED: "في انتظار اختبار التصنيف",
+  SCHOOL_PLACEMENT_SUBMITTED: "قيد المراجعة",
+  CLASS_ASSIGNED: "في الفصل",
 };
+
 const STATUS_COLORS: Record<string, string> = {
   PENDING_INTAKE: "#9ca3af",
   INTAKE_SUBMITTED: "#f59e0b",
@@ -44,38 +45,38 @@ export default function SchoolAdminDashboard() {
     return (
       <div className="dash-loading">
         <div className="spin" />
-        Ø¬Ø§Ø±Ù Ø§Ù„ØªØ­Ù…ÙŠÙ„...
+        جارٍ التحميل...
       </div>
     );
 
-  if (!stats) return <div className="dash-loading">ÙØ´Ù„ ØªØ­Ù…ÙŠÙ„ Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª</div>;
+  if (!stats) return <div className="dash-loading">فشل تحميل البيانات</div>;
 
   const statCards = [
     {
-      label: "Ø§Ù„Ù…Ø¹Ù„Ù…ÙˆÙ†",
+      label: "المعلمون",
       value: stats.teacherCount,
-      icon: "ðŸ‘¨â€ðŸ«",
+      icon: "👨‍🏫",
       href: "/school-admin/teachers",
       color: "#2563eb",
     },
     {
-      label: "Ø§Ù„Ø·Ù„Ø§Ø¨",
+      label: "الطلاب",
       value: stats.studentCount,
-      icon: "ðŸŽ“",
+      icon: "🎓",
       href: "/school-admin/students",
       color: "#7c3aed",
     },
     {
-      label: "Ø§Ù„ÙØµÙˆÙ„",
+      label: "الفصول",
       value: stats.classCount,
-      icon: "ðŸ“š",
+      icon: "📚",
       href: "/school-admin/classes",
       color: "#10b981",
     },
     {
-      label: "Ø¨Ø§Ù†ØªØ¸Ø§Ø± Ø§Ù„ØªØµÙ†ÙŠÙ",
+      label: "بانتظار التصنيف",
       value: stats.pendingPlacements,
-      icon: "â³",
+      icon: "⏳",
       href: "/school-admin/submissions",
       color: stats.pendingPlacements > 0 ? "#f59e0b" : "#10b981",
       alert: stats.pendingPlacements > 0,
@@ -83,11 +84,11 @@ export default function SchoolAdminDashboard() {
   ];
 
   return (
-    <div className="dash">
+    <div className="dash" dir="rtl">
       <div className="dash-header">
         <div>
           <h1 className="dash-title">{stats.school.name}</h1>
-          <p className="dash-sub">Ù„ÙˆØ­Ø© ØªØ­ÙƒÙ… Ù…Ø¯ÙŠØ± Ø§Ù„Ù…Ø¯Ø±Ø³Ø©</p>
+          <p className="dash-sub">لوحة تحكم مدير المدرسة</p>
         </div>
         {!stats.hasPlacementAssessment && (
           <Link href="/school-admin/placement-assessment" className="dash-cta">
@@ -101,7 +102,7 @@ export default function SchoolAdminDashboard() {
             >
               <path d="M12 5v14M5 12h14" />
             </svg>
-            Ø¥Ù†Ø´Ø§Ø¡ Ø§Ø®ØªØ¨Ø§Ø± Ø§Ù„ØªØµÙ†ÙŠÙ
+            إنشاء اختبار التصنيف
           </Link>
         )}
       </div>
@@ -118,12 +119,12 @@ export default function SchoolAdminDashboard() {
           >
             <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
           </svg>
-          Ù„Ù… ÙŠØªÙ… Ø¥Ù†Ø´Ø§Ø¡ Ø§Ø®ØªØ¨Ø§Ø± Ø§Ù„ØªØµÙ†ÙŠÙ Ø¨Ø¹Ø¯. Ù„Ù† ÙŠØªÙ…ÙƒÙ† Ø§Ù„Ø·Ù„Ø§Ø¨ Ù…Ù† Ø¥Ø¬Ø±Ø§Ø¡ Ø§Ù„Ø§Ø®ØªØ¨Ø§Ø±.
+          لم يتم إنشاء اختبار التصنيف بعد. لن يتمكن الطلاب من إجراء الاختبار.
           <Link
             href="/school-admin/placement-assessment"
             className="alert-link"
           >
-            Ø¥Ù†Ø´Ø§Ø¡ Ø§Ù„Ø¢Ù† â†
+            إنشاء الآن ←
           </Link>
         </div>
       )}
@@ -141,20 +142,19 @@ export default function SchoolAdminDashboard() {
             <circle cx="12" cy="12" r="10" />
             <path d="M12 8v4m0 4h.01" />
           </svg>
-          {stats.pendingPlacements} Ø·Ø§Ù„Ø¨ ÙÙŠ Ø§Ù†ØªØ¸Ø§Ø± Ù…Ø±Ø§Ø¬Ø¹Ø© Ø§Ø®ØªØ¨Ø§Ø± Ø§Ù„ØªØµÙ†ÙŠÙ ÙˆØªØ¹ÙŠÙŠÙ†
-          Ø§Ù„ÙØµÙ„.
+          {stats.pendingPlacements} طالب في انتظار مراجعة اختبار التصنيف وتعيين
+          الفصل.
           <Link
             href="/school-admin/submissions?status=PENDING"
             className="alert-link"
           >
-            Ù…Ø±Ø§Ø¬Ø¹Ø© â†
+            مراجعة ←
           </Link>
         </div>
       )}
 
       <div className="stat-grid">
         {statCards.map((card) => (
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           <Link
             key={card.label}
             href={card.href}
@@ -173,7 +173,7 @@ export default function SchoolAdminDashboard() {
 
       {stats.studentsByStatus.length > 0 && (
         <div className="section">
-          <h2 className="section-title">ØªÙˆØ²ÙŠØ¹ Ø§Ù„Ø·Ù„Ø§Ø¨ Ø­Ø³Ø¨ Ø§Ù„Ø­Ø§Ù„Ø©</h2>
+          <h2 className="section-title">توزيع الطلاب حسب الحالة</h2>
           <div className="pipeline">
             {stats.studentsByStatus.map((s) => (
               <div key={s.status} className="pipe-row">
@@ -207,50 +207,24 @@ export default function SchoolAdminDashboard() {
         .dash-loading { display: flex; align-items: center; gap: 10px; height: 180px; justify-content: center; color: var(--text2); font-size: 14px; }
         .spin { width: 18px; height: 18px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: sp 0.7s linear infinite; }
         @keyframes sp { to { transform: rotate(360deg); } }
-
         .dash-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
         .dash-title { font-size: 22px; font-weight: 800; color: var(--text); }
         .dash-sub { font-size: 13px; color: var(--text2); margin-top: 2px; }
-        .dash-cta {
-          display: flex; align-items: center; gap: 7px;
-          background: var(--accent); color: white;
-          padding: 9px 16px; border-radius: 9px; text-decoration: none;
-          font-size: 13px; font-weight: 700; transition: opacity 0.15s;
-        }
+        .dash-cta { display: flex; align-items: center; gap: 7px; background: var(--accent); color: white; padding: 9px 16px; border-radius: 9px; text-decoration: none; font-size: 13px; font-weight: 700; transition: opacity 0.15s; }
         .dash-cta:hover { opacity: 0.85; }
-
-        .alert-banner {
-          display: flex; align-items: center; gap: 10px;
-          background: rgba(239,68,68,0.07); border: 1px solid rgba(239,68,68,0.2);
-          color: #dc2626; font-size: 13px; padding: 11px 14px; border-radius: 10px;
-        }
+        .alert-banner { display: flex; align-items: center; gap: 10px; background: rgba(239,68,68,0.07); border: 1px solid rgba(239,68,68,0.2); color: #dc2626; font-size: 13px; padding: 11px 14px; border-radius: 10px; }
         .alert-banner.warning { background: rgba(245,158,11,0.07); border-color: rgba(245,158,11,0.2); color: #b45309; }
         .alert-link { margin-right: auto; color: inherit; font-weight: 700; text-decoration: none; }
         .alert-link:hover { text-decoration: underline; }
-
         .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-        .stat-card {
-          background: var(--surface); border: 1px solid var(--border);
-          border-radius: 12px; padding: 16px;
-          text-decoration: none; display: flex; align-items: center; gap: 12px;
-          position: relative; overflow: hidden;
-          transition: border-color 0.15s, transform 0.15s;
-        }
-        .stat-card::before {
-          content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px;
-          background: var(--c);
-        }
+        .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; text-decoration: none; display: flex; align-items: center; gap: 12px; position: relative; overflow: hidden; transition: border-color 0.15s, transform 0.15s; }
+        .stat-card::before { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: var(--c); }
         .stat-card:hover { border-color: var(--c); transform: translateY(-1px); }
         .stat-icon { font-size: 26px; }
         .stat-val { font-size: 24px; font-weight: 800; color: var(--text); font-family: 'JetBrains Mono', monospace; letter-spacing: -1px; }
         .stat-label { font-size: 11.5px; color: var(--text2); font-weight: 500; margin-top: 1px; }
-        .stat-alert {
-          position: absolute; top: 10px; left: 10px;
-          width: 8px; height: 8px; border-radius: 50%; background: #f59e0b;
-          box-shadow: 0 0 6px #f59e0b; animation: pulse 2s infinite;
-        }
+        .stat-alert { position: absolute; top: 10px; left: 10px; width: 8px; height: 8px; border-radius: 50%; background: #f59e0b; box-shadow: 0 0 6px #f59e0b; animation: pulse 2s infinite; }
         @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.3} }
-
         .section { display: flex; flex-direction: column; gap: 12px; }
         .section-title { font-size: 14px; font-weight: 700; color: var(--text); }
         .pipeline { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
@@ -260,12 +234,8 @@ export default function SchoolAdminDashboard() {
         .pipe-bar-wrap { flex: 1; height: 6px; background: var(--border); border-radius: 99px; overflow: hidden; }
         .pipe-bar { height: 100%; border-radius: 99px; transition: width 0.5s ease; }
         .pipe-count { font-size: 12px; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: var(--text); width: 24px; text-align: left; }
-
         @media (max-width: 800px) { .stat-grid { grid-template-columns: repeat(2, 1fr); } }
       `}</style>
     </div>
   );
 }
-
-
-
