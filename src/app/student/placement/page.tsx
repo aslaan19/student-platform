@@ -1,5 +1,5 @@
 ﻿"use client";
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -62,7 +62,7 @@ export default function StudentPlacementPage() {
     if (!assessment) return;
     const unanswered = questions.filter((q) => !answers[q.id]);
     if (unanswered.length > 0) {
-      setError(`ÙŠÙˆØ¬Ø¯ ${unanswered.length} Ø³Ø¤Ø§Ù„ Ù„Ù… ØªØ¬Ø¨ Ø¹Ù„ÙŠÙ‡`);
+      setError(`يوجد ${unanswered.length} سؤال لم تجب عليه`);
       setCurrentQ(questions.findIndex((q) => !answers[q.id]));
       return;
     }
@@ -82,7 +82,7 @@ export default function StudentPlacementPage() {
       });
       const d = await r.json();
       if (d.success) router.push("/student/waiting-class");
-      else setError(d.error ?? "Ø­Ø¯Ø« Ø®Ø·Ø£");
+      else setError(d.error ?? "حدث خطأ");
     } finally {
       setSubmitting(false);
     }
@@ -99,9 +99,9 @@ export default function StudentPlacementPage() {
     return (
       <Shell>
         <div className="p-empty">
-          <div className="p-empty-icon">ðŸ“‹</div>
-          <h2>Ù„Ø§ ÙŠÙˆØ¬Ø¯ Ø§Ø®ØªØ¨Ø§Ø± ØªØµÙ†ÙŠÙ Ù…ØªØ§Ø­ Ø­Ø§Ù„ÙŠØ§Ù‹</h2>
-          <p>Ø³ÙŠØªÙ… Ø¥Ø®Ø·Ø§Ø±Ùƒ Ø¹Ù†Ø¯Ù…Ø§ ÙŠÙƒÙˆÙ† Ø§Ù„Ø§Ø®ØªØ¨Ø§Ø± Ø¬Ø§Ù‡Ø²Ø§Ù‹</p>
+          <div className="p-empty-icon">📋</div>
+          <h2>لا يوجد اختبار تصنيف متاح حالياً</h2>
+          <p>سيتم إخطارك عندما يكون الاختبار جاهزاً</p>
         </div>
         <style>{styles}</style>
       </Shell>
@@ -114,15 +114,15 @@ export default function StudentPlacementPage() {
       <div className="p-wrap">
         <div className="p-header">
           <div>
-            {school && <div className="school-badge">ðŸ« {school.name}</div>}
-            <div className="p-label">Ø§Ø®ØªØ¨Ø§Ø± Ø§Ù„ØªØµÙ†ÙŠÙ</div>
+            {school && <div className="school-badge">🏫 {school.name}</div>}
+            <div className="p-label">اختبار التصنيف</div>
             <h1 className="p-title">{assessment.title}</h1>
           </div>
           <div className="p-meta">
             <span className="q-counter">
               {currentQ + 1} / {questions.length}
             </span>
-            <span className="answered">{answeredCount} Ù…Ø¬Ø§Ø¨</span>
+            <span className="answered">{answeredCount} مجاب</span>
           </div>
         </div>
 
@@ -144,10 +144,10 @@ export default function StudentPlacementPage() {
           <div className="q-card" key={current.id}>
             <div className="q-type-badge">
               {current.type === "MCQ"
-                ? "Ø§Ø®ØªÙŠØ§Ø± Ù…Ù† Ù…ØªØ¹Ø¯Ø¯"
+                ? "اختيار من متعدد"
                 : current.type === "TF"
-                  ? "ØµØ­ Ø£Ù… Ø®Ø·Ø£"
-                  : "Ø¥Ø¬Ø§Ø¨Ø© Ù…ÙƒØªÙˆØ¨Ø©"}
+                  ? "صح أم خطأ"
+                  : "إجابة مكتوبة"}
             </div>
             <div className="q-text">{current.text}</div>
 
@@ -173,8 +173,8 @@ export default function StudentPlacementPage() {
             {current.type === "TF" && (
               <div className="tf-row">
                 {[
-                  { val: "true", label: "âœ“ ØµØ­ÙŠØ­" },
-                  { val: "false", label: "âœ— Ø®Ø·Ø£" },
+                  { val: "true", label: "✔ صحيح" },
+                  { val: "false", label: "✘ خطأ" },
                 ].map((opt) => (
                   <button
                     key={opt.val}
@@ -190,7 +190,7 @@ export default function StudentPlacementPage() {
             {current.type === "WRITTEN" && (
               <textarea
                 className="written-inp"
-                placeholder="Ø§ÙƒØªØ¨ Ø¥Ø¬Ø§Ø¨ØªÙƒ Ù‡Ù†Ø§..."
+                placeholder="اكتب إجابتك هنا..."
                 value={answers[current.id] ?? ""}
                 onChange={(e) => setAnswer(current.id, e.target.value)}
                 rows={5}
@@ -206,14 +206,14 @@ export default function StudentPlacementPage() {
             onClick={() => setCurrentQ((q) => Math.max(0, q - 1))}
             disabled={currentQ === 0}
           >
-            â† Ø§Ù„Ø³Ø§Ø¨Ù‚
+            → السابق
           </button>
           {currentQ < questions.length - 1 ? (
             <button
               className="nav-btn primary"
               onClick={() => setCurrentQ((q) => q + 1)}
             >
-              Ø§Ù„ØªØ§Ù„ÙŠ â†’
+              التالي ←
             </button>
           ) : (
             <button
@@ -221,7 +221,7 @@ export default function StudentPlacementPage() {
               onClick={handleSubmit}
               disabled={submitting}
             >
-              {submitting ? "Ø¬Ø§Ø±Ù Ø§Ù„ØªÙ‚Ø¯ÙŠÙ…..." : "ØªÙ‚Ø¯ÙŠÙ… Ø§Ù„Ø§Ø®ØªØ¨Ø§Ø± âœ“"}
+              {submitting ? "جارٍ التقديم..." : "تقديم الاختبار ✔"}
             </button>
           )}
         </div>
@@ -267,7 +267,7 @@ function Spinner() {
           animation: "spin 0.7s linear infinite",
         }}
       />
-      Ø¬Ø§Ø±Ù ØªØ­Ù…ÙŠÙ„ Ø§Ù„Ø§Ø®ØªØ¨Ø§Ø±...
+      جارٍ تحميل الاختبار...
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
@@ -330,6 +330,3 @@ const styles = `
   .p-empty h2 { font-size: 17px; font-weight: 800; color: #111827; }
   .p-empty p { font-size: 13px; color: #6b7280; }
 `;
-
-
-

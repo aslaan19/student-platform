@@ -1,5 +1,5 @@
 ﻿"use client";
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 import { useEffect, useState } from "react";
 
@@ -28,38 +28,41 @@ export default function StudentWaitingClassPage() {
           transition: "opacity 0.5s ease, transform 0.5s ease",
         }}
       >
-        <div className="wc-icon">ðŸ«</div>
+        <div className="wc-icon">🏫</div>
 
         <div className="wc-body">
-          <h1 className="wc-title">ØªÙ… ØªØ¹ÙŠÙŠÙ†Ùƒ ÙÙŠ Ù…Ø¯Ø±Ø³Ø©!</h1>
+          <h1 className="wc-title">تم تعيينك في مدرسة!</h1>
           {schoolName && <div className="school-badge">{schoolName}</div>}
           <p className="wc-desc">
-            {studentName ? `Ù…Ø±Ø­Ø¨Ø§Ù‹ ${studentName}ØŒ ` : ""}
-            ØªÙ… Ù‚Ø¨ÙˆÙ„Ùƒ ÙÙŠ Ø§Ù„Ù…Ø¯Ø±Ø³Ø©. Ø§Ù„Ø¢Ù† Ø³ÙŠÙ‚ÙˆÙ… Ù…Ø¯ÙŠØ± Ø§Ù„Ù…Ø¯Ø±Ø³Ø© Ø¨Ù…Ø±Ø§Ø¬Ø¹Ø© Ù†ØªØ§Ø¦Ø¬Ùƒ ÙˆØªØ¹ÙŠÙŠÙ†Ùƒ ÙÙŠ Ø§Ù„ÙØµÙ„ Ø§Ù„Ù…Ù†Ø§Ø³Ø¨ Ù‚Ø±ÙŠØ¨Ø§Ù‹.
+            {studentName ? `مرحباً ${studentName}، ` : ""}
+            تم قبولك في المدرسة. الآن سيقوم مدير المدرسة بمراجعة نتائجك وتعيينك
+            في الفصل المناسب قريباً.
           </p>
 
           <div className="wc-steps">
             <div className="step done">
-              <div className="step-dot">âœ“</div>
+              <div className="step-dot">✔</div>
               <div className="step-text">
-                <div className="step-title">Ø§Ø®ØªØ¨Ø§Ø± Ø§Ù„Ù‚Ø¨ÙˆÙ„</div>
-                <div className="step-sub">Ù…ÙƒØªÙ…Ù„</div>
+                <div className="step-title">اختبار القبول</div>
+                <div className="step-sub">مكتمل</div>
               </div>
             </div>
             <div className="step-line" />
             <div className="step done">
-              <div className="step-dot">âœ“</div>
+              <div className="step-dot">✔</div>
               <div className="step-text">
-                <div className="step-title">ØªØ¹ÙŠÙŠÙ† Ø§Ù„Ù…Ø¯Ø±Ø³Ø©</div>
-                <div className="step-sub">Ù…ÙƒØªÙ…Ù„</div>
+                <div className="step-title">تعيين المدرسة</div>
+                <div className="step-sub">مكتمل</div>
               </div>
             </div>
             <div className="step-line" />
             <div className="step active">
-              <div className="step-dot pulse"><span /></div>
+              <div className="step-dot pulse">
+                <span />
+              </div>
               <div className="step-text">
-                <div className="step-title">ØªØ¹ÙŠÙŠÙ† Ø§Ù„ÙØµÙ„</div>
-                <div className="step-sub">Ù‚ÙŠØ¯ Ø§Ù„Ø§Ù†ØªØ¸Ø§Ø±...</div>
+                <div className="step-title">تعيين الفصل</div>
+                <div className="step-sub">قيد الانتظار...</div>
               </div>
             </div>
           </div>
@@ -116,5 +119,3 @@ export default function StudentWaitingClassPage() {
     </div>
   );
 }
-
-
