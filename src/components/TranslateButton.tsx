@@ -30,21 +30,9 @@ export default function TranslateButton() {
         cursor: "pointer",
         boxShadow: "0 4px 20px rgba(0,0,0,0.2)",
         fontFamily: "Tajawal, sans-serif",
-        letterSpacing: "0.2px",
       }}
     >
-      <svg
-        width="14"
-        height="14"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth={2}
-      >
-        <circle cx="12" cy="12" r="10" />
-        <path d="M2 12h20M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20" />
-      </svg>
-      Shqip
+      🌐 Shqip
     </button>
   );
 }

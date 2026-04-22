@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import TranslateButton from "@/components/TranslateButton";
+import Script from "next/script";
 
 export const metadata: Metadata = {
   title: "منصة الرواد التعليمية",
@@ -25,6 +26,17 @@ export default function RootLayout({
         />
       </head>
       <body>
+        <Script id="translate-fix" strategy="afterInteractive">{`
+  if (window.location.hostname.includes('translate.goog')) {
+    document.addEventListener('click', function(e) {
+      const a = e.target.closest('a');
+      if (a && a.href && a.href.includes('translate.goog')) {
+        e.preventDefault();
+        window.location.href = a.href;
+      }
+    }, true);
+  }
+`}</Script>
         {children}
         <TranslateButton />
       </body>
