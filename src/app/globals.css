@@ -23,3 +23,5 @@ div#goog-gt- {
 .goog-tooltip:hover {
   display: none !important;
 }
+iframe.goog-te-banner-frame { display: none !important; }
+body { top: 0 !important; position: static !important; }

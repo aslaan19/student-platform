@@ -39,6 +39,7 @@ export default function StudentWaitingPage() {
           <p className="wait-desc">
             تم استلام إجاباتك بنجاح. سيقوم المسؤول بمراجعة اختبارك وتحديد
             المدرسة المناسبة لك قريباً.
+            
           </p>
 
           <div className="wait-steps">
