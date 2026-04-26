@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -11,11 +10,11 @@ async function updateLanguage(schoolId: string, lang: string) {
     body: JSON.stringify({ language: lang }),
   });
 }
+
 interface SchoolDetail {
   id: string;
   name: string;
-  language: string; // ← add this line
-
+  language: string;
   created_at: string;
   admin: { id: string; full_name: string } | null;
   teachers: {
@@ -37,19 +36,19 @@ interface SchoolDetail {
   }[];
 }
 
-const STATUS_COLORS: Record<string, string> = {
-  PENDING_INTAKE: "#1a4fa0",
-  INTAKE_SUBMITTED: "#b45309",
-  SCHOOL_ASSIGNED: "#0d7c4f",
-  SCHOOL_PLACEMENT_SUBMITTED: "#6d28d9",
-  CLASS_ASSIGNED: "#0e7490",
-};
 const STATUS_LABELS: Record<string, string> = {
   PENDING_INTAKE: "في انتظار الاختبار",
   INTAKE_SUBMITTED: "تم تقديم الاختبار",
   SCHOOL_ASSIGNED: "تم تعيين المدرسة",
   SCHOOL_PLACEMENT_SUBMITTED: "تم تقديم التوزيع",
   CLASS_ASSIGNED: "تم تعيين الفصل",
+};
+const STATUS_GOLD: Record<string, string> = {
+  PENDING_INTAKE: "#C8A96A",
+  INTAKE_SUBMITTED: "#E5B93C",
+  SCHOOL_ASSIGNED: "#C8A96A",
+  SCHOOL_PLACEMENT_SUBMITTED: "#E5B93C",
+  CLASS_ASSIGNED: "#C8A96A",
 };
 
 type Tab = "overview" | "teachers" | "students" | "classes";
@@ -72,12 +71,17 @@ export default function OwnerSchoolDetailPage() {
 
   if (loading)
     return (
-      <div className="sd-loading">
-        <div className="spinner" />
-        جارٍ تحميل بيانات المدرسة…
+      <div className="sd-load">
+        <div className="sd-spin" />
+        جارٍ تحميل بيانات المدرسة…<style>{css}</style>
       </div>
     );
-  if (!school) return <div className="sd-loading">المدرسة غير موجودة.</div>;
+  if (!school)
+    return (
+      <div className="sd-load">
+        المدرسة غير موجودة.<style>{css}</style>
+      </div>
+    );
 
   const tabs: { id: Tab; label: string; count?: number }[] = [
     { id: "overview", label: "نظرة عامة" },
@@ -97,10 +101,10 @@ export default function OwnerSchoolDetailPage() {
     <div className="sd-page" dir="rtl">
       {/* Header */}
       <div className="sd-header">
-        <Link href="/owner/schools" className="back-link">
+        <Link href="/owner/schools" className="sd-back">
           <svg
-            width="15"
-            height="15"
+            width="14"
+            height="14"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -111,7 +115,7 @@ export default function OwnerSchoolDetailPage() {
           جميع المدارس
         </Link>
         <div className="sd-title-row">
-          <div className="sd-icon-wrap">🏫</div>
+          <div className="sd-icon">🏫</div>
           <div className="sd-title-body">
             <h1 className="sd-title">{school.name}</h1>
             <p className="sd-sub">
@@ -119,9 +123,9 @@ export default function OwnerSchoolDetailPage() {
               {school.admin ? (
                 <strong>{school.admin.full_name}</strong>
               ) : (
-                <span className="no-admin">غير معيَّن</span>
+                <span className="sd-no-admin">غير معيَّن</span>
               )}
-              <span className="meta-sep"> · </span>
+              <span className="sd-sep"> · </span>
               أُنشئت{" "}
               {new Date(school.created_at).toLocaleDateString("ar-SA", {
                 year: "numeric",
@@ -129,17 +133,16 @@ export default function OwnerSchoolDetailPage() {
               })}
             </p>
           </div>
-          <div className="readonly-badge"></div>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="tabs-wrap">
-        <div className="tabs">
+      <div className="sd-tabs-wrap">
+        <div className="sd-tabs">
           {tabs.map((t) => (
             <button
               key={t.id}
-              className={`tab ${tab === t.id ? "active" : ""}`}
+              className={`sd-tab ${tab === t.id ? "active" : ""}`}
               onClick={() => {
                 setTab(t.id);
                 setSearch("");
@@ -147,7 +150,7 @@ export default function OwnerSchoolDetailPage() {
             >
               {t.label}
               {t.count !== undefined && (
-                <span className="tab-badge">{t.count}</span>
+                <span className="sd-tab-badge">{t.count}</span>
               )}
             </button>
           ))}
@@ -156,27 +159,12 @@ export default function OwnerSchoolDetailPage() {
 
       {/* Overview */}
       {tab === "overview" && (
-        <div className="overview-section">
-          <div className="overview-grid">
+        <div className="sd-ov">
+          <div className="sd-ov-grid">
             {[
-              {
-                label: "المعلمون",
-                value: school.teachers.length,
-                icon: "👨‍🏫",
-                color: "#0d7c4f",
-              },
-              {
-                label: "الطلاب",
-                value: school.students.length,
-                icon: "🎓",
-                color: "#1a4fa0",
-              },
-              {
-                label: "الفصول",
-                value: school.classes.length,
-                icon: "📚",
-                color: "#6d28d9",
-              },
+              { label: "المعلمون", value: school.teachers.length, icon: "👨‍🏫" },
+              { label: "الطلاب", value: school.students.length, icon: "🎓" },
+              { label: "الفصول", value: school.classes.length, icon: "📚" },
               {
                 label: "تاريخ الإنشاء",
                 value: new Date(school.created_at).toLocaleDateString("ar-SA", {
@@ -184,66 +172,59 @@ export default function OwnerSchoolDetailPage() {
                   month: "short",
                 }),
                 icon: "📅",
-                color: "#b45309",
               },
             ].map((s) => (
-              <div
-                key={s.label}
-                className="ov-card"
-                style={{ "--card-color": s.color } as React.CSSProperties}
-              >
-                <div className="ov-icon-wrap">
-                  <span className="ov-icon">{s.icon}</span>
-                </div>
-                <div className="ov-val">{s.value}</div>
-                <div className="ov-lab">{s.label}</div>
+              <div key={s.label} className="sd-ov-card">
+                <div className="sd-ov-icon">{s.icon}</div>
+                <div className="sd-ov-val">{s.value}</div>
+                <div className="sd-ov-lab">{s.label}</div>
               </div>
             ))}
           </div>
-
-          {/* Quick stats about unassigned */}
-          <div className="ov-info-cards">
-            <div className="ov-info-card">
-              <div className="ov-info-title">المعلمون بدون فصول</div>
-              <div className="ov-info-val">
-                {school.teachers.filter((t) => t.classes.length === 0).length}
+          <div className="sd-ov-info-grid">
+            {[
+              {
+                label: "المعلمون بدون فصول",
+                val: school.teachers.filter((t) => t.classes.length === 0)
+                  .length,
+              },
+              {
+                label: "الطلاب بدون فصل",
+                val: school.students.filter((s) => !s.class).length,
+              },
+              {
+                label: "الفصول بدون معلم",
+                val: school.classes.filter((c) => !c.teacher).length,
+              },
+            ].map((item, i) => (
+              <div key={i} className="sd-info-card">
+                <span className="sd-info-label">{item.label}</span>
+                <span className="sd-info-val">{item.val}</span>
               </div>
-            </div>
-            <div className="ov-info-card">
-              <div className="ov-info-title">الطلاب بدون فصل</div>
-              <div className="ov-info-val">
-                {school.students.filter((s) => !s.class).length}
-              </div>
-            </div>
-            <div className="ov-info-card">
-              <div className="ov-info-title">الفصول بدون معلم</div>
-              <div className="ov-info-val">
-                {school.classes.filter((c) => !c.teacher).length}
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       )}
 
       {/* Teachers */}
       {tab === "teachers" && (
-        <div className="list-section">
+        <div className="sd-list">
           {school.teachers.length > 4 && (
-            <div className="list-search-wrap">
+            <div className="sd-search-wrap">
               <svg
-                width="15"
-                height="15"
+                width="14"
+                height="14"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
                 strokeWidth={2}
-                className="ls-icon"
+                className="sd-search-icon"
               >
                 <circle cx="11" cy="11" r="8" />
                 <path d="M21 21l-4.35-4.35" />
               </svg>
               <input
-                className="list-search"
+                className="sd-search"
                 placeholder="ابحث عن معلم…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -251,22 +232,22 @@ export default function OwnerSchoolDetailPage() {
             </div>
           )}
           {filteredTeachers.length === 0 ? (
-            <div className="empty">لا توجد نتائج مطابقة.</div>
+            <div className="sd-empty">لا توجد نتائج مطابقة.</div>
           ) : (
             filteredTeachers.map((t) => (
-              <div key={t.id} className="list-row">
-                <div className="list-avatar teacher">
+              <div key={t.id} className="sd-row">
+                <div className="sd-av teacher">
                   {t.profile.full_name.charAt(0)}
                 </div>
-                <div className="list-body">
-                  <div className="list-name">{t.profile.full_name}</div>
-                  <div className="list-sub">
+                <div className="sd-row-body">
+                  <div className="sd-row-name">{t.profile.full_name}</div>
+                  <div className="sd-row-sub">
                     {t.classes.length > 0
                       ? t.classes.map((c) => c.name).join("، ")
                       : "لا توجد فصول مُعيَّنة"}
                   </div>
                 </div>
-                <div className="list-tag">
+                <div className="sd-tag">
                   {t.classes.length} {t.classes.length === 1 ? "فصل" : "فصول"}
                 </div>
               </div>
@@ -277,23 +258,23 @@ export default function OwnerSchoolDetailPage() {
 
       {/* Students */}
       {tab === "students" && (
-        <div className="list-section">
+        <div className="sd-list">
           {school.students.length > 4 && (
-            <div className="list-search-wrap">
+            <div className="sd-search-wrap">
               <svg
-                width="15"
-                height="15"
+                width="14"
+                height="14"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
                 strokeWidth={2}
-                className="ls-icon"
+                className="sd-search-icon"
               >
                 <circle cx="11" cy="11" r="8" />
                 <path d="M21 21l-4.35-4.35" />
               </svg>
               <input
-                className="list-search"
+                className="sd-search"
                 placeholder="ابحث عن طالب…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -301,27 +282,26 @@ export default function OwnerSchoolDetailPage() {
             </div>
           )}
           {filteredStudents.length === 0 ? (
-            <div className="empty">لا توجد نتائج مطابقة.</div>
+            <div className="sd-empty">لا توجد نتائج مطابقة.</div>
           ) : (
             filteredStudents.map((s) => (
-              <div key={s.id} className="list-row">
-                <div className="list-avatar student">
+              <div key={s.id} className="sd-row">
+                <div className="sd-av student">
                   {s.profile.full_name.charAt(0)}
                 </div>
-                <div className="list-body">
-                  <div className="list-name">{s.profile.full_name}</div>
-                  <div className="list-sub">
+                <div className="sd-row-body">
+                  <div className="sd-row-name">{s.profile.full_name}</div>
+                  <div className="sd-row-sub">
                     {s.class?.name ?? "لم يُعيَّن فصل"}
                   </div>
                 </div>
                 <div
-                  className="status-chip-sm"
-                  style={
-                    {
-                      "--chip-color":
-                        STATUS_COLORS[s.onboarding_status] ?? "#4a5568",
-                    } as React.CSSProperties
-                  }
+                  className="sd-status-chip"
+                  style={{
+                    color: STATUS_GOLD[s.onboarding_status] ?? "#C8A96A",
+                    background: `${STATUS_GOLD[s.onboarding_status] ?? "#C8A96A"}15`,
+                    border: `1px solid ${STATUS_GOLD[s.onboarding_status] ?? "#C8A96A"}30`,
+                  }}
                 >
                   {STATUS_LABELS[s.onboarding_status] ?? s.onboarding_status}
                 </div>
@@ -333,185 +313,109 @@ export default function OwnerSchoolDetailPage() {
 
       {/* Classes */}
       {tab === "classes" && (
-        <div className="list-section">
+        <div className="sd-list">
           {school.classes.length === 0 ? (
-            <div className="empty">لا توجد فصول في هذه المدرسة.</div>
+            <div className="sd-empty">لا توجد فصول في هذه المدرسة.</div>
           ) : (
             school.classes.map((c) => (
-              <div key={c.id} className="list-row">
-                <div className="list-avatar class">📚</div>
-                <div className="list-body">
-                  <div className="list-name">{c.name}</div>
-                  <div className="list-sub">
+              <div key={c.id} className="sd-row">
+                <div className="sd-av class-av">📚</div>
+                <div className="sd-row-body">
+                  <div className="sd-row-name">{c.name}</div>
+                  <div className="sd-row-sub">
                     {c.teacher?.profile.full_name ?? "لم يُعيَّن معلم"}
                   </div>
                 </div>
-                <div className="list-tag">{c._count.students} طالب</div>
+                <div className="sd-tag">{c._count.students} طالب</div>
               </div>
             ))
           )}
         </div>
       )}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-          padding: "14px 16px",
-          background: "var(--surface)",
-          border: "1px solid var(--border)",
-          borderRadius: 10,
-        }}
-      >
-        <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text2)" }}>
-          لغة المدرسة
-        </span>
+
+      {/* Language selector */}
+      <div className="sd-lang-card">
+        <span className="sd-lang-label">لغة المدرسة</span>
         <select
+          className="sd-lang-select"
           defaultValue={school.language ?? "ar"}
           onChange={(e) => updateLanguage(school.id, e.target.value)}
-          style={{
-            padding: "6px 12px",
-            borderRadius: 8,
-            border: "1px solid var(--border)",
-            fontSize: 13,
-            fontFamily: "Tajawal, sans-serif",
-            cursor: "pointer",
-          }}
         >
           <option value="ar">🇸🇦 العربية</option>
           <option value="sq">🇦🇱 Shqip (Albanian)</option>
         </select>
       </div>
-      <style>{`
-        .sd-page { display:flex; flex-direction:column; gap:22px; }
-        .sd-loading { display:flex; align-items:center; gap:12px; height:220px; justify-content:center; color:var(--text2); font-size:14px; }
-        .spinner { width:20px; height:20px; border:2px solid var(--border2); border-top-color:var(--accent); border-radius:50%; animation:spin 0.8s linear infinite; }
-        @keyframes spin { to{transform:rotate(360deg)} }
 
-        .back-link { display:inline-flex; align-items:center; gap:6px; font-size:13px; color:var(--text2); text-decoration:none; font-weight:600; }
-        .back-link:hover { color:var(--accent); }
-        .sd-header { display:flex; flex-direction:column; gap:12px; padding-bottom:20px; border-bottom:1px solid var(--border); }
-        .sd-title-row { display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
-        .sd-icon-wrap {
-          width:52px; height:52px; border-radius:14px; flex-shrink:0;
-          background:var(--accent-muted); border:1px solid var(--accent-muted2);
-          display:flex; align-items:center; justify-content:center; font-size:28px;
-        }
-        .sd-title-body { flex:1; }
-        .sd-title { font-size:22px; font-weight:800; color:var(--text); letter-spacing:-0.4px; }
-        .sd-sub { font-size:13px; color:var(--text2); margin-top:3px; }
-        .meta-sep { opacity:0.4; }
-        .no-admin { color:var(--danger); font-style:italic; }
-        .readonly-badge {
-          display:flex; align-items:center; gap:6px;
-          background:var(--accent-muted); border:1px solid var(--accent-muted2);
-          color:var(--accent); font-size:11.5px; font-weight:700;
-          padding:6px 14px; border-radius:20px; white-space:nowrap;
-        }
-
-        /* Tabs */
-        .tabs-wrap { border-bottom:2px solid var(--border); }
-        .tabs { display:flex; gap:2px; }
-        .tab {
-          display:flex; align-items:center; gap:7px;
-          background:none; border:none; cursor:pointer;
-          padding:10px 16px; font-size:13.5px; font-weight:700;
-          color:var(--text2); border-bottom:2px solid transparent;
-          margin-bottom:-2px; transition:all 0.15s;
-          font-family:'Cairo',sans-serif; border-radius:6px 6px 0 0;
-        }
-        .tab:hover { color:var(--text); background:var(--surface3); }
-        .tab.active { color:var(--accent); border-bottom-color:var(--accent); }
-        .tab-badge {
-          background:var(--surface3); border-radius:99px;
-          padding:1px 8px; font-size:11px; font-family:'IBM Plex Mono',monospace;
-          color:var(--text3); font-weight:700;
-        }
-        .tab.active .tab-badge { background:var(--accent-muted2); color:var(--accent); }
-
-        /* Overview */
-        .overview-section { display:flex; flex-direction:column; gap:16px; }
-        .overview-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
-        .ov-card {
-          background:var(--surface); border:1px solid var(--border);
-          border-top:3px solid var(--card-color,var(--accent));
-          border-radius:var(--radius); padding:20px 16px;
-          display:flex; flex-direction:column; align-items:center; gap:8px; text-align:center;
-          box-shadow:var(--shadow-sm); transition:box-shadow 0.15s;
-        }
-        .ov-card:hover { box-shadow:var(--shadow); }
-        .ov-icon-wrap {
-          width:46px; height:46px; border-radius:12px;
-          background:color-mix(in srgb,var(--card-color,var(--accent)) 10%,transparent);
-          display:flex; align-items:center; justify-content:center;
-        }
-        .ov-icon { font-size:24px; }
-        .ov-val { font-size:26px; font-weight:900; font-family:'IBM Plex Mono',monospace; color:var(--text); letter-spacing:-1px; }
-        .ov-lab { font-size:12px; color:var(--text2); font-weight:700; }
-
-        .ov-info-cards { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
-        .ov-info-card {
-          background:var(--surface2); border:1px solid var(--border);
-          border-radius:var(--radius); padding:14px 16px;
-          display:flex; align-items:center; justify-content:space-between;
-        }
-        .ov-info-title { font-size:12.5px; color:var(--text2); font-weight:600; }
-        .ov-info-val { font-size:18px; font-weight:800; color:var(--text); font-family:'IBM Plex Mono',monospace; }
-
-        /* Lists */
-        .list-section { display:flex; flex-direction:column; gap:8px; }
-        .empty { text-align:center; color:var(--text3); padding:48px; font-size:14px; font-weight:500; }
-
-        .list-search-wrap { position:relative; display:flex; align-items:center; }
-        .ls-icon { position:absolute; right:13px; color:var(--text3); pointer-events:none; }
-        .list-search {
-          width:100%; background:var(--surface); border:1px solid var(--border2);
-          border-radius:8px; padding:9px 40px 9px 13px;
-          font-size:13.5px; font-family:'Cairo',sans-serif; color:var(--text); outline:none;
-          transition:border-color 0.15s, box-shadow 0.15s;
-        }
-        .list-search:focus { border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-muted); }
-
-        .list-row {
-          display:flex; align-items:center; gap:13px;
-          background:var(--surface); border:1px solid var(--border);
-          border-radius:var(--radius); padding:14px 16px;
-          box-shadow:var(--shadow-sm);
-        }
-        .list-avatar {
-          width:38px; height:38px; border-radius:10px; flex-shrink:0;
-          background:linear-gradient(145deg,var(--accent),#2563c4);
-          display:flex; align-items:center; justify-content:center;
-          font-size:15px; font-weight:800; color:white;
-        }
-        .list-avatar.teacher { background:linear-gradient(145deg,#0d7c4f,#059669); }
-        .list-avatar.student { background:linear-gradient(145deg,#6d28d9,#7c3aed); }
-        .list-avatar.class { background:var(--surface2); font-size:20px; border:1px solid var(--border); }
-        .list-body { flex:1; min-width:0; }
-        .list-name { font-size:14px; font-weight:700; color:var(--text); }
-        .list-sub { font-size:12px; color:var(--text2); margin-top:2px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-        .list-tag {
-          font-size:12px; font-weight:700; color:var(--text2);
-          background:var(--surface2); border:1px solid var(--border);
-          padding:4px 12px; border-radius:20px; white-space:nowrap; flex-shrink:0;
-        }
-        .status-chip-sm {
-          font-size:11px; font-weight:700; white-space:nowrap;
-          color:var(--chip-color,var(--accent));
-          background:color-mix(in srgb,var(--chip-color,var(--accent)) 10%,transparent);
-          border:1px solid color-mix(in srgb,var(--chip-color,var(--accent)) 25%,transparent);
-          padding:4px 11px; border-radius:20px; flex-shrink:0;
-        }
-
-        @media (max-width:900px) {
-          .overview-grid { grid-template-columns:repeat(2,1fr); }
-          .ov-info-cards { grid-template-columns:1fr; }
-        }
-        @media (max-width:600px) {
-          .overview-grid { grid-template-columns:1fr 1fr; }
-          .tabs { overflow-x:auto; }
-        }
-      `}</style>
+      <style>{css}</style>
     </div>
   );
 }
+
+const css = `
+  :root{--gold:#C8A96A;--gold2:#E5B93C;--gold-muted:rgba(200,169,106,0.1);--gold-border:rgba(200,169,106,0.2);--black:#0B0B0C;--off-white:#F5F3EE;--text:#0B0B0C;--text2:#4a3f2f;--text3:#9a8a6a;--surface:#ffffff;--surface2:#faf8f4;--surface3:#f5f0e8;--border:#e8dfd0;--border2:#d8ccb8;--danger:#8b1a1a;--radius:10px;--shadow-sm:0 1px 3px rgba(11,11,12,0.06);--shadow:0 4px 12px rgba(11,11,12,0.08)}
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  .sd-page{display:flex;flex-direction:column;gap:22px;font-family:'Cairo',sans-serif}
+  .sd-load{display:flex;align-items:center;gap:12px;height:220px;justify-content:center;color:var(--text3);font-size:14px;font-family:'Cairo',sans-serif}
+  .sd-spin{width:20px;height:20px;border:2px solid var(--gold-border);border-top-color:var(--gold);border-radius:50%;animation:spin 0.8s linear infinite}
+
+  .sd-header{display:flex;flex-direction:column;gap:12px;padding-bottom:20px;border-bottom:1px solid var(--border)}
+  .sd-back{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--text3);text-decoration:none;font-weight:600;transition:color 0.15s}
+  .sd-back:hover{color:var(--gold)}
+  .sd-title-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .sd-icon{width:52px;height:52px;border-radius:14px;flex-shrink:0;background:var(--gold-muted);border:1px solid var(--gold-border);display:flex;align-items:center;justify-content:center;font-size:28px}
+  .sd-title-body{flex:1}
+  .sd-title{font-size:22px;font-weight:800;color:var(--black);letter-spacing:-0.4px}
+  .sd-sub{font-size:13px;color:var(--text3);margin-top:3px}
+  .sd-sep{opacity:0.4}
+  .sd-no-admin{color:var(--danger);font-style:italic}
+
+  .sd-tabs-wrap{border-bottom:2px solid var(--border)}
+  .sd-tabs{display:flex;gap:2px}
+  .sd-tab{display:flex;align-items:center;gap:7px;background:none;border:none;cursor:pointer;padding:10px 16px;font-size:13.5px;font-weight:700;color:var(--text3);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all 0.15s;font-family:'Cairo',sans-serif;border-radius:6px 6px 0 0}
+  .sd-tab:hover{color:var(--text);background:var(--surface3)}
+  .sd-tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+  .sd-tab-badge{background:var(--surface3);border-radius:99px;padding:1px 8px;font-size:11px;font-family:'IBM Plex Mono',monospace;color:var(--text3);font-weight:700}
+  .sd-tab.active .sd-tab-badge{background:var(--gold-muted);color:var(--gold);border:1px solid var(--gold-border)}
+
+  .sd-ov{display:flex;flex-direction:column;gap:14px}
+  .sd-ov-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  .sd-ov-card{background:var(--surface);border:1px solid var(--border);border-top:2px solid var(--gold);border-radius:var(--radius);padding:20px 16px;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;box-shadow:var(--shadow-sm);transition:box-shadow 0.15s}
+  .sd-ov-card:hover{box-shadow:var(--shadow)}
+  .sd-ov-icon{font-size:24px}
+  .sd-ov-val{font-size:26px;font-weight:900;font-family:'IBM Plex Mono',monospace;color:var(--gold);letter-spacing:-1px}
+  .sd-ov-lab{font-size:12px;color:var(--text3);font-weight:700}
+
+  .sd-ov-info-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .sd-info-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;display:flex;align-items:center;justify-content:space-between}
+  .sd-info-label{font-size:12.5px;color:var(--text2);font-weight:600}
+  .sd-info-val{font-size:18px;font-weight:800;color:var(--black);font-family:'IBM Plex Mono',monospace}
+
+  .sd-list{display:flex;flex-direction:column;gap:8px}
+  .sd-empty{text-align:center;color:var(--text3);padding:48px;font-size:14px;font-weight:500}
+  .sd-search-wrap{position:relative;display:flex;align-items:center}
+  .sd-search-icon{position:absolute;right:13px;color:var(--text3);pointer-events:none}
+  .sd-search{width:100%;background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:9px 40px 9px 13px;font-size:13.5px;font-family:'Cairo',sans-serif;color:var(--text);outline:none;transition:border-color 0.15s,box-shadow 0.15s}
+  .sd-search:focus{border-color:var(--gold);box-shadow:0 0 0 3px var(--gold-muted)}
+
+  .sd-row{display:flex;align-items:center;gap:13px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow-sm);transition:border-color 0.15s}
+  .sd-row:hover{border-color:var(--gold-border)}
+  .sd-av{width:38px;height:38px;border-radius:10px;flex-shrink:0;background:var(--black);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:var(--gold)}
+  .sd-av.teacher{background:var(--black);color:var(--gold)}
+  .sd-av.student{background:rgba(200,169,106,0.15);color:var(--gold);border:1px solid var(--gold-border)}
+  .sd-av.class-av{background:var(--surface2);font-size:20px;border:1px solid var(--border)}
+  .sd-row-body{flex:1;min-width:0}
+  .sd-row-name{font-size:14px;font-weight:700;color:var(--black)}
+  .sd-row-sub{font-size:12px;color:var(--text3);margin-top:2px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sd-tag{font-size:12px;font-weight:700;color:var(--text2);background:var(--surface2);border:1px solid var(--border);padding:4px 12px;border-radius:20px;white-space:nowrap;flex-shrink:0}
+  .sd-status-chip{font-size:11px;font-weight:700;white-space:nowrap;padding:4px 11px;border-radius:20px;flex-shrink:0}
+
+  .sd-lang-card{display:flex;align-items:center;gap:12px;padding:14px 18px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-sm)}
+  .sd-lang-label{font-size:13px;font-weight:700;color:var(--text2)}
+  .sd-lang-select{padding:7px 13px;border-radius:8px;border:1px solid var(--gold-border);background:var(--surface);font-size:13px;font-family:'Cairo',sans-serif;cursor:pointer;color:var(--text);outline:none;transition:border-color 0.15s}
+  .sd-lang-select:focus{border-color:var(--gold)}
+
+  @media(max-width:900px){.sd-ov-grid{grid-template-columns:repeat(2,1fr)}.sd-ov-info-grid{grid-template-columns:1fr}}
+  @media(max-width:600px){.sd-tabs{overflow-x:auto}}
+`;

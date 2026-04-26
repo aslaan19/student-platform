@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -129,6 +129,7 @@ export default function StudentLayout({
   const [loggingOut, setLoggingOut] = useState(false);
   const [showToggle, setShowToggle] = useState(false);
   const [checked, setChecked] = useState(false);
+  const langInitialized = useRef(false); // ← track if lang was already set
   const pathname = usePathname();
   const router = useRouter();
   const { lang, setLang } = useLang();
@@ -143,6 +144,7 @@ export default function StudentLayout({
           router.push("/login");
           return;
         }
+
         if (data?.profile?.full_name) {
           setName(data.profile.full_name);
           setInitials(
@@ -154,16 +156,23 @@ export default function StudentLayout({
           );
         }
         if (data?.school?.name) setSchoolName(data.school.name);
-        if (data.school?.language) {
+
+        // ✅ Only set language ONCE on first load — never override user's choice after that
+        if (data.school?.language && !langInitialized.current) {
+          langInitialized.current = true;
           setLang(data.school.language as "ar" | "sq");
           if (data.school.language === "sq") setShowToggle(true);
         }
+        // If already initialized, still show toggle for sq schools
+        if (data.school?.language === "sq") setShowToggle(true);
+
         const status: string = data.onboarding_status;
         const allowed = ALLOWED_PAGES[status];
         if (!allowed) {
           setChecked(true);
           return;
         }
+
         if (status === "CLASS_ASSIGNED") {
           const onDashboard =
             pathname === "/student" || pathname.startsWith("/student/");
@@ -172,6 +181,7 @@ export default function StudentLayout({
           else setChecked(true);
           return;
         }
+
         const isAllowed = allowed.some(
           (p) => p === pathname || pathname.startsWith(p + "/"),
         );
@@ -384,9 +394,7 @@ const styles = `
 
   .sl-root{min-height:100vh;background:#faf7f4;font-family:Tajawal,sans-serif}
   .sl-body{display:flex;min-height:100vh}
-
   .sl-sidebar{width:256px;flex-shrink:0;background:var(--black);display:flex;flex-direction:column;min-height:100vh;position:sticky;top:0;height:100vh;overflow-y:auto;overflow-x:hidden;z-index:30;border-left:1px solid rgba(200,169,106,0.08)}
-
   .sl-brand{display:flex;align-items:center;gap:10px;padding:20px 18px 16px;flex-shrink:0}
   .sl-brand-icon{width:36px;height:36px;background:var(--red-muted);border:1px solid var(--red-border);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--gold);flex-shrink:0}
   .sl-brand-text{flex:1;display:flex;flex-direction:column;min-width:0}
@@ -394,41 +402,32 @@ const styles = `
   .sl-brand-sub{font-size:10.5px;color:rgba(200,169,106,0.5);font-weight:500}
   .sl-close-btn{display:none;background:none;border:none;color:rgba(200,169,106,0.4);cursor:pointer;padding:4px;border-radius:6px;transition:color 0.15s;flex-shrink:0}
   .sl-close-btn:hover{color:var(--gold)}
-
   .sl-profile{display:flex;align-items:center;gap:10px;margin:0 12px 16px;padding:12px 14px;background:var(--red-muted);border:1px solid var(--red-border);border-radius:12px;flex-shrink:0}
   .sl-profile-avatar{width:36px;height:36px;border-radius:9px;background:var(--red);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:var(--gold);flex-shrink:0;border:1px solid rgba(200,169,106,0.2)}
   .sl-profile-info{display:flex;flex-direction:column;gap:1px;overflow:hidden;min-width:0}
   .sl-profile-name{font-size:13px;font-weight:800;color:white;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .sl-profile-role{font-size:11px;color:rgba(200,169,106,0.5);font-weight:500}
-
   .sl-divider{height:1px;background:rgba(200,169,106,0.1);margin:0 12px 16px;flex-shrink:0}
-
   .sl-nav{display:flex;flex-direction:column;gap:2px;padding:0 10px;flex:1}
   .sl-nav-group-label{font-size:10px;font-weight:700;color:rgba(200,169,106,0.35);text-transform:uppercase;letter-spacing:0.8px;padding:0 8px 8px}
   .sl-nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;text-decoration:none;color:rgba(200,169,106,0.5);font-size:13.5px;font-weight:600;transition:all 0.16s ease;position:relative}
   .sl-nav-item:hover{background:var(--red-muted);color:var(--gold)}
   .sl-nav-item.active{background:var(--red-muted);color:var(--gold);font-weight:800;border:1px solid var(--red-border)}
   .sl-nav-icon{width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:8px;background:rgba(200,169,106,0.05);flex-shrink:0;transition:background 0.16s}
-  .sl-nav-item:hover .sl-nav-icon{background:var(--red-muted)}
-  .sl-nav-item.active .sl-nav-icon{background:var(--red-muted)}
+  .sl-nav-item:hover .sl-nav-icon,.sl-nav-item.active .sl-nav-icon{background:var(--red-muted)}
   .sl-nav-label{flex:1}
   .sl-nav-active-bar{width:3px;height:16px;background:var(--gold);border-radius:99px;opacity:0.8}
-
   .sl-sidebar-footer{padding:0 10px 20px;flex-shrink:0}
   .sl-logout{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:10px;color:rgba(200,169,106,0.35);background:none;border:none;font-size:13px;font-weight:600;font-family:Tajawal,sans-serif;cursor:pointer;transition:all 0.16s;width:100%}
   .sl-logout:hover:not(:disabled){background:var(--red-muted);color:var(--gold)}
   .sl-logout:disabled{opacity:0.5;cursor:not-allowed}
   .sl-logout-spin{width:14px;height:14px;border:2px solid rgba(200,169,106,0.2);border-top-color:var(--gold);border-radius:50%;animation:sp 0.7s linear infinite;flex-shrink:0}
-
   .sl-main{flex:1;min-width:0;overflow-x:hidden;padding:28px}
-
   .sl-mobile-bar{display:none;align-items:center;justify-content:space-between;padding:0 18px;height:54px;background:var(--black);position:sticky;top:0;z-index:40;border-bottom:1px solid rgba(200,169,106,0.12)}
   .sl-hamburger{background:var(--red-muted);border:1px solid var(--red-border);border-radius:8px;color:var(--gold);width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer}
   .sl-mobile-title{font-size:14px;font-weight:800;color:var(--gold)}
   .sl-mobile-avatar{width:32px;height:32px;border-radius:8px;background:var(--red);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:var(--gold)}
-
   .sl-backdrop{position:fixed;inset:0;background:rgba(11,11,12,0.6);z-index:29;animation:fadeIn 0.2s ease}
-
   @media(max-width:768px){
     .sl-mobile-bar{display:flex}
     .sl-sidebar{position:fixed;right:0;top:0;bottom:0;transform:translateX(100%);transition:transform 0.28s cubic-bezier(0.4,0,0.2,1);height:100%}
