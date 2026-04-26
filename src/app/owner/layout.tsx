@@ -245,10 +245,6 @@ export default function OwnerLayout({
             </svg>
             <span className="ow-breadcrumb-current">{currentLabel}</span>
           </div>
-          <div className="ow-topbar-right">
-            <div className="ow-live-dot" />
-            <span className="ow-live-text">نظام نشط</span>
-          </div>
         </header>
 
         <main className="ow-content">{children}</main>
