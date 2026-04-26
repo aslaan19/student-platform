@@ -4,6 +4,8 @@ export const dynamic = "force-dynamic";
 import { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useLang } from "@/lib/language-context";
+import { t } from "@/lib/translations";
 
 interface Submission {
   id: string;
@@ -17,6 +19,10 @@ interface Submission {
 }
 
 function SubmissionsContent() {
+  const { lang } = useLang();
+  const tr = t[lang];
+  const dir = lang === "ar" ? "rtl" : "ltr";
+
   const searchParams = useSearchParams();
   const router = useRouter();
   const statusFilter = searchParams.get("status") ?? "";
@@ -46,25 +52,25 @@ function SubmissionsContent() {
   ).length;
 
   return (
-    <div className="sub-page" dir="rtl">
+    <div className="sub-page" dir={dir}>
       <div className="sub-header">
         <div>
-          <h1 className="sub-title">نتائج اختبار التصنيف</h1>
-          <p className="sub-sub">استعراض إجابات الطلاب وتعيينهم في الفصول</p>
+          <h1 className="sub-title">{tr.placementResults}</h1>
+          <p className="sub-sub">{tr.reviewDesc}</p>
         </div>
         {pending > 0 && (
           <div className="pending-pill">
             <span className="pending-dot" />
-            {pending} بانتظار المراجعة
+            {pending} {tr.awaitingReview}
           </div>
         )}
       </div>
 
       <div className="filter-row">
         {[
-          { val: "", label: "الكل" },
-          { val: "PENDING", label: "قيد الانتظار" },
-          { val: "REVIEWED", label: "تمت المراجعة" },
+          { val: "", label: tr.filterAll },
+          { val: "PENDING", label: tr.filterPending },
+          { val: "REVIEWED", label: tr.filterReviewed },
         ].map((f) => (
           <button
             key={f.val}
@@ -79,10 +85,10 @@ function SubmissionsContent() {
       {loading ? (
         <div className="sub-loading">
           <div className="spin" />
-          جارٍ التحميل...
+          {tr.loading}
         </div>
       ) : submissions.length === 0 ? (
-        <div className="sub-empty">لا توجد نتائج.</div>
+        <div className="sub-empty">{tr.noSubmissions}</div>
       ) : (
         <div className="sub-list">
           {submissions.map((s) => (
@@ -97,11 +103,14 @@ function SubmissionsContent() {
               <div className="sub-body">
                 <div className="sub-name">{s.student.profile.full_name}</div>
                 <div className="sub-meta">
-                  {new Date(s.submitted_at).toLocaleDateString("ar-SA", {
-                    month: "short",
-                    day: "numeric",
-                    year: "numeric",
-                  })}
+                  {new Date(s.submitted_at).toLocaleDateString(
+                    lang === "ar" ? "ar-SA" : "sq-AL",
+                    {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    },
+                  )}
                   {" · "}
                   {s.assessment.title}
                 </div>
@@ -114,7 +123,7 @@ function SubmissionsContent() {
                         {s.score}/{s.total}
                       </span>
                     )}
-                    <span className="chip reviewed">تمت المراجعة</span>
+                    <span className="chip reviewed">{tr.chipReviewed}</span>
                     {s.assigned_class && (
                       <span className="chip class-chip">
                         {s.assigned_class.name}
@@ -122,7 +131,7 @@ function SubmissionsContent() {
                     )}
                   </>
                 ) : (
-                  <span className="chip pending">قيد الانتظار</span>
+                  <span className="chip pending">{tr.chipPending}</span>
                 )}
                 <svg
                   width="13"
@@ -131,7 +140,10 @@ function SubmissionsContent() {
                   viewBox="0 0 24 24"
                   stroke="currentColor"
                   strokeWidth={2}
-                  style={{ color: "var(--text3)", transform: "rotate(180deg)" }}
+                  style={{
+                    color: "var(--text3)",
+                    transform: lang === "ar" ? "rotate(180deg)" : "none",
+                  }}
                 >
                   <path d="M9 18l6-6-6-6" />
                 </svg>
@@ -176,12 +188,12 @@ function SubmissionsContent() {
 }
 
 export default function SchoolAdminSubmissionsPage() {
+  const { lang } = useLang();
+  const tr = t[lang];
   return (
     <Suspense
       fallback={
-        <div style={{ padding: 40, color: "var(--text2)" }}>
-          جارٍ التحميل...
-        </div>
+        <div style={{ padding: 40, color: "var(--text2)" }}>{tr.loading}</div>
       }
     >
       <SubmissionsContent />

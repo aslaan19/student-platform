@@ -2,13 +2,18 @@
 export const dynamic = "force-dynamic";
 
 import { useEffect, useState, useCallback } from "react";
+import { useLang } from "@/lib/language-context";
+import { t } from "@/lib/translations";
 
 type Announcement = {
-  id: string; content: string; created_at: string;
+  id: string;
+  content: string;
+  created_at: string;
   teacher: { profile: { full_name: string } };
 };
 type ClassItem = {
-  id: string; name: string;
+  id: string;
+  name: string;
   students: { id: string; profile: { full_name: string } }[];
 };
 type TeacherData = { profile: { full_name: string }; classes: ClassItem[] };
@@ -18,6 +23,10 @@ function Skeleton({ className = "" }: { className?: string }) {
 }
 
 export default function TeacherPage() {
+  const { lang } = useLang();
+  const tr = t[lang];
+  const dir = lang === "ar" ? "rtl" : "ltr";
+
   const [data, setData] = useState<TeacherData | null>(null);
   const [selectedClass, setSelectedClass] = useState<ClassItem | null>(null);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
@@ -35,10 +44,13 @@ export default function TeacherPage() {
     setAnnouncementsLoading(false);
   }, []);
 
-  const handleSelectClass = useCallback(async (cls: ClassItem) => {
-    setSelectedClass(cls);
-    await fetchAnnouncements(cls.id);
-  }, [fetchAnnouncements]);
+  const handleSelectClass = useCallback(
+    async (cls: ClassItem) => {
+      setSelectedClass(cls);
+      await fetchAnnouncements(cls.id);
+    },
+    [fetchAnnouncements],
+  );
 
   useEffect(() => {
     fetch("/api/teacher")
@@ -57,7 +69,10 @@ export default function TeacherPage() {
     await fetch("/api/teacher/announcements", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ classId: selectedClass.id, content: newAnnouncement }),
+      body: JSON.stringify({
+        classId: selectedClass.id,
+        content: newAnnouncement,
+      }),
     });
     setNewAnnouncement("");
     await fetchAnnouncements(selectedClass.id);
@@ -73,48 +88,77 @@ export default function TeacherPage() {
   };
 
   const initials = data?.profile.full_name
-    ? data.profile.full_name.split(" ").map((w) => w[0]).slice(0, 2).join("")
+    ? data.profile.full_name
+        .split(" ")
+        .map((w) => w[0])
+        .slice(0, 2)
+        .join("")
     : "م";
 
-  const totalStudents = data?.classes.reduce((acc, c) => acc + c.students.length, 0);
-
-  if (loading) return (
-    <div className="td-page" dir="rtl">
-      <div className="td-inner">
-        <Skeleton className="td-sk-banner" />
-        <div className="td-grid">
-          <div className="td-sk-col">{[1, 2, 3].map((i) => <Skeleton key={i} className="td-sk-cls" />)}</div>
-          <div className="td-sk-col">
-            <Skeleton className="td-sk-compose" />
-            {[1, 2].map((i) => <Skeleton key={i} className="td-sk-ann" />)}
-          </div>
-        </div>
-      </div>
-      <style>{styles}</style>
-    </div>
+  const totalStudents = data?.classes.reduce(
+    (acc, c) => acc + c.students.length,
+    0,
   );
 
+  if (loading)
+    return (
+      <div className="td-page" dir={dir}>
+        <div className="td-inner">
+          <Skeleton className="td-sk-banner" />
+          <div className="td-grid">
+            <div className="td-sk-col">
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="td-sk-cls" />
+              ))}
+            </div>
+            <div className="td-sk-col">
+              <Skeleton className="td-sk-compose" />
+              {[1, 2].map((i) => (
+                <Skeleton key={i} className="td-sk-ann" />
+              ))}
+            </div>
+          </div>
+        </div>
+        <style>{styles}</style>
+      </div>
+    );
+
   return (
-    <div className="td-page" dir="rtl" style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(14px)", transition: "opacity 0.45s ease, transform 0.45s ease" }}>
+    <div
+      className="td-page"
+      dir={dir}
+      style={{
+        opacity: visible ? 1 : 0,
+        transform: visible ? "translateY(0)" : "translateY(14px)",
+        transition: "opacity 0.45s ease, transform 0.45s ease",
+      }}
+    >
       <div className="td-inner">
         {/* Banner */}
         <div className="td-banner">
           <div className="td-banner-left">
-            <p className="td-banner-greeting">مرحباً بك،</p>
+            <p className="td-banner-greeting">{tr.greetingPrefix}</p>
             <h1 className="td-banner-name">{data?.profile.full_name} 👋</h1>
             <p className="td-banner-sub">
-              أنت تشرف على <strong>{data?.classes.length} فصل</strong> و <strong>{totalStudents} طالب</strong>
+              {tr.teacherBannerSub}{" "}
+              <strong>
+                {data?.classes.length} {tr.classWord}
+              </strong>{" "}
+              {tr.outOf}{" "}
+              <strong>
+                {totalStudents} {tr.studentWord}
+              </strong>
             </p>
           </div>
           <div className="td-banner-stats">
             <div className="td-stat">
               <span className="td-stat-val">{data?.classes.length}</span>
-              <span className="td-stat-label">فصل</span>
+              <span className="td-stat-label">{tr.classWord}</span>
             </div>
             <div className="td-stat-sep" />
             <div className="td-stat">
               <span className="td-stat-val">{totalStudents}</span>
-              <span className="td-stat-label">طالب</span>
+              <span className="td-stat-label">{tr.studentWord}</span>
             </div>
           </div>
         </div>
@@ -122,20 +166,34 @@ export default function TeacherPage() {
         {!data?.classes.length ? (
           <div className="td-empty-state">
             <div className="td-empty-icon">📋</div>
-            <h2>لم يتم تعيينك في أي فصل بعد</h2>
-            <p>تواصل مع مدير المدرسة لإضافتك إلى فصول دراسية</p>
+            <h2>{tr.notAssignedToClass}</h2>
+            <p>{tr.contactSchoolAdmin}</p>
           </div>
         ) : (
           <div className="td-grid">
             {/* Sidebar */}
             <aside className="td-sidebar">
-              <p className="td-col-label">الفصول الدراسية</p>
+              <p className="td-col-label">{tr.classesLabel}</p>
               <div className="td-classes-list">
                 {data?.classes.map((cls, i) => (
-                  <button key={cls.id} onClick={() => handleSelectClass(cls)} style={{ animationDelay: `${i * 50}ms` }}
-                    className={`td-class-btn ${selectedClass?.id === cls.id ? "active" : ""}`}>
+                  <button
+                    key={cls.id}
+                    onClick={() => handleSelectClass(cls)}
+                    style={{ animationDelay: `${i * 50}ms` }}
+                    className={`td-class-btn ${
+                      selectedClass?.id === cls.id ? "active" : ""
+                    }`}
+                  >
                     <div className="td-class-icon">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                      >
                         <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
                         <circle cx="9" cy="7" r="4" />
                         <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" />
@@ -143,9 +201,13 @@ export default function TeacherPage() {
                     </div>
                     <div className="td-class-info">
                       <span className="td-class-name">{cls.name}</span>
-                      <span className="td-class-count">{cls.students.length} طالب</span>
+                      <span className="td-class-count">
+                        {cls.students.length} {tr.studentWord}
+                      </span>
                     </div>
-                    {selectedClass?.id === cls.id && <span className="td-class-dot" />}
+                    {selectedClass?.id === cls.id && (
+                      <span className="td-class-dot" />
+                    )}
                   </button>
                 ))}
               </div>
@@ -154,17 +216,29 @@ export default function TeacherPage() {
                 <div className="td-students-card">
                   <div className="td-card-header">
                     <span className="td-card-icon">👥</span>
-                    <span className="td-card-title">طلاب {selectedClass.name}</span>
-                    <span className="td-badge">{selectedClass.students.length}</span>
+                    <span className="td-card-title">
+                      {tr.studentsOfClass} {selectedClass.name}
+                    </span>
+                    <span className="td-badge">
+                      {selectedClass.students.length}
+                    </span>
                   </div>
                   <div className="td-students-list">
                     {selectedClass.students.length === 0 ? (
-                      <p className="td-no-students">لا يوجد طلاب مسجلون</p>
+                      <p className="td-no-students">{tr.noEnrolledStudents}</p>
                     ) : (
                       selectedClass.students.map((s, i) => (
-                        <div key={s.id} className="td-student-row" style={{ animationDelay: `${i * 35}ms` }}>
-                          <div className="td-student-av">{s.profile.full_name.charAt(0)}</div>
-                          <span className="td-student-name">{s.profile.full_name}</span>
+                        <div
+                          key={s.id}
+                          className="td-student-row"
+                          style={{ animationDelay: `${i * 35}ms` }}
+                        >
+                          <div className="td-student-av">
+                            {s.profile.full_name.charAt(0)}
+                          </div>
+                          <span className="td-student-name">
+                            {s.profile.full_name}
+                          </span>
                         </div>
                       ))
                     )}
@@ -176,27 +250,59 @@ export default function TeacherPage() {
             {/* Announcements */}
             <section className="td-content">
               <p className="td-col-label">
-                إعلانات {selectedClass && <span className="td-col-label-accent">{selectedClass.name}</span>}
+                {tr.announcementsOf}{" "}
+                {selectedClass && (
+                  <span className="td-col-label-accent">
+                    {selectedClass.name}
+                  </span>
+                )}
               </p>
 
               <div className="td-compose">
                 <div className="td-compose-head">
                   <div className="td-compose-av">{initials}</div>
-                  <span className="td-compose-label">إعلان جديد للفصل</span>
+                  <span className="td-compose-label">
+                    {tr.newAnnouncementLabel}
+                  </span>
                 </div>
                 <textarea
-                  className="td-textarea" rows={3}
-                  placeholder="اكتب إعلاناً، تنبيهاً، أو رسالة للطلاب..."
+                  className="td-textarea"
+                  rows={3}
+                  placeholder={tr.announcementPlaceholder}
                   value={newAnnouncement}
                   onChange={(e) => setNewAnnouncement(e.target.value)}
                 />
                 <div className="td-compose-foot">
-                  <span className="td-char-count">{newAnnouncement.length} حرف</span>
-                  <button onClick={handlePost} disabled={posting || !newAnnouncement.trim()} className="td-post-btn">
+                  <span className="td-char-count">
+                    {newAnnouncement.length} {tr.charCount}
+                  </span>
+                  <button
+                    onClick={handlePost}
+                    disabled={posting || !newAnnouncement.trim()}
+                    className="td-post-btn"
+                  >
                     {posting ? (
-                      <><span className="td-spin" />جارٍ النشر...</>
+                      <>
+                        <span className="td-spin" />
+                        {tr.publishing}
+                      </>
                     ) : (
-                      <><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" /></svg>نشر الإعلان</>
+                      <>
+                        <svg
+                          width="13"
+                          height="13"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2.2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <line x1="22" y1="2" x2="11" y2="13" />
+                          <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                        </svg>
+                        {tr.publishAnnouncement}
+                      </>
                     )}
                   </button>
                 </div>
@@ -204,34 +310,63 @@ export default function TeacherPage() {
 
               <div className="td-ann-list">
                 {announcementsLoading ? (
-                  [1, 2, 3].map((i) => <Skeleton key={i} className="td-sk-ann" />)
+                  [1, 2, 3].map((i) => (
+                    <Skeleton key={i} className="td-sk-ann" />
+                  ))
                 ) : announcements.length === 0 ? (
                   <div className="td-ann-empty">
                     <span className="td-ann-empty-icon">📣</span>
-                    <p>لا توجد إعلانات منشورة بعد</p>
-                    <span>ابدأ بكتابة إعلانك أعلاه</span>
+                    <p>{tr.noAnnouncementsYet}</p>
+                    <span>{tr.startWritingHint}</span>
                   </div>
                 ) : (
                   announcements.map((a) => (
-                    <div key={a.id} className={`td-ann-item ${deletingId === a.id ? "deleting" : ""}`}>
+                    <div
+                      key={a.id}
+                      className={`td-ann-item ${
+                        deletingId === a.id ? "deleting" : ""
+                      }`}
+                    >
                       <div className="td-ann-body">
                         <div className="td-ann-meta-row">
                           <div className="td-ann-av">{initials}</div>
-                          <span className="td-ann-author">{a.teacher.profile.full_name}</span>
+                          <span className="td-ann-author">
+                            {a.teacher.profile.full_name}
+                          </span>
                           <span className="td-ann-sep">·</span>
                           <span className="td-ann-date">
-                            {new Date(a.created_at).toLocaleDateString("ar-SA", { year: "numeric", month: "long", day: "numeric" })}
+                            {new Date(a.created_at).toLocaleDateString(
+                              lang === "ar" ? "ar-SA" : "sq",
+                              {
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                              },
+                            )}
                           </span>
                         </div>
                         <p className="td-ann-content">{a.content}</p>
                       </div>
-                      <button onClick={() => handleDelete(a.id)} disabled={deletingId === a.id} className="td-del-btn">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <button
+                        onClick={() => handleDelete(a.id)}
+                        disabled={deletingId === a.id}
+                        className="td-del-btn"
+                      >
+                        <svg
+                          width="12"
+                          height="12"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
                           <polyline points="3 6 5 6 21 6" />
                           <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
                           <path d="M10 11v6M14 11v6M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2" />
                         </svg>
-                        حذف
+                        {tr.delete}
                       </button>
                     </div>
                   ))

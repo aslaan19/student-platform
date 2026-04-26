@@ -2,6 +2,8 @@
 export const dynamic = "force-dynamic";
 
 import { useEffect, useState } from "react";
+import { useLang } from "@/lib/language-context";
+import { t } from "@/lib/translations";
 
 interface Teacher {
   id: string;
@@ -10,6 +12,10 @@ interface Teacher {
 }
 
 export default function SchoolAdminTeachersPage() {
+  const { lang } = useLang();
+  const tr = t[lang];
+  const dir = lang === "ar" ? "rtl" : "ltr";
+
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -21,19 +27,21 @@ export default function SchoolAdminTeachersPage() {
   }, []);
 
   return (
-    <div className="te-page" dir="rtl">
+    <div className="te-page" dir={dir}>
       <div className="te-header">
-        <h1 className="te-title">المعلمون</h1>
-        <p className="te-sub">{teachers.length} معلم في مدرستك</p>
+        <h1 className="te-title">{tr.teachers}</h1>
+        <p className="te-sub">
+          {teachers.length} {tr.teachersInYourSchool}
+        </p>
       </div>
 
       {loading ? (
         <div className="te-loading">
           <div className="spin" />
-          جارٍ التحميل...
+          {tr.loading}
         </div>
       ) : teachers.length === 0 ? (
-        <div className="te-empty">لا يوجد معلمون بعد.</div>
+        <div className="te-empty">{tr.noTeachers}</div>
       ) : (
         <div className="te-list">
           {teachers.map((t) => (
@@ -44,10 +52,12 @@ export default function SchoolAdminTeachersPage() {
                 <div className="te-classes">
                   {t.classes.length > 0
                     ? t.classes.map((c) => c.name).join("، ")
-                    : "لا فصول معينة"}
+                    : tr.noAssignedClasses}
                 </div>
               </div>
-              <div className="te-count">{t.classes.length} فصل</div>
+              <div className="te-count">
+                {t.classes.length} {tr.classCountLabel}
+              </div>
             </div>
           ))}
         </div>

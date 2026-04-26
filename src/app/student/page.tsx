@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
+import { useLang } from "@/lib/language-context";
+import { t } from "@/lib/translations";
 
 type Announcement = {
   id: string;
@@ -25,6 +27,10 @@ type StudentData = {
 };
 
 export default function StudentPage() {
+  const { lang } = useLang();
+  const tr = t[lang];
+  const dir = lang === "ar" ? "rtl" : "ltr";
+
   const router = useRouter();
   const [data, setData] = useState<StudentData | null>(null);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
@@ -70,14 +76,14 @@ export default function StudentPage() {
     : "ط";
 
   return (
-    <div className="sd-shell" dir="rtl">
+    <div className="sd-shell" dir={dir}>
       {/* Top nav */}
       <header className="sd-nav">
         <div className="sd-nav-inner">
           <div className="sd-nav-brand">
             <div className="sd-nav-logo">🎓</div>
             <div className="sd-nav-titles">
-              <span className="sd-nav-platform">المنصة التعليمية</span>
+              <span className="sd-nav-platform">{tr.platform}</span>
               {data?.school && (
                 <span className="sd-nav-school">{data.school.name}</span>
               )}
@@ -98,7 +104,7 @@ export default function StudentPage() {
                 <rect x="9" y="3" width="6" height="4" rx="1" />
                 <path d="M9 12h6M9 16h4" />
               </svg>
-              الاختبارات
+              {tr.quizzes}
             </Link>
             <div className="sd-user-pill">
               <div className="sd-avatar">{initials}</div>
@@ -123,7 +129,7 @@ export default function StudentPage() {
                   <path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                 </svg>
               )}
-              {loggingOut ? "..." : "خروج"}
+              {loggingOut ? "..." : tr.logout}
             </button>
           </div>
         </div>
@@ -133,21 +139,21 @@ export default function StudentPage() {
         {/* Welcome banner */}
         <div className="sd-welcome">
           <div className="sd-welcome-text">
-            <div className="sd-welcome-greeting">مرحباً،</div>
+            <div className="sd-welcome-greeting">{tr.welcome}،</div>
             <h1 className="sd-welcome-name">{data?.profile.full_name} 👋</h1>
             {data?.class ? (
               <p className="sd-welcome-class">
-                أنت في فصل <strong>{data.class.name}</strong>
+                {tr.inClass} <strong>{data.class.name}</strong>
                 {data.class.teacher && (
                   <>
                     {" "}
-                    · معلمك{" "}
+                    · {tr.yourTeacher}{" "}
                     <strong>{data.class.teacher.profile.full_name}</strong>
                   </>
                 )}
               </p>
             ) : (
-              <p className="sd-welcome-class">لم يتم تعيينك في فصل بعد</p>
+              <p className="sd-welcome-class">{tr.noClass}</p>
             )}
           </div>
           <div className="sd-welcome-avatar">{initials}</div>
@@ -156,8 +162,8 @@ export default function StudentPage() {
         {!data?.class ? (
           <div className="sd-no-class">
             <div className="sd-no-class-icon">📚</div>
-            <h2>لم يتم تعيينك في فصل بعد</h2>
-            <p>تواصل مع مدير المدرسة لإضافتك إلى فصل دراسي</p>
+            <h2>{tr.noClass}</h2>
+            <p>{tr.contactAdmin}</p>
           </div>
         ) : (
           <div className="sd-grid">
@@ -165,14 +171,14 @@ export default function StudentPage() {
             <div className="sd-card sd-announcements">
               <div className="sd-card-header">
                 <div className="sd-card-icon">📢</div>
-                <h2 className="sd-card-title">إعلانات الفصل</h2>
+                <h2 className="sd-card-title">{tr.classAnnouncements}</h2>
                 <span className="sd-card-count">{announcements.length}</span>
               </div>
               <div className="sd-ann-list">
                 {announcements.length === 0 ? (
                   <div className="sd-empty">
                     <div className="sd-empty-icon">🔔</div>
-                    <p>لا توجد إعلانات حتى الآن</p>
+                    <p>{tr.noAnnouncements}</p>
                   </div>
                 ) : (
                   announcements.map((a, i) => (
@@ -198,10 +204,10 @@ export default function StudentPage() {
                           {a.teacher.profile.full_name}
                         </span>
                         <span className="sd-ann-date">
-                          {new Date(a.created_at).toLocaleDateString("ar-SA", {
-                            month: "short",
-                            day: "numeric",
-                          })}
+                          {new Date(a.created_at).toLocaleDateString(
+                            lang === "ar" ? "ar-SA" : "sq-AL",
+                            { month: "short", day: "numeric" },
+                          )}
                         </span>
                       </div>
                     </div>
@@ -214,7 +220,7 @@ export default function StudentPage() {
             <div className="sd-card sd-classmates">
               <div className="sd-card-header">
                 <div className="sd-card-icon">👥</div>
-                <h2 className="sd-card-title">زملائي</h2>
+                <h2 className="sd-card-title">{tr.classmates}</h2>
                 <span className="sd-card-count">
                   {data.class.students.length}
                 </span>
@@ -234,7 +240,9 @@ export default function StudentPage() {
                       <span className="sd-student-name">
                         {s.profile.full_name}
                       </span>
-                      {isMe && <span className="sd-me-badge">أنت</span>}
+                      {isMe && (
+                        <span className="sd-me-badge">{tr.youBadge}</span>
+                      )}
                     </div>
                   );
                 })}
@@ -248,8 +256,8 @@ export default function StudentPage() {
           <Link href="/student/quizzes" className="sd-action-card">
             <div className="sd-action-icon">📝</div>
             <div className="sd-action-body">
-              <div className="sd-action-title">الاختبارات</div>
-              <div className="sd-action-sub">أداء الاختبارات المتاحة</div>
+              <div className="sd-action-title">{tr.quizzes}</div>
+              <div className="sd-action-sub">{tr.quizzesSubtitle}</div>
             </div>
             <svg
               width="14"
@@ -258,7 +266,7 @@ export default function StudentPage() {
               viewBox="0 0 24 24"
               stroke="currentColor"
               strokeWidth={2}
-              style={{ transform: "rotate(180deg)" }}
+              style={{ transform: lang === "ar" ? "rotate(180deg)" : "none" }}
             >
               <path d="M9 18l6-6-6-6" />
             </svg>
@@ -266,8 +274,8 @@ export default function StudentPage() {
           <Link href="/student/classes" className="sd-action-card">
             <div className="sd-action-icon">📚</div>
             <div className="sd-action-body">
-              <div className="sd-action-title">فصلي</div>
-              <div className="sd-action-sub">تفاصيل فصلك الدراسي</div>
+              <div className="sd-action-title">{tr.myClass}</div>
+              <div className="sd-action-sub">{tr.myClassSubtitle}</div>
             </div>
             <svg
               width="14"
@@ -276,7 +284,7 @@ export default function StudentPage() {
               viewBox="0 0 24 24"
               stroke="currentColor"
               strokeWidth={2}
-              style={{ transform: "rotate(180deg)" }}
+              style={{ transform: lang === "ar" ? "rotate(180deg)" : "none" }}
             >
               <path d="M9 18l6-6-6-6" />
             </svg>

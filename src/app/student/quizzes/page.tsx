@@ -1,11 +1,24 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import { useLang } from "@/lib/language-context";
+import { t } from "@/lib/translations";
 
 type Option = { id: string; text: string; order: number };
-type Question = { id: string; type: "MCQ" | "TF"; text: string; order: number; options: Option[] };
+type Question = {
+  id: string;
+  type: "MCQ" | "TF";
+  text: string;
+  order: number;
+  options: Option[];
+};
 type Attempt = { score: number; total: number };
-type Quiz = { id: string; name: string; questions: Question[]; attempts: Attempt[] };
+type Quiz = {
+  id: string;
+  name: string;
+  questions: Question[];
+  attempts: Attempt[];
+};
 
 function Skeleton({ className = "" }: { className?: string }) {
   return (
@@ -17,16 +30,21 @@ function Skeleton({ className = "" }: { className?: string }) {
 }
 
 export default function StudentQuizzesPage() {
+  const { lang } = useLang();
+  const tr = t[lang];
+  const dir = lang === "ar" ? "rtl" : "ltr";
+
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [activeQuiz, setActiveQuiz] = useState<Quiz | null>(null);
   const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [result, setResult] = useState<{ score: number; total: number } | null>(null);
+  const [result, setResult] = useState<{ score: number; total: number } | null>(
+    null,
+  );
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [visible, setVisible] = useState(false);
   const visibleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // ✅ Fix: fetch is a plain async function, not wrapped in useCallback with setState
   async function fetchQuizzes() {
     try {
       const data = await fetch("/api/student/quizzes").then((r) => r.json());
@@ -44,7 +62,7 @@ export default function StudentQuizzesPage() {
     return () => {
       if (visibleTimerRef.current) clearTimeout(visibleTimerRef.current);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const startQuiz = (quiz: Quiz) => {
@@ -60,14 +78,18 @@ export default function StudentQuizzesPage() {
   const handleSubmit = async () => {
     if (!activeQuiz) return;
     const unanswered = activeQuiz.questions.filter((q) => !answers[q.id]);
-    if (unanswered.length > 0) return alert(`لم تجب على ${unanswered.length} سؤال بعد`);
+    if (unanswered.length > 0)
+      return alert(`${unanswered.length} ${tr.questionsRemaining}`);
     setSubmitting(true);
     const res = await fetch("/api/student/quizzes/submit", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         quizId: activeQuiz.id,
-        answers: Object.entries(answers).map(([questionId, answer]) => ({ questionId, answer })),
+        answers: Object.entries(answers).map(([questionId, answer]) => ({
+          questionId,
+          answer,
+        })),
       }),
     });
     const data = await res.json();
@@ -77,10 +99,16 @@ export default function StudentQuizzesPage() {
     fetchQuizzes();
   };
 
+  // ── TF option labels (language-aware) ─────────────────────────────────────
+  const tfOptions = [
+    { id: "t", text: tr.trueWord },
+    { id: "f", text: tr.falseWord },
+  ];
+
   // ── Loading skeleton ──────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="space-y-4 p-6 max-w-2xl mx-auto" dir="rtl">
+      <div className="space-y-4 p-6 max-w-2xl mx-auto" dir={dir}>
         <style>{`@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }`}</style>
         <Skeleton className="h-8 w-36" />
         <Skeleton className="h-5 w-48" />
@@ -98,7 +126,10 @@ export default function StudentQuizzesPage() {
     const percent = Math.round((result.score / result.total) * 100);
     const passed = percent >= 50;
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] p-6" dir="rtl">
+      <div
+        className="flex flex-col items-center justify-center min-h-[60vh] p-6"
+        dir={dir}
+      >
         <style>{`
           @keyframes popIn {
             0%   { opacity:0; transform:scale(0.82) }
@@ -112,14 +143,26 @@ export default function StudentQuizzesPage() {
 
         <div
           className="rounded-2xl border border-gray-200 bg-white p-8 text-center space-y-5 max-w-sm w-full shadow-sm"
-          style={{ animation: "popIn 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards" }}
+          style={{
+            animation: "popIn 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards",
+          }}
         >
           {/* Circular progress ring */}
           <div className="flex justify-center">
             <svg width="96" height="96" viewBox="0 0 96 96">
-              <circle cx="48" cy="48" r="40" fill="none" stroke="#f3f4f6" strokeWidth="8" />
               <circle
-                cx="48" cy="48" r="40" fill="none"
+                cx="48"
+                cy="48"
+                r="40"
+                fill="none"
+                stroke="#f3f4f6"
+                strokeWidth="8"
+              />
+              <circle
+                cx="48"
+                cy="48"
+                r="40"
+                fill="none"
                 stroke={passed ? "#22c55e" : "#ef4444"}
                 strokeWidth="8"
                 strokeLinecap="round"
@@ -128,18 +171,29 @@ export default function StudentQuizzesPage() {
                 transform="rotate(-90 48 48)"
                 style={{ transition: "stroke-dashoffset 0.9s ease" }}
               />
-              <text x="48" y="53" textAnchor="middle" fontSize="20" fontWeight="600"
-                fill={passed ? "#16a34a" : "#dc2626"}>
+              <text
+                x="48"
+                y="53"
+                textAnchor="middle"
+                fontSize="20"
+                fontWeight="600"
+                fill={passed ? "#16a34a" : "#dc2626"}
+              >
                 {percent}%
               </text>
             </svg>
           </div>
 
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">{activeQuiz.name}</h2>
+            <h2 className="text-lg font-semibold text-gray-900">
+              {activeQuiz.name}
+            </h2>
             <p className="text-sm text-gray-500 mt-1">
-              أجبت على <span className="font-medium text-gray-700">{result.score}</span> من{" "}
-              <span className="font-medium text-gray-700">{result.total}</span> سؤال بشكل صحيح
+              {tr.answeredCorrectly}{" "}
+              <span className="font-medium text-gray-700">{result.score}</span>{" "}
+              {tr.outOf}{" "}
+              <span className="font-medium text-gray-700">{result.total}</span>{" "}
+              {tr.question}
             </p>
           </div>
 
@@ -149,14 +203,17 @@ export default function StudentQuizzesPage() {
             }`}
           >
             <span>{passed ? "✓" : "✗"}</span>
-            {passed ? "أحسنت! نتيجة رائعة" : "راجع المادة وحاول مرة أخرى"}
+            {passed ? tr.greatResult : tr.reviewAndRetry}
           </div>
 
           <button
-            onClick={() => { setActiveQuiz(null); setResult(null); }}
+            onClick={() => {
+              setActiveQuiz(null);
+              setResult(null);
+            }}
             className="w-full border border-gray-200 rounded-xl py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
           >
-            العودة إلى الاختبارات
+            {tr.backToQuizzes}
           </button>
         </div>
       </div>
@@ -170,7 +227,7 @@ export default function StudentQuizzesPage() {
     const progressPercent = (answered / total) * 100;
 
     return (
-      <div className="space-y-6 p-6 max-w-2xl mx-auto" dir="rtl">
+      <div className="space-y-6 p-6 max-w-2xl mx-auto" dir={dir}>
         <style>{`
           @keyframes fadeSlideIn {
             from { opacity:0; transform:translateY(10px) }
@@ -181,16 +238,18 @@ export default function StudentQuizzesPage() {
         {/* Header */}
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-xl font-bold text-gray-900">{activeQuiz.name}</h1>
+            <h1 className="text-xl font-bold text-gray-900">
+              {activeQuiz.name}
+            </h1>
             <p className="text-sm text-gray-400 mt-0.5">
-              {answered} / {total} تمت الإجابة
+              {answered} / {total} {tr.answeredOf}
             </p>
           </div>
           <button
             onClick={() => setActiveQuiz(null)}
             className="text-xs text-gray-400 hover:text-gray-700 border border-gray-200 rounded-lg px-3 py-1.5 transition-colors mt-0.5 shrink-0"
           >
-            إلغاء
+            {tr.cancel}
           </button>
         </div>
 
@@ -202,7 +261,8 @@ export default function StudentQuizzesPage() {
               style={{
                 width: `${progressPercent}%`,
                 background: progressPercent === 100 ? "#22c55e" : "#111827",
-                transition: "width 0.4s cubic-bezier(0.4,0,0.2,1), background 0.3s ease",
+                transition:
+                  "width 0.4s cubic-bezier(0.4,0,0.2,1), background 0.3s ease",
               }}
             />
           </div>
@@ -212,6 +272,11 @@ export default function StudentQuizzesPage() {
         <div className="space-y-4">
           {activeQuiz.questions.map((q, qi) => {
             const isAnswered = !!answers[q.id];
+            const opts =
+              q.type === "TF"
+                ? tfOptions
+                : q.options.map((o) => ({ id: o.id, text: o.text }));
+
             return (
               <div
                 key={q.id}
@@ -220,7 +285,9 @@ export default function StudentQuizzesPage() {
                     ? "border-gray-900 shadow-sm bg-white"
                     : "border-gray-200 hover:border-gray-300 bg-white"
                 }`}
-                style={{ animation: `fadeSlideIn 0.3s ease ${qi * 60}ms both` }}
+                style={{
+                  animation: `fadeSlideIn 0.3s ease ${qi * 60}ms both`,
+                }}
               >
                 <p className="font-medium text-sm text-gray-900 leading-relaxed">
                   <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 text-gray-500 text-xs font-semibold ml-2 shrink-0">
@@ -229,11 +296,7 @@ export default function StudentQuizzesPage() {
                   {q.text}
                 </p>
                 <div className="space-y-2">
-                  {(
-                    q.type === "TF"
-                      ? [{ id: "t", text: "صح" }, { id: "f", text: "خطأ" }]
-                      : q.options.map((o) => ({ id: o.id, text: o.text }))
-                  ).map((opt) => {
+                  {opts.map((opt) => {
                     const selected = answers[q.id] === opt.text;
                     return (
                       <label
@@ -251,13 +314,14 @@ export default function StudentQuizzesPage() {
                           value={opt.text}
                           onChange={() => handleAnswer(q.id, opt.text)}
                         />
-                        {/* Custom radio indicator */}
                         <span
                           className={`w-4 h-4 rounded-full border-2 shrink-0 flex items-center justify-center transition-colors ${
                             selected ? "border-white" : "border-gray-300"
                           }`}
                         >
-                          {selected && <span className="w-2 h-2 rounded-full bg-white block" />}
+                          {selected && (
+                            <span className="w-2 h-2 rounded-full bg-white block" />
+                          )}
                         </span>
                         <span className="text-sm">{opt.text}</span>
                       </label>
@@ -278,12 +342,12 @@ export default function StudentQuizzesPage() {
           {submitting ? (
             <>
               <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              جارٍ التسليم...
+              {tr.submitting}
             </>
           ) : answered < total ? (
-            `أجب على ${total - answered} سؤال متبقٍ`
+            `${total - answered} ${tr.questionsRemaining}`
           ) : (
-            "تسليم الاختبار ✓"
+            tr.submitQuiz
           )}
         </button>
       </div>
@@ -295,7 +359,7 @@ export default function StudentQuizzesPage() {
 
   return (
     <div
-      dir="rtl"
+      dir={dir}
       className="space-y-6 p-6 max-w-2xl mx-auto"
       style={{
         opacity: visible ? 1 : 0,
@@ -311,17 +375,19 @@ export default function StudentQuizzesPage() {
       {/* Page header */}
       <div className="flex items-end justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">الاختبارات</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{tr.quizzes}</h1>
           {quizzes.length > 0 && (
             <p className="text-sm text-gray-400 mt-0.5">
-              {doneCount} من {quizzes.length} مكتمل
+              {doneCount} {tr.outOf} {quizzes.length} {tr.completed}
             </p>
           )}
         </div>
         {quizzes.length > 0 && (
           <div className="flex gap-1.5 items-center text-xs text-gray-400 mb-0.5">
-            <span className="inline-block w-2 h-2 rounded-full bg-green-400" /> مكتمل
-            <span className="inline-block w-2 h-2 rounded-full bg-gray-200 mr-2" /> لم يبدأ
+            <span className="inline-block w-2 h-2 rounded-full bg-green-400" />
+            {tr.completed}
+            <span className="inline-block w-2 h-2 rounded-full bg-gray-200 mr-2" />
+            {tr.notStarted}
           </div>
         )}
       </div>
@@ -331,7 +397,10 @@ export default function StudentQuizzesPage() {
         <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
           <div
             className="h-1.5 rounded-full bg-green-500"
-            style={{ width: `${(doneCount / quizzes.length) * 100}%`, transition: "width 0.6s ease" }}
+            style={{
+              width: `${(doneCount / quizzes.length) * 100}%`,
+              transition: "width 0.6s ease",
+            }}
           />
         </div>
       )}
@@ -339,23 +408,29 @@ export default function StudentQuizzesPage() {
       {quizzes.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-gray-200 p-12 text-center">
           <p className="text-3xl mb-3">📋</p>
-          <p className="text-gray-500 text-sm">لا توجد اختبارات متاحة بعد</p>
+          <p className="text-gray-500 text-sm">{tr.noQuizzesYet}</p>
         </div>
       ) : (
         <div className="grid gap-3">
           {quizzes.map((quiz, i) => {
             const attempt = quiz.attempts[0];
             const done = !!attempt;
-            const percent = done ? Math.round((attempt.score / attempt.total) * 100) : null;
+            const percent = done
+              ? Math.round((attempt.score / attempt.total) * 100)
+              : null;
             const passed = percent !== null && percent >= 50;
 
             return (
               <div
                 key={quiz.id}
                 className={`rounded-2xl border p-4 flex items-center justify-between gap-4 transition-all duration-200 bg-white ${
-                  done ? "border-gray-200" : "border-gray-200 hover:border-gray-400 hover:shadow-sm"
+                  done
+                    ? "border-gray-200"
+                    : "border-gray-200 hover:border-gray-400 hover:shadow-sm"
                 }`}
-                style={{ animation: `fadeSlideIn 0.3s ease ${i * 55}ms both` }}
+                style={{
+                  animation: `fadeSlideIn 0.3s ease ${i * 55}ms both`,
+                }}
               >
                 {/* Left: icon + info */}
                 <div className="flex items-center gap-3 min-w-0">
@@ -371,15 +446,23 @@ export default function StudentQuizzesPage() {
                     {done ? (passed ? "✓" : "✗") : "?"}
                   </div>
                   <div className="min-w-0">
-                    <h3 className="font-semibold text-gray-900 text-sm truncate">{quiz.name}</h3>
-                    <p className="text-xs text-gray-400 mt-0.5">{quiz.questions.length} سؤال</p>
+                    <h3 className="font-semibold text-gray-900 text-sm truncate">
+                      {quiz.name}
+                    </h3>
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      {quiz.questions.length} {tr.question}
+                    </p>
                   </div>
                 </div>
 
                 {/* Right: score or start button */}
                 {done ? (
                   <div className="text-left shrink-0">
-                    <span className={`text-xl font-bold ${passed ? "text-green-600" : "text-red-500"}`}>
+                    <span
+                      className={`text-xl font-bold ${
+                        passed ? "text-green-600" : "text-red-500"
+                      }`}
+                    >
                       {percent}%
                     </span>
                     <p className="text-xs text-gray-400">
@@ -391,7 +474,7 @@ export default function StudentQuizzesPage() {
                     onClick={() => startQuiz(quiz)}
                     className="shrink-0 bg-gray-900 text-white px-4 py-2 rounded-xl text-xs font-medium transition-all hover:bg-gray-800 hover:scale-[1.03] active:scale-[0.98]"
                   >
-                    ابدأ الاختبار
+                    {tr.startTest}
                   </button>
                 )}
               </div>

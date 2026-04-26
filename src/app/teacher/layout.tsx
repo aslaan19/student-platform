@@ -4,10 +4,13 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { useLang } from "@/lib/language-context";
+import LangToggle from "@/lib/LangToggle";
+import { t } from "@/lib/translations";
 
 const sidebarItems = [
   {
-    label: "الرئيسية",
+    key: "dashboard" as const,
     href: "/teacher",
     icon: (
       <svg
@@ -26,7 +29,7 @@ const sidebarItems = [
     ),
   },
   {
-    label: "فصولي",
+    key: "myClasses" as const,
     href: "/teacher/classes",
     icon: (
       <svg
@@ -46,7 +49,7 @@ const sidebarItems = [
     ),
   },
   {
-    label: "الاختبارات",
+    key: "quizzes" as const,
     href: "/teacher/quizzes",
     icon: (
       <svg
@@ -70,12 +73,16 @@ const sidebarItems = [
 export default function TeacherLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const [name, setName] = useState("المعلم");
+  const [name, setName] = useState("");
   const [initials, setInitials] = useState("م");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [showToggle, setShowToggle] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
+  const { lang, setLang } = useLang();
+  const tr = t[lang];
+  const isRtl = lang === "ar";
 
   useEffect(() => {
     fetch("/api/teacher")
@@ -91,6 +98,11 @@ export default function TeacherLayout({
               .join(""),
           );
         }
+        // Auto-set language from school
+        if (d?.school?.language) {
+          setLang(d.school.language as "ar" | "sq");
+          if (d.school.language === "sq") setShowToggle(true);
+        }
       });
   }, []);
 
@@ -102,7 +114,7 @@ export default function TeacherLayout({
   }
 
   return (
-    <div className="tl-root" dir="rtl">
+    <div className="tl-root" dir={isRtl ? "rtl" : "ltr"}>
       {/* Mobile top bar */}
       <header className="tl-mobile-bar">
         <button className="tl-hamburger" onClick={() => setSidebarOpen(true)}>
@@ -120,7 +132,7 @@ export default function TeacherLayout({
             <line x1="3" y1="18" x2="21" y2="18" />
           </svg>
         </button>
-        <span className="tl-mobile-title">لوحة المعلم</span>
+        <span className="tl-mobile-title">{tr.dashboard}</span>
         <div className="tl-mobile-avatar">{initials}</div>
       </header>
 
@@ -129,7 +141,6 @@ export default function TeacherLayout({
       )}
 
       <div className="tl-body">
-        {/* Sidebar */}
         <aside className={`tl-sidebar ${sidebarOpen ? "open" : ""}`}>
           <div className="tl-brand">
             <div className="tl-brand-icon">
@@ -148,8 +159,10 @@ export default function TeacherLayout({
               </svg>
             </div>
             <div className="tl-brand-text">
-              <span className="tl-brand-title">المنصة التعليمية</span>
-              <span className="tl-brand-sub">لوحة المعلم</span>
+              <span className="tl-brand-title">{tr.platform}</span>
+              <span className="tl-brand-sub">
+                {lang === "ar" ? "لوحة المعلم" : "Paneli i Mësuesit"}
+              </span>
             </div>
             <button
               className="tl-close-btn"
@@ -174,14 +187,24 @@ export default function TeacherLayout({
             <div className="tl-profile-avatar">{initials}</div>
             <div className="tl-profile-info">
               <span className="tl-profile-name">{name}</span>
-              <span className="tl-profile-role">معلم</span>
+              <span className="tl-profile-role">
+                {lang === "ar" ? "معلم" : "Mësues"}
+              </span>
             </div>
           </div>
+
+          {showToggle && (
+            <div style={{ padding: "0 12px 12px" }}>
+              <LangToggle />
+            </div>
+          )}
 
           <div className="tl-divider" />
 
           <nav className="tl-nav">
-            <span className="tl-nav-group-label">القائمة الرئيسية</span>
+            <span className="tl-nav-group-label">
+              {lang === "ar" ? "القائمة الرئيسية" : "Menuja Kryesore"}
+            </span>
             {sidebarItems.map((item) => {
               const isActive =
                 item.href === "/teacher"
@@ -195,7 +218,7 @@ export default function TeacherLayout({
                   onClick={() => setSidebarOpen(false)}
                 >
                   <span className="tl-nav-icon">{item.icon}</span>
-                  <span className="tl-nav-label">{item.label}</span>
+                  <span className="tl-nav-label">{tr[item.key]}</span>
                   {isActive && <span className="tl-nav-active-bar" />}
                 </Link>
               );
@@ -225,7 +248,7 @@ export default function TeacherLayout({
                   <path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                 </svg>
               )}
-              {loggingOut ? "جارٍ الخروج..." : "تسجيل الخروج"}
+              {loggingOut ? "..." : tr.logout}
             </button>
           </div>
         </aside>
@@ -243,12 +266,9 @@ const styles = `
   @keyframes slideIn{from{transform:translateX(100%)}to{transform:translateX(0)}}
   @keyframes fadeIn{from{opacity:0}to{opacity:1}}
   @keyframes sp{to{transform:rotate(360deg)}}
-
   .tl-root{min-height:100vh;background:#f4f5f7;font-family:Tajawal,sans-serif}
   .tl-body{display:flex;min-height:100vh}
-
   .tl-sidebar{width:256px;flex-shrink:0;background:#111827;display:flex;flex-direction:column;min-height:100vh;position:sticky;top:0;height:100vh;overflow-y:auto;overflow-x:hidden;z-index:30}
-
   .tl-brand{display:flex;align-items:center;gap:10px;padding:20px 18px 16px;flex-shrink:0}
   .tl-brand-icon{width:36px;height:36px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.12);border-radius:10px;display:flex;align-items:center;justify-content:center;color:white;flex-shrink:0}
   .tl-brand-text{flex:1;display:flex;flex-direction:column}
@@ -256,15 +276,12 @@ const styles = `
   .tl-brand-sub{font-size:10.5px;color:rgba(255,255,255,0.4);font-weight:500}
   .tl-close-btn{display:none;background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;padding:4px;border-radius:6px;transition:color 0.15s}
   .tl-close-btn:hover{color:white}
-
   .tl-profile{display:flex;align-items:center;gap:10px;margin:0 12px 16px;padding:12px 14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:12px;flex-shrink:0}
   .tl-profile-avatar{width:36px;height:36px;border-radius:9px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:white;flex-shrink:0}
   .tl-profile-info{display:flex;flex-direction:column;gap:1px;overflow:hidden}
   .tl-profile-name{font-size:13px;font-weight:800;color:white;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .tl-profile-role{font-size:11px;color:rgba(255,255,255,0.4);font-weight:500}
-
   .tl-divider{height:1px;background:rgba(255,255,255,0.07);margin:0 12px 16px;flex-shrink:0}
-
   .tl-nav{display:flex;flex-direction:column;gap:2px;padding:0 10px;flex:1}
   .tl-nav-group-label{font-size:10px;font-weight:700;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:0.8px;padding:0 8px 8px}
   .tl-nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;text-decoration:none;color:rgba(255,255,255,0.55);font-size:13.5px;font-weight:600;transition:all 0.16s ease;position:relative}
@@ -275,28 +292,16 @@ const styles = `
   .tl-nav-item.active .tl-nav-icon{background:rgba(255,255,255,0.15)}
   .tl-nav-label{flex:1}
   .tl-nav-active-bar{width:3px;height:16px;background:white;border-radius:99px;opacity:0.6}
-
   .tl-sidebar-footer{padding:0 10px 20px;flex-shrink:0}
   .tl-logout{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:10px;color:rgba(255,255,255,0.4);background:none;border:none;font-size:13px;font-weight:600;font-family:Tajawal,sans-serif;cursor:pointer;transition:all 0.16s;width:100%}
   .tl-logout:hover:not(:disabled){background:rgba(239,68,68,0.12);color:#fca5a5}
   .tl-logout:disabled{opacity:0.5;cursor:not-allowed}
   .tl-logout-spin{width:14px;height:14px;border:2px solid rgba(255,255,255,0.2);border-top-color:rgba(255,255,255,0.6);border-radius:50%;animation:sp 0.7s linear infinite;flex-shrink:0}
-
   .tl-main{flex:1;min-width:0;overflow-x:hidden}
-
   .tl-mobile-bar{display:none;align-items:center;justify-content:space-between;padding:0 18px;height:54px;background:#111827;position:sticky;top:0;z-index:40}
   .tl-hamburger{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:white;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer}
   .tl-mobile-title{font-size:14px;font-weight:800;color:white}
   .tl-mobile-avatar{width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:white}
-
   .tl-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:29;animation:fadeIn 0.2s ease}
-
-  @media(max-width:768px){
-    .tl-mobile-bar{display:flex}
-    .tl-sidebar{position:fixed;right:0;top:0;bottom:0;transform:translateX(100%);transition:transform 0.28s cubic-bezier(0.4,0,0.2,1);height:100%}
-    .tl-sidebar.open{transform:translateX(0);box-shadow:-8px 0 32px rgba(0,0,0,0.3)}
-    .tl-close-btn{display:flex}
-    .tl-body{flex-direction:column}
-    .tl-main{min-height:calc(100vh - 54px)}
-  }
+  @media(max-width:768px){.tl-mobile-bar{display:flex}.tl-sidebar{position:fixed;right:0;top:0;bottom:0;transform:translateX(100%);transition:transform 0.28s cubic-bezier(0.4,0,0.2,1);height:100%}.tl-sidebar.open{transform:translateX(0);box-shadow:-8px 0 32px rgba(0,0,0,0.3)}.tl-close-btn{display:flex}.tl-body{flex-direction:column}.tl-main{min-height:calc(100vh - 54px)}}
 `;

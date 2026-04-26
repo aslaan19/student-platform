@@ -222,12 +222,6 @@ export default function OwnerLayout({
             </svg>
             <span>{navItems.find((n) => isActive(n))?.label ?? "الصفحة"}</span>
           </div>
-          <div className="topbar-actions">
-            <div className="status-indicator">
-              <div className="status-dot" />
-              <span className="status-text">متصل الآن</span>
-            </div>
-          </div>
         </header>
 
         <main className="owner-content">{children}</main>

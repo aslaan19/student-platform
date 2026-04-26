@@ -2,15 +2,44 @@
 export const dynamic = "force-dynamic";
 
 import { useEffect, useState } from "react";
+import { useLang } from "@/lib/language-context";
+import { t } from "@/lib/translations";
 
 type Option = { id: string; text: string; order: number };
-type Question = { id: string; type: "MCQ" | "TF"; text: string; correct_answer: string; order: number; options: Option[] };
-type Attempt = { id: string; score: number; total: number; student: { profile: { full_name: string } } };
-type Quiz = { id: string; name: string; class: { id: string; name: string }; questions: Question[]; attempts: Attempt[] };
+type Question = {
+  id: string;
+  type: "MCQ" | "TF";
+  text: string;
+  correct_answer: string;
+  order: number;
+  options: Option[];
+};
+type Attempt = {
+  id: string;
+  score: number;
+  total: number;
+  student: { profile: { full_name: string } };
+};
+type Quiz = {
+  id: string;
+  name: string;
+  class: { id: string; name: string };
+  questions: Question[];
+  attempts: Attempt[];
+};
 type ClassItem = { id: string; name: string };
-type NewQuestion = { type: "MCQ" | "TF"; text: string; options: string[]; correct_answer: string };
+type NewQuestion = {
+  type: "MCQ" | "TF";
+  text: string;
+  options: string[];
+  correct_answer: string;
+};
 
 export default function TeacherQuizzesPage() {
+  const { lang } = useLang();
+  const tr = t[lang];
+  const dir = lang === "ar" ? "rtl" : "ltr";
+
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [classes, setClasses] = useState<ClassItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -24,7 +53,10 @@ export default function TeacherQuizzesPage() {
   const [formError, setFormError] = useState("");
 
   async function load() {
-    const [qRes, tRes] = await Promise.all([fetch("/api/teacher/quizzes"), fetch("/api/teacher")]);
+    const [qRes, tRes] = await Promise.all([
+      fetch("/api/teacher/quizzes"),
+      fetch("/api/teacher"),
+    ]);
     setQuizzes(await qRes.json());
     const tData = await tRes.json();
     setClasses(tData.classes ?? []);
@@ -33,110 +65,260 @@ export default function TeacherQuizzesPage() {
 
   useEffect(() => {
     load();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // TF option labels are language-aware
+  const tfLabels = [tr.trueWord, tr.falseWord];
+
   const addQuestion = (type: "MCQ" | "TF") =>
-    setQuestions((p) => [...p, { type, text: "", options: type === "MCQ" ? ["", "", "", ""] : ["صح", "خطأ"], correct_answer: "" }]);
+    setQuestions((p) => [
+      ...p,
+      {
+        type,
+        text: "",
+        options: type === "MCQ" ? ["", "", "", ""] : tfLabels,
+        correct_answer: "",
+      },
+    ]);
 
   const updateQ = (i: number, field: string, val: string) =>
-    setQuestions((p) => p.map((q, idx) => idx === i ? { ...q, [field]: val } : q));
+    setQuestions((p) =>
+      p.map((q, idx) => (idx === i ? { ...q, [field]: val } : q)),
+    );
 
   const updateOpt = (qi: number, oi: number, val: string) =>
-    setQuestions((p) => p.map((q, i) => {
-      if (i !== qi) return q;
-      const opts = [...q.options]; opts[oi] = val; return { ...q, options: opts };
-    }));
+    setQuestions((p) =>
+      p.map((q, i) => {
+        if (i !== qi) return q;
+        const opts = [...q.options];
+        opts[oi] = val;
+        return { ...q, options: opts };
+      }),
+    );
 
   async function handleSubmit() {
     setFormError("");
-    if (!quizName.trim()) { setFormError("أدخل اسم الاختبار"); return; }
-    if (!selectedClass) { setFormError("اختر الفصل"); return; }
-    if (questions.length === 0) { setFormError("أضف سؤالاً على الأقل"); return; }
+    if (!quizName.trim()) {
+      setFormError(tr.enterQuizName);
+      return;
+    }
+    if (!selectedClass) {
+      setFormError(tr.chooseClassPrompt);
+      return;
+    }
+    if (questions.length === 0) {
+      setFormError(tr.addAtLeastOne);
+      return;
+    }
     for (const q of questions) {
-      if (!q.text.trim()) { setFormError("أكمل نص جميع الأسئلة"); return; }
-      if (!q.correct_answer) { setFormError("اختر الإجابة الصحيحة لجميع الأسئلة"); return; }
-      if (q.type === "MCQ" && q.options.filter((o) => o.trim()).length < 2) { setFormError("أضف خيارين على الأقل"); return; }
+      if (!q.text.trim()) {
+        setFormError(tr.fillAllQuestions);
+        return;
+      }
+      if (!q.correct_answer) {
+        setFormError(tr.chooseCorrectForAll);
+        return;
+      }
+      if (q.type === "MCQ" && q.options.filter((o) => o.trim()).length < 2) {
+        setFormError(tr.addTwoOptions);
+        return;
+      }
     }
     setSubmitting(true);
     const res = await fetch("/api/teacher/quizzes", {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: quizName, classId: selectedClass, questions: questions.map((q) => ({ ...q, options: q.type === "MCQ" ? q.options.filter((o) => o.trim()) : undefined })) }),
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: quizName,
+        classId: selectedClass,
+        questions: questions.map((q) => ({
+          ...q,
+          options:
+            q.type === "MCQ" ? q.options.filter((o) => o.trim()) : undefined,
+        })),
+      }),
     });
     setSubmitting(false);
-    if (!res.ok) { const e = await res.json(); setFormError(e.error ?? "فشل الحفظ"); return; }
-    setQuizName(""); setSelectedClass(""); setQuestions([]); setCreating(false); load();
+    if (!res.ok) {
+      const e = await res.json();
+      setFormError(e.error ?? tr.saveQuiz);
+      return;
+    }
+    setQuizName("");
+    setSelectedClass("");
+    setQuestions([]);
+    setCreating(false);
+    load();
   }
 
   async function handleDelete(id: string) {
-    if (!confirm("حذف هذا الاختبار نهائياً؟")) return;
+    if (!confirm(tr.deleteQuizConfirm)) return;
     setDeletingId(id);
     await fetch(`/api/teacher/quizzes/${id}`, { method: "DELETE" });
-    setDeletingId(null); load();
+    setDeletingId(null);
+    load();
   }
 
-  if (loading) return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 160, gap: 10, color: "#6b7280", fontFamily: "Tajawal, sans-serif" }}>
-      <div style={{ width: 18, height: 18, border: "2px solid #e5e7eb", borderTopColor: "#2563eb", borderRadius: "50%", animation: "sp 0.7s linear infinite" }} />
-      جارٍ التحميل...<style>{`@keyframes sp{to{transform:rotate(360deg)}}`}</style>
-    </div>
-  );
+  if (loading)
+    return (
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          height: 160,
+          gap: 10,
+          color: "#6b7280",
+          fontFamily: "Tajawal, sans-serif",
+        }}
+      >
+        <div
+          style={{
+            width: 18,
+            height: 18,
+            border: "2px solid #e5e7eb",
+            borderTopColor: "#2563eb",
+            borderRadius: "50%",
+            animation: "sp 0.7s linear infinite",
+          }}
+        />
+        {tr.loading}
+        <style>{`@keyframes sp{to{transform:rotate(360deg)}}`}</style>
+      </div>
+    );
 
   return (
-    <div className="tq-shell" dir="rtl">
+    <div className="tq-shell" dir={dir}>
       <div className="tq-header">
         <div>
-          <h1 className="tq-title">الاختبارات</h1>
-          <p className="tq-sub">{quizzes.length} اختبار · {quizzes.reduce((a, q) => a + q.attempts.length, 0)} محاولة</p>
+          <h1 className="tq-title">{tr.quizzes}</h1>
+          <p className="tq-sub">
+            {quizzes.length} {tr.attempt} ·{" "}
+            {quizzes.reduce((a, q) => a + q.attempts.length, 0)} {tr.attempt}
+          </p>
         </div>
-        {!creating && <button className="tq-btn primary" onClick={() => setCreating(true)}>+ اختبار جديد</button>}
+        {!creating && (
+          <button className="tq-btn primary" onClick={() => setCreating(true)}>
+            + {tr.newQuiz}
+          </button>
+        )}
       </div>
 
       {creating && (
         <div className="tq-form">
           <div className="tq-form-header">
-            <h2 className="tq-form-title">إنشاء اختبار جديد</h2>
-            <button className="tq-ghost-btn" onClick={() => { setCreating(false); setFormError(""); }}>إلغاء</button>
+            <h2 className="tq-form-title">{tr.createNewQuiz}</h2>
+            <button
+              className="tq-ghost-btn"
+              onClick={() => {
+                setCreating(false);
+                setFormError("");
+              }}
+            >
+              {tr.cancel}
+            </button>
           </div>
           <div className="tq-form-row">
             <div className="tq-field">
-              <label className="tq-label">اسم الاختبار</label>
-              <input className="tq-input" placeholder="مثال: اختبار الفصل الأول" value={quizName} onChange={(e) => setQuizName(e.target.value)} dir="rtl" />
+              <label className="tq-label">{tr.quizName}</label>
+              <input
+                className="tq-input"
+                placeholder={tr.quizNamePlaceholder}
+                value={quizName}
+                onChange={(e) => setQuizName(e.target.value)}
+                dir={dir}
+              />
             </div>
             <div className="tq-field">
-              <label className="tq-label">الفصل</label>
-              <select className="tq-input" value={selectedClass} onChange={(e) => setSelectedClass(e.target.value)} dir="rtl">
-                <option value="">اختر الفصل</option>
-                {classes.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+              <label className="tq-label">{tr.selectClass}</label>
+              <select
+                className="tq-input"
+                value={selectedClass}
+                onChange={(e) => setSelectedClass(e.target.value)}
+                dir={dir}
+              >
+                <option value="">{tr.chooseClassPrompt}</option>
+                {classes.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
+
           <div className="tq-questions">
             {questions.map((q, qi) => (
               <div key={qi} className="tq-q-card">
                 <div className="tq-q-header">
-                  <div className="tq-q-num">س{qi + 1}</div>
-                  <span className="tq-q-type-badge">{q.type === "MCQ" ? "اختيار متعدد" : "صح / خطأ"}</span>
-                  <button className="tq-del-q-btn" onClick={() => setQuestions((p) => p.filter((_, i) => i !== qi))}>✕</button>
+                  <div className="tq-q-num">
+                    {tr.question}
+                    {qi + 1}
+                  </div>
+                  <span className="tq-q-type-badge">
+                    {q.type === "MCQ" ? tr.mcqType : tr.tfType}
+                  </span>
+                  <button
+                    className="tq-del-q-btn"
+                    onClick={() =>
+                      setQuestions((p) => p.filter((_, i) => i !== qi))
+                    }
+                  >
+                    ✕
+                  </button>
                 </div>
-                <input className="tq-input" placeholder="نص السؤال" value={q.text} onChange={(e) => updateQ(qi, "text", e.target.value)} dir="rtl" />
+                <input
+                  className="tq-input"
+                  placeholder={tr.questionText}
+                  value={q.text}
+                  onChange={(e) => updateQ(qi, "text", e.target.value)}
+                  dir={dir}
+                />
                 {q.type === "MCQ" ? (
                   <div className="tq-opts">
                     {q.options.map((opt, oi) => (
                       <div key={oi} className="tq-opt-row">
-                        <button className={`tq-radio ${q.correct_answer === opt && opt.trim() ? "selected" : ""}`} type="button" onClick={() => opt.trim() && updateQ(qi, "correct_answer", opt)}>
+                        <button
+                          className={`tq-radio ${
+                            q.correct_answer === opt && opt.trim()
+                              ? "selected"
+                              : ""
+                          }`}
+                          type="button"
+                          onClick={() =>
+                            opt.trim() && updateQ(qi, "correct_answer", opt)
+                          }
+                        >
                           {q.correct_answer === opt && opt.trim() && "✓"}
                         </button>
-                        <input className="tq-input opt-inp" placeholder={`خيار ${oi + 1}`} value={opt} onChange={(e) => { if (q.correct_answer === opt) updateQ(qi, "correct_answer", e.target.value); updateOpt(qi, oi, e.target.value); }} dir="rtl" />
+                        <input
+                          className="tq-input opt-inp"
+                          placeholder={`${tr.optionNumber} ${oi + 1}`}
+                          value={opt}
+                          onChange={(e) => {
+                            if (q.correct_answer === opt)
+                              updateQ(qi, "correct_answer", e.target.value);
+                            updateOpt(qi, oi, e.target.value);
+                          }}
+                          dir={dir}
+                        />
                       </div>
                     ))}
-                    <div className="tq-opt-hint">اضغط على الدائرة لتحديد الإجابة الصحيحة</div>
+                    <div className="tq-opt-hint">{tr.clickCircleHint}</div>
                   </div>
                 ) : (
                   <div className="tq-tf-row">
-                    {["صح", "خطأ"].map((opt) => (
-                      <button key={opt} className={`tq-tf-btn ${q.correct_answer === opt ? "selected" : ""} ${opt === "صح" ? "true" : "false"}`} onClick={() => updateQ(qi, "correct_answer", opt)} type="button">
-                        {opt === "صح" ? "✓ صح" : "✗ خطأ"}
+                    {tfLabels.map((opt, idx) => (
+                      <button
+                        key={opt}
+                        className={`tq-tf-btn ${
+                          q.correct_answer === opt ? "selected" : ""
+                        } ${idx === 0 ? "true" : "false"}`}
+                        onClick={() => updateQ(qi, "correct_answer", opt)}
+                        type="button"
+                      >
+                        {idx === 0 ? `✓ ${tr.trueWord}` : `✗ ${tr.falseWord}`}
                       </button>
                     ))}
                   </div>
@@ -144,13 +326,26 @@ export default function TeacherQuizzesPage() {
               </div>
             ))}
           </div>
+
           <div className="tq-add-q-row">
-            <button className="tq-add-q-btn" onClick={() => addQuestion("MCQ")}>+ اختيار متعدد</button>
-            <button className="tq-add-q-btn" onClick={() => addQuestion("TF")}>+ صح / خطأ</button>
+            <button className="tq-add-q-btn" onClick={() => addQuestion("MCQ")}>
+              {tr.addMcq}
+            </button>
+            <button className="tq-add-q-btn" onClick={() => addQuestion("TF")}>
+              {tr.addTf}
+            </button>
           </div>
+
           {formError && <div className="tq-error">{formError}</div>}
-          <button className="tq-btn primary full" onClick={handleSubmit} disabled={submitting}>
-            {submitting ? "جارٍ الحفظ..." : `حفظ الاختبار (${questions.length} سؤال)`}
+
+          <button
+            className="tq-btn primary full"
+            onClick={handleSubmit}
+            disabled={submitting}
+          >
+            {submitting
+              ? tr.savingQuiz
+              : `${tr.saveQuizWithCount} (${questions.length} ${tr.question})`}
           </button>
         </div>
       )}
@@ -158,14 +353,21 @@ export default function TeacherQuizzesPage() {
       {quizzes.length === 0 && !creating ? (
         <div className="tq-empty">
           <div style={{ fontSize: 40 }}>📝</div>
-          <h3>لا توجد اختبارات بعد</h3>
-          <p>أنشئ أول اختبار لفصلك</p>
-          <button className="tq-btn primary" onClick={() => setCreating(true)}>+ إنشاء اختبار</button>
+          <h3>{tr.noQuizzesTeacher}</h3>
+          <p>{tr.createFirstQuiz}</p>
+          <button className="tq-btn primary" onClick={() => setCreating(true)}>
+            {tr.createQuizBtn}
+          </button>
         </div>
       ) : (
         <div className="tq-list">
           {quizzes.map((quiz) => (
-            <div key={quiz.id} className={`tq-quiz-card ${deletingId === quiz.id ? "deleting" : ""}`}>
+            <div
+              key={quiz.id}
+              className={`tq-quiz-card ${
+                deletingId === quiz.id ? "deleting" : ""
+              }`}
+            >
               <div className="tq-quiz-top">
                 <div style={{ fontSize: 24 }}>📋</div>
                 <div className="tq-quiz-info">
@@ -173,37 +375,75 @@ export default function TeacherQuizzesPage() {
                   <div className="tq-quiz-meta">
                     <span className="tq-tag">{quiz.class.name}</span>
                     <span className="tq-dot" />
-                    <span>{quiz.questions.length} سؤال</span>
+                    <span>
+                      {quiz.questions.length} {tr.question}
+                    </span>
                     <span className="tq-dot" />
-                    <span>{quiz.attempts.length} محاولة</span>
+                    <span>
+                      {quiz.attempts.length} {tr.attempt}
+                    </span>
                   </div>
                 </div>
                 <div className="tq-quiz-actions">
-                  <button className="tq-ghost-btn" onClick={() => setExpandedQuiz(expandedQuiz === quiz.id ? null : quiz.id)}>
-                    {expandedQuiz === quiz.id ? "إخفاء النتائج" : "النتائج"}
+                  <button
+                    className="tq-ghost-btn"
+                    onClick={() =>
+                      setExpandedQuiz(expandedQuiz === quiz.id ? null : quiz.id)
+                    }
+                  >
+                    {expandedQuiz === quiz.id ? tr.hideResults : tr.showResults}
                   </button>
-                  <button className="tq-del-btn" onClick={() => handleDelete(quiz.id)} disabled={deletingId === quiz.id}>
-                    {deletingId === quiz.id ? "..." : "حذف"}
+                  <button
+                    className="tq-del-btn"
+                    onClick={() => handleDelete(quiz.id)}
+                    disabled={deletingId === quiz.id}
+                  >
+                    {deletingId === quiz.id ? "..." : tr.delete}
                   </button>
                 </div>
               </div>
+
               {expandedQuiz === quiz.id && (
                 <div className="tq-results">
-                  <div className="tq-results-header">نتائج الطلاب</div>
+                  <div className="tq-results-header">{tr.studentResults}</div>
                   {quiz.attempts.length === 0 ? (
-                    <div className="tq-results-empty">لم يؤدِ أي طالب الاختبار بعد</div>
+                    <div className="tq-results-empty">{tr.noAttemptsYet}</div>
                   ) : (
                     <div className="tq-results-list">
                       {quiz.attempts.map((a) => {
-                        const pct = a.total > 0 ? Math.round((a.score / a.total) * 100) : 0;
+                        const pct =
+                          a.total > 0
+                            ? Math.round((a.score / a.total) * 100)
+                            : 0;
                         return (
                           <div key={a.id} className="tq-result-row">
-                            <div className="tq-result-avatar">{a.student.profile.full_name.charAt(0)}</div>
-                            <div className="tq-result-name">{a.student.profile.full_name}</div>
-                            <div className="tq-result-bar-wrap">
-                              <div className="tq-result-bar" style={{ width: `${pct}%`, background: pct >= 70 ? "#10b981" : pct >= 50 ? "#f59e0b" : "#ef4444" }} />
+                            <div className="tq-result-avatar">
+                              {a.student.profile.full_name.charAt(0)}
                             </div>
-                            <div className={`tq-result-score ${pct >= 70 ? "good" : pct >= 50 ? "mid" : "low"}`}>{a.score}/{a.total}</div>
+                            <div className="tq-result-name">
+                              {a.student.profile.full_name}
+                            </div>
+                            <div className="tq-result-bar-wrap">
+                              <div
+                                className="tq-result-bar"
+                                style={{
+                                  width: `${pct}%`,
+                                  background:
+                                    pct >= 70
+                                      ? "#10b981"
+                                      : pct >= 50
+                                        ? "#f59e0b"
+                                        : "#ef4444",
+                                }}
+                              />
+                            </div>
+                            <div
+                              className={`tq-result-score ${
+                                pct >= 70 ? "good" : pct >= 50 ? "mid" : "low"
+                              }`}
+                            >
+                              {a.score}/{a.total}
+                            </div>
                           </div>
                         );
                       })}

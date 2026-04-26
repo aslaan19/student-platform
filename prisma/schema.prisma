@@ -58,6 +58,7 @@ model School {
   name       String   @unique
   admin_id   String?  @unique @db.Uuid
   created_at DateTime @default(now())
+  language   String   @default("ar")
 
   admin              Profile?            @relation("SchoolAdmin", fields: [admin_id], references: [id], onDelete: SetNull)
   teachers           Teacher[]

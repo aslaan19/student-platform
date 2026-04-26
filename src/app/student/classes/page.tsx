@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useLang } from "@/lib/language-context";
+import { t } from "@/lib/translations";
 
 type Announcement = {
   id: string;
@@ -20,6 +22,10 @@ type StudentData = {
 };
 
 export default function StudentClassPage() {
+  const { lang } = useLang();
+  const tr = t[lang];
+  const dir = lang === "ar" ? "rtl" : "ltr";
+
   const [data, setData] = useState<StudentData | null>(null);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
 
@@ -39,50 +45,54 @@ export default function StudentClassPage() {
 
   if (!data)
     return (
-      <div className="p-6" dir="rtl">
-        جارٍ التحميل...
+      <div className="p-6" dir={dir}>
+        {tr.loading}
       </div>
     );
 
   if (!data.class) {
     return (
-      <div className="p-6" dir="rtl">
-        <p className="text-gray-500">
-          لم يتم إضافتك إلى فصل بعد. تواصل مع المدير.
-        </p>
+      <div className="p-6" dir={dir}>
+        <p className="text-gray-500">{tr.noClass}</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 p-6" dir="rtl">
+    <div className="space-y-6 p-6" dir={dir}>
       <h1 className="text-2xl font-bold">{data.class.name}</h1>
       <p className="text-gray-600">
-        المعلم: {data.class.teacher?.profile.full_name ?? "لا يوجد معلم"}
+        {tr.yourTeacher}:{" "}
+        {data.class.teacher?.profile.full_name ?? tr.withoutTeacher}
       </p>
 
       <div className="grid md:grid-cols-2 gap-6">
         {/* Classmates */}
         <div className="rounded-xl border p-4 space-y-3">
           <h2 className="font-semibold">
-            زملائي في الفصل ({data.class.students.length})
+            {tr.classmates} ({data.class.students.length})
           </h2>
           {data.class.students.map((s) => (
             <div
               key={s.id}
-              className={`text-sm border rounded px-3 py-2 ${s.profile.full_name === data.profile.full_name ? "bg-gray-50 font-medium" : ""}`}
+              className={`text-sm border rounded px-3 py-2 ${
+                s.profile.full_name === data.profile.full_name
+                  ? "bg-gray-50 font-medium"
+                  : ""
+              }`}
             >
               {s.profile.full_name}
-              {s.profile.full_name === data.profile.full_name && " (أنت)"}
+              {s.profile.full_name === data.profile.full_name &&
+                ` (${tr.youBadge})`}
             </div>
           ))}
         </div>
 
         {/* Announcements */}
         <div className="rounded-xl border p-4 space-y-3">
-          <h2 className="font-semibold">إعلانات الفصل</h2>
+          <h2 className="font-semibold">{tr.classAnnouncements}</h2>
           {announcements.length === 0 ? (
-            <p className="text-sm text-gray-400">لا توجد إعلانات</p>
+            <p className="text-sm text-gray-400">{tr.noAnnouncements}</p>
           ) : (
             announcements.map((a) => (
               <div
@@ -95,7 +105,9 @@ export default function StudentClassPage() {
                     {a.teacher.profile.full_name}
                   </span>
                   <span className="text-xs text-gray-400">
-                    {new Date(a.created_at).toLocaleDateString("ar")}
+                    {new Date(a.created_at).toLocaleDateString(
+                      lang === "ar" ? "ar" : "sq",
+                    )}
                   </span>
                 </div>
               </div>

@@ -1,7 +1,9 @@
-﻿// student/layout.tsx
-"use client";
+﻿"use client";
+
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { useLang } from "@/lib/language-context";
+import LangToggle from "@/lib/LangToggle";
 
 const ONBOARDING_ROUTES: Record<string, string> = {
   PENDING_INTAKE: "/student/intake",
@@ -11,7 +13,6 @@ const ONBOARDING_ROUTES: Record<string, string> = {
   CLASS_ASSIGNED: "/student/welcome",
 };
 
-// For each status, ALL pages the student is allowed to visit
 const ALLOWED_PAGES: Record<string, string[]> = {
   PENDING_INTAKE: ["/student/intake"],
   INTAKE_SUBMITTED: ["/student/waiting"],
@@ -34,6 +35,8 @@ export default function StudentLayout({
   const router = useRouter();
   const pathname = usePathname();
   const [checked, setChecked] = useState(false);
+  const [showToggle, setShowToggle] = useState(false);
+  const { setLang, lang } = useLang();
 
   useEffect(() => {
     fetch("/api/student")
@@ -44,6 +47,16 @@ export default function StudentLayout({
           return;
         }
 
+        // Auto-set language from school
+        if (data.school?.language && data.school.language !== lang) {
+          setLang(data.school.language as "ar" | "sq");
+        }
+
+        // Show toggle only for schools with Albanian language
+        if (data.school?.language === "sq") {
+          setShowToggle(true);
+        }
+
         const status: string = data.onboarding_status;
         const allowed = ALLOWED_PAGES[status];
 
@@ -52,12 +65,20 @@ export default function StudentLayout({
           return;
         }
 
-        // Check if current page is in the allowed list
         const isAllowed = allowed.some(
-          (p) =>
-            p === pathname ||
-            (p.endsWith("*") ? pathname.startsWith(p.slice(0, -1)) : false),
+          (p) => p === pathname || pathname.startsWith(p + "/"),
         );
+
+        if (status === "CLASS_ASSIGNED") {
+          const onDashboard =
+            pathname === "/student" || pathname.startsWith("/student/");
+          if (!onDashboard || pathname === "/student/school-assigned") {
+            router.push("/student/welcome");
+          } else {
+            setChecked(true);
+          }
+          return;
+        }
 
         if (!isAllowed) {
           router.push(ONBOARDING_ROUTES[status] ?? "/student");
@@ -94,5 +115,14 @@ export default function StudentLayout({
     );
   }
 
-  return <>{children}</>;
+  return (
+    <>
+      {showToggle && (
+        <div style={{ position: "fixed", bottom: 24, left: 24, zIndex: 9999 }}>
+          <LangToggle />
+        </div>
+      )}
+      {children}
+    </>
+  );
 }

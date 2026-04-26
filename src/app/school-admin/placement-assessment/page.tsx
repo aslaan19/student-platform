@@ -3,20 +3,55 @@
 export const dynamic = "force-dynamic";
 
 import { useEffect, useState } from "react";
+import { useLang } from "@/lib/language-context";
+import { t } from "@/lib/translations";
 
 type QuestionType = "MCQ" | "TF" | "WRITTEN";
-interface Option { id: string; text: string; order: number; }
-interface Question { id: string; type: QuestionType; text: string; correct_answer: string | null; order: number; options: Option[]; }
-interface Assessment { id: string; title: string; is_active: boolean; questions: Question[]; }
+interface Option {
+  id: string;
+  text: string;
+  order: number;
+}
+interface Question {
+  id: string;
+  type: QuestionType;
+  text: string;
+  correct_answer: string | null;
+  order: number;
+  options: Option[];
+}
+interface Assessment {
+  id: string;
+  title: string;
+  is_active: boolean;
+  questions: Question[];
+}
 
-const TYPE_LABELS: Record<QuestionType, string> = { MCQ: "اختيار من متعدد", TF: "صح أم خطأ", WRITTEN: "مكتوب" };
-const TYPE_COLORS: Record<QuestionType, string> = { MCQ: "#2563eb", TF: "#10b981", WRITTEN: "#f59e0b" };
-const EMPTY_FORM = { type: "MCQ" as QuestionType, text: "", correct_answer: "", options: [{ text: "" }, { text: "" }] };
+const TYPE_COLORS: Record<QuestionType, string> = {
+  MCQ: "#2563eb",
+  TF: "#10b981",
+  WRITTEN: "#f59e0b",
+};
+const EMPTY_FORM = {
+  type: "MCQ" as QuestionType,
+  text: "",
+  correct_answer: "",
+  options: [{ text: "" }, { text: "" }],
+};
 
 export default function PlacementAssessmentPage() {
+  const { lang } = useLang();
+  const tr = t[lang];
+
+  const TYPE_LABELS: Record<QuestionType, string> = {
+    MCQ: tr.mcq,
+    TF: tr.tf,
+    WRITTEN: tr.written,
+  };
+
   const [assessment, setAssessment] = useState<Assessment | null>(null);
   const [loading, setLoading] = useState(true);
-  const [newTitle, setNewTitle] = useState("اختبار التصنيف المدرسي");
+  const [newTitle, setNewTitle] = useState<string>(tr.defaultAssessmentTitle);
   const [creating, setCreating] = useState(false);
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState("");
@@ -34,12 +69,15 @@ export default function PlacementAssessmentPage() {
     setLoading(false);
   }
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+  }, []);
 
   async function handleCreate() {
     setCreating(true);
     const r = await fetch("/api/school-admin/placement-assessment", {
-      method: "POST", headers: { "Content-Type": "application/json" },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title: newTitle }),
     });
     const d = await r.json();
@@ -50,185 +88,489 @@ export default function PlacementAssessmentPage() {
   async function handleTitleSave() {
     if (!assessment) return;
     await fetch(`/api/school-admin/placement-assessment/${assessment.id}`, {
-      method: "PUT", headers: { "Content-Type": "application/json" },
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title: titleDraft }),
     });
-    setAssessment((a) => a ? { ...a, title: titleDraft } : a);
+    setAssessment((a) => (a ? { ...a, title: titleDraft } : a));
     setEditingTitle(false);
   }
 
   async function handleToggleActive() {
     if (!assessment) return;
     await fetch(`/api/school-admin/placement-assessment/${assessment.id}`, {
-      method: "PUT", headers: { "Content-Type": "application/json" },
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ is_active: !assessment.is_active }),
     });
-    setAssessment((a) => a ? { ...a, is_active: !a.is_active } : a);
+    setAssessment((a) => (a ? { ...a, is_active: !a.is_active } : a));
   }
 
-  function openAdd() { setForm(EMPTY_FORM); setModalMode("add"); setEditingQId(null); setModalOpen(true); }
+  function openAdd() {
+    setForm(EMPTY_FORM);
+    setModalMode("add");
+    setEditingQId(null);
+    setModalOpen(true);
+  }
   function openEdit(q: Question) {
-    setForm({ type: q.type, text: q.text, correct_answer: q.correct_answer ?? "", options: q.options.length > 0 ? q.options.map((o) => ({ text: o.text })) : [{ text: "" }, { text: "" }] });
-    setModalMode("edit"); setEditingQId(q.id); setModalOpen(true);
+    setForm({
+      type: q.type,
+      text: q.text,
+      correct_answer: q.correct_answer ?? "",
+      options:
+        q.options.length > 0
+          ? q.options.map((o) => ({ text: o.text }))
+          : [{ text: "" }, { text: "" }],
+    });
+    setModalMode("edit");
+    setEditingQId(q.id);
+    setModalOpen(true);
   }
 
   async function handleSave() {
     if (!assessment) return;
     setSaving(true);
     try {
-      const body: any = { type: form.type, text: form.text, correct_answer: form.correct_answer || null, options: [] };
-      if (form.type === "MCQ") body.options = form.options.filter((o) => o.text.trim());
+      const body: any = {
+        type: form.type,
+        text: form.text,
+        correct_answer: form.correct_answer || null,
+        options: [],
+      };
+      if (form.type === "MCQ")
+        body.options = form.options.filter((o) => o.text.trim());
       if (modalMode === "add") {
-        const r = await fetch(`/api/school-admin/placement-assessment/${assessment.id}/questions`, {
-          method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
-        });
+        const r = await fetch(
+          `/api/school-admin/placement-assessment/${assessment.id}/questions`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          },
+        );
         const d = await r.json();
-        if (d.question) setAssessment((a) => a ? { ...a, questions: [...a.questions, d.question] } : a);
+        if (d.question)
+          setAssessment((a) =>
+            a ? { ...a, questions: [...a.questions, d.question] } : a,
+          );
       } else if (editingQId) {
-        const r = await fetch(`/api/school-admin/placement-assessment/${assessment.id}/questions/${editingQId}`, {
-          method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
-        });
+        const r = await fetch(
+          `/api/school-admin/placement-assessment/${assessment.id}/questions/${editingQId}`,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          },
+        );
         const d = await r.json();
-        if (d.question) setAssessment((a) => a ? { ...a, questions: a.questions.map((q) => q.id === editingQId ? d.question : q) } : a);
+        if (d.question)
+          setAssessment((a) =>
+            a
+              ? {
+                  ...a,
+                  questions: a.questions.map((q) =>
+                    q.id === editingQId ? d.question : q,
+                  ),
+                }
+              : a,
+          );
       }
       setModalOpen(false);
-    } finally { setSaving(false); }
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function handleDelete(qid: string) {
-    if (!assessment || !confirm("حذف هذا السؤال؟")) return;
+    if (!assessment || !confirm(tr.deleteQuestionConfirm)) return;
     setDeleting(qid);
-    await fetch(`/api/school-admin/placement-assessment/${assessment.id}/questions/${qid}`, { method: "DELETE" });
-    setAssessment((a) => a ? { ...a, questions: a.questions.filter((q) => q.id !== qid) } : a);
+    await fetch(
+      `/api/school-admin/placement-assessment/${assessment.id}/questions/${qid}`,
+      { method: "DELETE" },
+    );
+    setAssessment((a) =>
+      a ? { ...a, questions: a.questions.filter((q) => q.id !== qid) } : a,
+    );
     setDeleting(null);
   }
 
-  const addOption = () => setForm((f) => ({ ...f, options: [...f.options, { text: "" }] }));
-  const removeOption = (i: number) => setForm((f) => ({ ...f, options: f.options.filter((_, idx) => idx !== i) }));
-  const updateOption = (i: number, text: string) => setForm((f) => ({ ...f, options: f.options.map((o, idx) => idx === i ? { text } : o) }));
+  const addOption = () =>
+    setForm((f) => ({ ...f, options: [...f.options, { text: "" }] }));
+  const removeOption = (i: number) =>
+    setForm((f) => ({
+      ...f,
+      options: f.options.filter((_, idx) => idx !== i),
+    }));
+  const updateOption = (i: number, text: string) =>
+    setForm((f) => ({
+      ...f,
+      options: f.options.map((o, idx) => (idx === i ? { text } : o)),
+    }));
 
-  if (loading) return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 200, gap: 10, color: "#6b7280", fontFamily: "Tajawal, sans-serif" }}>
-      <div style={{ width: 18, height: 18, border: "2px solid #e5e7eb", borderTopColor: "#2563eb", borderRadius: "50%", animation: "sp 0.7s linear infinite" }} />
-      جارٍ التحميل...<style>{`@keyframes sp{to{transform:rotate(360deg)}}`}</style>
-    </div>
-  );
+  const dir = lang === "ar" ? "rtl" : "ltr";
 
-  if (!assessment) return (
-    <div className="pa-page" dir="rtl">
-      <h1 className="pa-title">اختبار التصنيف</h1>
-      <p className="pa-sub">لم يتم إنشاء اختبار تصنيف لمدرستك بعد.</p>
-      <div className="create-card">
-        <div style={{ fontSize: 44 }}>📋</div>
-        <h2 style={{ fontSize: 17, fontWeight: 800, color: "#111827" }}>إنشاء اختبار التصنيف</h2>
-        <p style={{ fontSize: 13, color: "#6b7280" }}>هذا الاختبار يجريه الطلاب بعد تعيينهم في مدرستك لتحديد الفصل المناسب.</p>
-        <input className="pa-input" value={newTitle} onChange={(e) => setNewTitle(e.target.value)} placeholder="عنوان الاختبار" dir="rtl" />
-        <button className="pa-btn primary" onClick={handleCreate} disabled={creating || !newTitle.trim()}>{creating ? "جارٍ الإنشاء..." : "إنشاء الاختبار"}</button>
+  if (loading)
+    return (
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          height: 200,
+          gap: 10,
+          color: "#6b7280",
+          fontFamily: "Tajawal, sans-serif",
+        }}
+      >
+        <div
+          style={{
+            width: 18,
+            height: 18,
+            border: "2px solid #e5e7eb",
+            borderTopColor: "#2563eb",
+            borderRadius: "50%",
+            animation: "sp 0.7s linear infinite",
+          }}
+        />
+        {tr.loading}
+        <style>{`@keyframes sp{to{transform:rotate(360deg)}}`}</style>
       </div>
-      <style>{sharedStyles}</style>
-    </div>
-  );
+    );
+
+  if (!assessment)
+    return (
+      <div className="pa-page" dir={dir}>
+        <h1 className="pa-title">{tr.placementAssessment}</h1>
+        <p className="pa-sub">{tr.notCreatedYet}</p>
+        <div className="create-card">
+          <div style={{ fontSize: 44 }}>📋</div>
+          <h2 style={{ fontSize: 17, fontWeight: 800, color: "#111827" }}>
+            {tr.createAssessment}
+          </h2>
+          <p style={{ fontSize: 13, color: "#6b7280" }}>
+            {tr.createPlacementDesc}
+          </p>
+          <input
+            className="pa-input"
+            value={newTitle}
+            onChange={(e) => setNewTitle(e.target.value)}
+            placeholder={tr.assessmentTitle}
+            dir={dir}
+          />
+          <button
+            className="pa-btn primary"
+            onClick={handleCreate}
+            disabled={creating || !newTitle.trim()}
+          >
+            {creating ? tr.creatingAssessment : tr.createAssessment}
+          </button>
+        </div>
+        <style>{sharedStyles}</style>
+      </div>
+    );
 
   return (
-    <div className="pa-page" dir="rtl">
+    <div className="pa-page" dir={dir}>
       <div className="pa-header">
         <div className="pa-title-row">
           {editingTitle ? (
-            <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1 }}>
-              <input className="pa-input title-inp" value={titleDraft} onChange={(e) => setTitleDraft(e.target.value)} autoFocus dir="rtl" />
-              <button className="pa-btn primary sm" onClick={handleTitleSave}>حفظ</button>
-              <button className="pa-btn ghost sm" onClick={() => setEditingTitle(false)}>إلغاء</button>
+            <div
+              style={{ display: "flex", alignItems: "center", gap: 8, flex: 1 }}
+            >
+              <input
+                className="pa-input title-inp"
+                value={titleDraft}
+                onChange={(e) => setTitleDraft(e.target.value)}
+                autoFocus
+                dir={dir}
+              />
+              <button className="pa-btn primary sm" onClick={handleTitleSave}>
+                {tr.save}
+              </button>
+              <button
+                className="pa-btn ghost sm"
+                onClick={() => setEditingTitle(false)}
+              >
+                {tr.cancel}
+              </button>
             </div>
           ) : (
             <>
               <h1 className="pa-title">{assessment.title}</h1>
-              <button className="icon-btn" onClick={() => { setTitleDraft(assessment.title); setEditingTitle(true); }}>✏️</button>
+              <button
+                className="icon-btn"
+                onClick={() => {
+                  setTitleDraft(assessment.title);
+                  setEditingTitle(true);
+                }}
+              >
+                ✏️
+              </button>
             </>
           )}
         </div>
         <div className="pa-meta">
-          <div className={`active-badge ${assessment.is_active ? "on" : "off"}`}><div className="active-dot" />{assessment.is_active ? "مفعّل" : "معطّل"}</div>
-          <button className="pa-btn ghost sm" onClick={handleToggleActive}>{assessment.is_active ? "تعطيل" : "تفعيل"}</button>
-          <span style={{ fontSize: 12, color: "#9ca3af", marginRight: "auto" }}>{assessment.questions.length} سؤال</span>
+          <div
+            className={`active-badge ${assessment.is_active ? "on" : "off"}`}
+          >
+            <div className="active-dot" />
+            {assessment.is_active ? tr.enabled : tr.disabled}
+          </div>
+          <button className="pa-btn ghost sm" onClick={handleToggleActive}>
+            {assessment.is_active ? tr.disable : tr.enable}
+          </button>
+          <span
+            style={{
+              fontSize: 12,
+              color: "#9ca3af",
+              marginInlineStart: "auto",
+            }}
+          >
+            {assessment.questions.length} {tr.questionCount}
+          </span>
         </div>
       </div>
 
       <div className="q-list">
-        {assessment.questions.length === 0 && <div className="q-empty">لا توجد أسئلة بعد. أضف أول سؤال.</div>}
+        {assessment.questions.length === 0 && (
+          <div className="q-empty">{tr.noQuestionsYet}</div>
+        )}
         {assessment.questions.map((q, idx) => (
           <div key={q.id} className="q-card">
             <div className="q-card-top">
-              <span className="q-num">س{idx + 1}</span>
-              <span className="q-type" style={{ color: TYPE_COLORS[q.type], background: `${TYPE_COLORS[q.type]}15` }}>{TYPE_LABELS[q.type]}</span>
-              <div style={{ marginRight: "auto", display: "flex", gap: 5 }}>
-                <button className="icon-btn" onClick={() => openEdit(q)}>✏️</button>
-                <button className="icon-btn danger" onClick={() => handleDelete(q.id)} disabled={deleting === q.id}>🗑️</button>
+              <span className="q-num">
+                {tr.question[0]}
+                {idx + 1}
+              </span>
+              <span
+                className="q-type"
+                style={{
+                  color: TYPE_COLORS[q.type],
+                  background: `${TYPE_COLORS[q.type]}15`,
+                }}
+              >
+                {TYPE_LABELS[q.type]}
+              </span>
+              <div
+                style={{ marginInlineStart: "auto", display: "flex", gap: 5 }}
+              >
+                <button className="icon-btn" onClick={() => openEdit(q)}>
+                  ✏️
+                </button>
+                <button
+                  className="icon-btn danger"
+                  onClick={() => handleDelete(q.id)}
+                  disabled={deleting === q.id}
+                >
+                  🗑️
+                </button>
               </div>
             </div>
             <div className="q-text">{q.text}</div>
-            {q.type === "MCQ" && <div className="q-opts">{q.options.map((o) => <div key={o.id} className={`q-opt ${o.text === q.correct_answer ? "correct" : ""}`}>{o.text}</div>)}</div>}
-            {q.type === "TF" && <div style={{ fontSize: 12, color: "#6b7280" }}>الإجابة: <strong>{q.correct_answer === "true" ? "صح ✓" : "خطأ ✗"}</strong></div>}
-            {q.type === "WRITTEN" && <div style={{ fontSize: 11.5, color: "#f59e0b", fontStyle: "italic" }}>يُصحَّح يدوياً</div>}
+            {q.type === "MCQ" && (
+              <div className="q-opts">
+                {q.options.map((o) => (
+                  <div
+                    key={o.id}
+                    className={`q-opt ${o.text === q.correct_answer ? "correct" : ""}`}
+                  >
+                    {o.text}
+                  </div>
+                ))}
+              </div>
+            )}
+            {q.type === "TF" && (
+              <div style={{ fontSize: 12, color: "#6b7280" }}>
+                {tr.correctAnswer}:{" "}
+                <strong>
+                  {q.correct_answer === "true" ? tr.trueAnswer : tr.falseAnswer}
+                </strong>
+              </div>
+            )}
+            {q.type === "WRITTEN" && (
+              <div
+                style={{
+                  fontSize: 11.5,
+                  color: "#f59e0b",
+                  fontStyle: "italic",
+                }}
+              >
+                {tr.manualGrade}
+              </div>
+            )}
           </div>
         ))}
       </div>
 
-      <button className="add-q-btn" onClick={openAdd}>+ إضافة سؤال</button>
+      <button className="add-q-btn" onClick={openAdd}>
+        + {tr.addQuestion}
+      </button>
 
       {modalOpen && (
-        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setModalOpen(false)}>
-          <div className="modal" dir="rtl">
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <h2 style={{ fontSize: 15, fontWeight: 800 }}>{modalMode === "add" ? "إضافة سؤال" : "تعديل السؤال"}</h2>
-              <button className="icon-btn" onClick={() => setModalOpen(false)}>✕</button>
+        <div
+          className="modal-overlay"
+          onClick={(e) => e.target === e.currentTarget && setModalOpen(false)}
+        >
+          <div className="modal" dir={dir}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <h2 style={{ fontSize: 15, fontWeight: 800 }}>
+                {modalMode === "add"
+                  ? tr.addQuestionTitle
+                  : tr.editQuestionTitle}
+              </h2>
+              <button className="icon-btn" onClick={() => setModalOpen(false)}>
+                ✕
+              </button>
             </div>
             <div className="modal-field">
-              <label className="field-label">نوع السؤال</label>
+              <label className="field-label">{tr.questionType}</label>
               <div style={{ display: "flex", gap: 7 }}>
-                {(["MCQ", "TF", "WRITTEN"] as QuestionType[]).map((t) => (
-                  <button key={t} className={`type-btn ${form.type === t ? "sel" : ""}`} style={{ "--tc": TYPE_COLORS[t] } as never}
-                    onClick={() => setForm((f) => ({ ...f, type: t, correct_answer: "", options: t === "MCQ" ? [{ text: "" }, { text: "" }] : [] }))}>
-                    {TYPE_LABELS[t]}
+                {(["MCQ", "TF", "WRITTEN"] as QuestionType[]).map((type) => (
+                  <button
+                    key={type}
+                    className={`type-btn ${form.type === type ? "sel" : ""}`}
+                    style={{ "--tc": TYPE_COLORS[type] } as never}
+                    onClick={() =>
+                      setForm((f) => ({
+                        ...f,
+                        type,
+                        correct_answer: "",
+                        options:
+                          type === "MCQ" ? [{ text: "" }, { text: "" }] : [],
+                      }))
+                    }
+                  >
+                    {TYPE_LABELS[type]}
                   </button>
                 ))}
               </div>
             </div>
             <div className="modal-field">
-              <label className="field-label">نص السؤال</label>
-              <textarea className="pa-textarea" placeholder="اكتب السؤال هنا..." value={form.text} onChange={(e) => setForm((f) => ({ ...f, text: e.target.value }))} rows={3} dir="rtl" />
+              <label className="field-label">{tr.questionText}</label>
+              <textarea
+                className="pa-textarea"
+                placeholder={tr.questionPlaceholder}
+                value={form.text}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, text: e.target.value }))
+                }
+                rows={3}
+                dir={dir}
+              />
             </div>
             {form.type === "MCQ" && (
               <div className="modal-field">
-                <label className="field-label">الخيارات <span style={{ fontSize: 10.5, color: "#9ca3af", fontWeight: 400 }}>(اختر الإجابة الصحيحة)</span></label>
-                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                <label className="field-label">
+                  {tr.options}{" "}
+                  <span
+                    style={{
+                      fontSize: 10.5,
+                      color: "#9ca3af",
+                      fontWeight: 400,
+                    }}
+                  >
+                    ({tr.chooseCorrect})
+                  </span>
+                </label>
+                <div
+                  style={{ display: "flex", flexDirection: "column", gap: 6 }}
+                >
                   {form.options.map((o, i) => (
-                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                      <button className={`correct-radio ${form.correct_answer === o.text && o.text ? "sel" : ""}`} type="button" onClick={() => o.text && setForm((f) => ({ ...f, correct_answer: o.text }))}>
+                    <div
+                      key={i}
+                      style={{ display: "flex", alignItems: "center", gap: 7 }}
+                    >
+                      <button
+                        className={`correct-radio ${form.correct_answer === o.text && o.text ? "sel" : ""}`}
+                        type="button"
+                        onClick={() =>
+                          o.text &&
+                          setForm((f) => ({ ...f, correct_answer: o.text }))
+                        }
+                      >
                         {form.correct_answer === o.text && o.text && "✓"}
                       </button>
-                      <input className="pa-input" style={{ flex: 1 }} placeholder={`خيار ${i + 1}`} value={o.text} onChange={(e) => updateOption(i, e.target.value)} dir="rtl" />
-                      {form.options.length > 2 && <button className="icon-btn danger" onClick={() => removeOption(i)}>✕</button>}
+                      <input
+                        className="pa-input"
+                        style={{ flex: 1 }}
+                        placeholder={`${tr.options} ${i + 1}`}
+                        value={o.text}
+                        onChange={(e) => updateOption(i, e.target.value)}
+                        dir={dir}
+                      />
+                      {form.options.length > 2 && (
+                        <button
+                          className="icon-btn danger"
+                          onClick={() => removeOption(i)}
+                        >
+                          ✕
+                        </button>
+                      )}
                     </div>
                   ))}
-                  {form.options.length < 6 && <button className="add-opt-btn" onClick={addOption}>+ إضافة خيار</button>}
+                  {form.options.length < 6 && (
+                    <button className="add-opt-btn" onClick={addOption}>
+                      {tr.addOption}
+                    </button>
+                  )}
                 </div>
               </div>
             )}
             {form.type === "TF" && (
               <div className="modal-field">
-                <label className="field-label">الإجابة الصحيحة</label>
+                <label className="field-label">{tr.correctAnswer}</label>
                 <div style={{ display: "flex", gap: 10 }}>
-                  {[{ val: "true", label: "✓ صحيح" }, { val: "false", label: "✗ خطأ" }].map((opt) => (
-                    <button key={opt.val} className={`tf-btn ${form.correct_answer === opt.val ? "sel" : ""} ${opt.val}`}
-                      onClick={() => setForm((f) => ({ ...f, correct_answer: opt.val }))}>{opt.label}</button>
+                  {[
+                    { val: "true", label: tr.correctTrue },
+                    { val: "false", label: tr.correctFalse },
+                  ].map((opt) => (
+                    <button
+                      key={opt.val}
+                      className={`tf-btn ${form.correct_answer === opt.val ? "sel" : ""} ${opt.val}`}
+                      onClick={() =>
+                        setForm((f) => ({ ...f, correct_answer: opt.val }))
+                      }
+                    >
+                      {opt.label}
+                    </button>
                   ))}
                 </div>
               </div>
             )}
-            {form.type === "WRITTEN" && <div className="written-note">يُصحَّح هذا السؤال يدوياً أثناء مراجعة النتائج.</div>}
-            <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, paddingTop: 4 }}>
-              <button className="pa-btn ghost" onClick={() => setModalOpen(false)}>إلغاء</button>
-              <button className="pa-btn primary" onClick={handleSave} disabled={saving || !form.text.trim()}>{saving ? "جارٍ الحفظ..." : modalMode === "add" ? "إضافة" : "حفظ التعديلات"}</button>
+            {form.type === "WRITTEN" && (
+              <div className="written-note">{tr.manualGradeNote}</div>
+            )}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: 8,
+                paddingTop: 4,
+              }}
+            >
+              <button
+                className="pa-btn ghost"
+                onClick={() => setModalOpen(false)}
+              >
+                {tr.cancel}
+              </button>
+              <button
+                className="pa-btn primary"
+                onClick={handleSave}
+                disabled={saving || !form.text.trim()}
+              >
+                {saving
+                  ? tr.saving
+                  : modalMode === "add"
+                    ? tr.add
+                    : tr.saveEdits}
+              </button>
             </div>
           </div>
         </div>

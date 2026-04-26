@@ -1,38 +1,56 @@
 // api/school-admin/stats/route.ts
 import { NextResponse } from "next/server";
-import { requireSchoolAdmin } from "@/lib/school-admin-auth";
+import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 
 export async function GET() {
-  const auth = await requireSchoolAdmin();
-  if (!auth) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  const { school } = auth;
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const [teacherCount, studentCount, classCount, pendingPlacements, hasPlacementAssessment] =
-    await Promise.all([
-      prisma.teacher.count({ where: { school_id: school.id } }),
-      prisma.student.count({ where: { school_id: school.id } }),
-      prisma.class.count({ where: { school_id: school.id } }),
-      prisma.student.count({ where: { school_id: school.id, onboarding_status: "SCHOOL_ASSIGNED" } }),
-      prisma.assessment.findFirst({ where: { type: "SCHOOL_PLACEMENT", school_id: school.id } }),
-    ]);
+    const school = await prisma.school.findFirst({
+      where: { admin_id: user.id },
+      select: { id: true, name: true, language: true },
+    });
 
-  const studentsByStatus = await prisma.student.groupBy({
-    by: ["onboarding_status"],
-    where: { school_id: school.id },
-    _count: { onboarding_status: true },
-  });
+    if (!school) return NextResponse.json({ error: "School not found" }, { status: 404 });
 
-  return NextResponse.json({
-    school: { id: school.id, name: school.name },
-    teacherCount,
-    studentCount,
-    classCount,
-    pendingPlacements,
-    hasPlacementAssessment: !!hasPlacementAssessment,
-    studentsByStatus: studentsByStatus.map((s) => ({
-      status: s.onboarding_status,
-      count: s._count.onboarding_status,
-    })),
-  });
+    const [teacherCount, studentCount, classCount, pendingPlacements, hasPlacementAssessment, studentsByStatus] =
+      await Promise.all([
+        prisma.teacher.count({ where: { school_id: school.id } }),
+        prisma.student.count({ where: { school_id: school.id } }),
+        prisma.class.count({ where: { school_id: school.id } }),
+        prisma.assessmentAttempt.count({
+          where: {
+            assessment: { school_id: school.id, type: "SCHOOL_PLACEMENT" },
+            review_status: "PENDING",
+          },
+        }),
+        prisma.assessment.findFirst({
+          where: { school_id: school.id, type: "SCHOOL_PLACEMENT" },
+        }).then(Boolean),
+        prisma.student.groupBy({
+          by: ["onboarding_status"],
+          where: { school_id: school.id },
+          _count: { onboarding_status: true },
+        }),
+      ]);
+
+    return NextResponse.json({
+      school,
+      teacherCount,
+      studentCount,
+      classCount,
+      pendingPlacements,
+      hasPlacementAssessment,
+      studentsByStatus: studentsByStatus.map((s) => ({
+        status: s.onboarding_status,
+        count: s._count.onboarding_status,
+      })),
+    });
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json({ error: "Failed to fetch stats" }, { status: 500 });
+  }
 }

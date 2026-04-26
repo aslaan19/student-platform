@@ -4,16 +4,41 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import { useLang } from "@/lib/language-context";
+import { t } from "@/lib/translations";
 
-interface Option { id: string; text: string; order: number; }
-interface Question { id: string; type: "MCQ" | "TF" | "WRITTEN"; text: string; correct_answer: string | null; order: number; options: Option[]; }
-interface Answer { id: string; question_id: string; answer: string; is_correct: boolean | null; question: Question; }
-interface ClassItem { id: string; name: string; }
+interface Option {
+  id: string;
+  text: string;
+  order: number;
+}
+interface Question {
+  id: string;
+  type: "MCQ" | "TF" | "WRITTEN";
+  text: string;
+  correct_answer: string | null;
+  order: number;
+  options: Option[];
+}
+interface Answer {
+  id: string;
+  question_id: string;
+  answer: string;
+  is_correct: boolean | null;
+  question: Question;
+}
+interface ClassItem {
+  id: string;
+  name: string;
+}
 interface Attempt {
   id: string;
   review_status: "PENDING" | "REVIEWED";
-  score: number | null; total: number | null;
-  reviewer_notes: string | null; submitted_at: string; reviewed_at: string | null;
+  score: number | null;
+  total: number | null;
+  reviewer_notes: string | null;
+  submitted_at: string;
+  reviewed_at: string | null;
   student: { profile: { full_name: string } };
   assessment: { title: string; questions: Question[] };
   answers: Answer[];
@@ -22,6 +47,10 @@ interface Attempt {
 }
 
 export default function SchoolAdminSubmissionDetailPage() {
+  const { lang } = useLang();
+  const tr = t[lang];
+  const dir = lang === "ar" ? "rtl" : "ltr";
+
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
@@ -29,7 +58,9 @@ export default function SchoolAdminSubmissionDetailPage() {
   const [attempt, setAttempt] = useState<Attempt | null>(null);
   const [classes, setClasses] = useState<ClassItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [writtenGrades, setWrittenGrades] = useState<Record<string, boolean>>({});
+  const [writtenGrades, setWrittenGrades] = useState<Record<string, boolean>>(
+    {},
+  );
   const [reviewerNotes, setReviewerNotes] = useState("");
   const [assignedClassId, setAssignedClassId] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -39,61 +70,106 @@ export default function SchoolAdminSubmissionDetailPage() {
     Promise.all([
       fetch(`/api/school-admin/submissions/${id}`).then((r) => r.json()),
       fetch("/api/school-admin/classes").then((r) => r.json()),
-    ]).then(([attemptData, classData]) => {
-      const a: Attempt = attemptData.attempt;
-      setAttempt(a);
-      setClasses(classData.classes ?? []);
-      if (a) {
-        const grades: Record<string, boolean> = {};
-        a.answers.forEach((ans) => {
-          if (ans.question.type === "WRITTEN" && ans.is_correct !== null) grades[ans.id] = ans.is_correct;
-        });
-        setWrittenGrades(grades);
-        setReviewerNotes(a.reviewer_notes ?? "");
-        setAssignedClassId(a.assigned_class?.id ?? "");
-      }
-    }).finally(() => setLoading(false));
+    ])
+      .then(([attemptData, classData]) => {
+        const a: Attempt = attemptData.attempt;
+        setAttempt(a);
+        setClasses(classData.classes ?? []);
+        if (a) {
+          const grades: Record<string, boolean> = {};
+          a.answers.forEach((ans) => {
+            if (ans.question.type === "WRITTEN" && ans.is_correct !== null)
+              grades[ans.id] = ans.is_correct;
+          });
+          setWrittenGrades(grades);
+          setReviewerNotes(a.reviewer_notes ?? "");
+          setAssignedClassId(a.assigned_class?.id ?? "");
+        }
+      })
+      .finally(() => setLoading(false));
   }, [id]);
 
   async function handleSubmit() {
-    if (!assignedClassId) { setError("يرجى اختيار الفصل."); return; }
-    setSubmitting(true); setError("");
+    if (!assignedClassId) {
+      setError(tr.pleaseChooseClass);
+      return;
+    }
+    setSubmitting(true);
+    setError("");
     try {
       const r = await fetch(`/api/school-admin/submissions/${id}/review`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ written_grades: writtenGrades, reviewer_notes: reviewerNotes, assigned_class_id: assignedClassId }),
+        body: JSON.stringify({
+          written_grades: writtenGrades,
+          reviewer_notes: reviewerNotes,
+          assigned_class_id: assignedClassId,
+        }),
       });
-      if (!r.ok) { const d = await r.json(); setError(d.error ?? "فشل التقديم."); return; }
+      if (!r.ok) {
+        const d = await r.json();
+        setError(d.error ?? tr.failedSubmit);
+        return;
+      }
       router.push("/school-admin/submissions");
-    } finally { setSubmitting(false); }
+    } finally {
+      setSubmitting(false);
+    }
   }
 
-  if (loading) return <div className="sr-loading"><div className="spin" />جارٍ التحميل...</div>;
-  if (!attempt) return <div className="sr-loading">لم يتم العثور على النتيجة.</div>;
+  if (loading)
+    return (
+      <div className="sr-loading">
+        <div className="spin" />
+        {tr.loading}
+      </div>
+    );
+  if (!attempt) return <div className="sr-loading">{tr.notFound}</div>;
 
   const isReviewed = attempt.review_status === "REVIEWED";
-  const writtenAnswers = attempt.answers.filter((a) => a.question.type === "WRITTEN");
-  const autoAnswers = attempt.answers.filter((a) => a.question.type !== "WRITTEN");
+  const writtenAnswers = attempt.answers.filter(
+    (a) => a.question.type === "WRITTEN",
+  );
+  const autoAnswers = attempt.answers.filter(
+    (a) => a.question.type !== "WRITTEN",
+  );
   const autoCorrect = autoAnswers.filter((a) => a.is_correct === true).length;
   const writtenCorrect = Object.values(writtenGrades).filter(Boolean).length;
   const liveScore = autoCorrect + writtenCorrect;
 
   return (
-    <div className="sr-page">
+    <div className="sr-page" dir={dir}>
       <div className="sr-header">
         <Link href="/school-admin/submissions" className="back-link">
-          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M9 18l6-6-6-6" /></svg>
-          النتائج
+          <svg
+            width="14"
+            height="14"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+            style={{ transform: lang === "ar" ? "none" : "rotate(180deg)" }}
+          >
+            <path d="M9 18l6-6-6-6" />
+          </svg>
+          {tr.backToResults}
         </Link>
         <div className="sr-title-row">
-          <div className="sr-avatar">{attempt.student.profile.full_name.charAt(0)}</div>
+          <div className="sr-avatar">
+            {attempt.student.profile.full_name.charAt(0)}
+          </div>
           <div>
             <h1 className="sr-title">{attempt.student.profile.full_name}</h1>
-            <p className="sr-sub">{attempt.assessment.title} · {new Date(attempt.submitted_at).toLocaleDateString("ar-SA", { month: "long", day: "numeric", year: "numeric" })}</p>
+            <p className="sr-sub">
+              {attempt.assessment.title} ·{" "}
+              {new Date(attempt.submitted_at).toLocaleDateString(
+                lang === "ar" ? "ar-SA" : "sq-AL",
+                { month: "long", day: "numeric", year: "numeric" },
+              )}
+            </p>
           </div>
           <div className={`status-chip ${isReviewed ? "reviewed" : "pending"}`}>
-            {isReviewed ? "تمت المراجعة" : "قيد الانتظار"}
+            {isReviewed ? tr.chipReviewed : tr.chipPending}
           </div>
         </div>
       </div>
@@ -106,13 +182,20 @@ export default function SchoolAdminSubmissionDetailPage() {
             <span className="score-t">{attempt.total}</span>
           </div>
           <div>
-            <div className="score-label">النتيجة النهائية</div>
-            <div className="score-pct">{attempt.total ? Math.round((attempt.score / attempt.total) * 100) : 0}%</div>
+            <div className="score-label">{tr.finalScore}</div>
+            <div className="score-pct">
+              {attempt.total
+                ? Math.round((attempt.score / attempt.total) * 100)
+                : 0}
+              %
+            </div>
           </div>
           {attempt.assigned_class && (
             <div className="score-class">
-              <div className="score-label">الفصل</div>
-              <div className="score-class-name">{attempt.assigned_class.name}</div>
+              <div className="score-label">{tr.assignedClass}</div>
+              <div className="score-class-name">
+                {attempt.assigned_class.name}
+              </div>
             </div>
           )}
         </div>
@@ -120,18 +203,22 @@ export default function SchoolAdminSubmissionDetailPage() {
 
       <div className="sr-body">
         <div className="answers-col">
-          <h2 className="col-title">إجابات الطالب</h2>
+          <h2 className="col-title">{tr.studentAnswers}</h2>
           {attempt.assessment.questions.map((q, idx) => {
             const answer = attempt.answers.find((a) => a.question_id === q.id);
             if (!answer) return null;
             return (
               <div key={q.id} className="a-card">
                 <div className="a-header">
-                  <span className="q-num">س{idx + 1}</span>
-                  <span className={`q-type-badge t-${q.type.toLowerCase()}`}>{q.type}</span>
+                  <span className="q-num">{idx + 1}</span>
+                  <span className={`q-type-badge t-${q.type.toLowerCase()}`}>
+                    {q.type}
+                  </span>
                   {q.type !== "WRITTEN" && answer.is_correct !== null && (
-                    <span className={`result-chip ${answer.is_correct ? "correct" : "wrong"}`}>
-                      {answer.is_correct ? "✓ صحيح" : "✗ خطأ"}
+                    <span
+                      className={`result-chip ${answer.is_correct ? "correct" : "wrong"}`}
+                    >
+                      {answer.is_correct ? tr.correct : tr.wrong}
                     </span>
                   )}
                 </div>
@@ -143,13 +230,42 @@ export default function SchoolAdminSubmissionDetailPage() {
                       const isStudent = answer.answer === opt.text;
                       const isCorrect = q.correct_answer === opt.text;
                       return (
-                        <div key={opt.id} className={`mcq-opt ${isStudent ? "student" : ""} ${isCorrect ? "correct" : ""}`}>
+                        <div
+                          key={opt.id}
+                          className={`mcq-opt ${isStudent ? "student" : ""} ${isCorrect ? "correct" : ""}`}
+                        >
                           <div className="opt-ind">
-                            {isCorrect && <svg width="9" height="9" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><polyline points="20 6 9 17 4 12" /></svg>}
-                            {isStudent && !isCorrect && <svg width="9" height="9" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path d="M18 6L6 18M6 6l12 12" /></svg>}
+                            {isCorrect && (
+                              <svg
+                                width="9"
+                                height="9"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                                strokeWidth={3}
+                              >
+                                <polyline points="20 6 9 17 4 12" />
+                              </svg>
+                            )}
+                            {isStudent && !isCorrect && (
+                              <svg
+                                width="9"
+                                height="9"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                                strokeWidth={3}
+                              >
+                                <path d="M18 6L6 18M6 6l12 12" />
+                              </svg>
+                            )}
                           </div>
                           <span>{opt.text}</span>
-                          {isStudent && <span className="student-tag">إجابة الطالب</span>}
+                          {isStudent && (
+                            <span className="student-tag">
+                              {tr.studentAnswerLabel}
+                            </span>
+                          )}
                         </div>
                       );
                     })}
@@ -158,10 +274,18 @@ export default function SchoolAdminSubmissionDetailPage() {
 
                 {q.type === "TF" && (
                   <div className="tf-row">
-                    <span className={`tf-pill ${answer.answer === q.correct_answer ? "correct" : "wrong"}`}>
-                      الطالب: {answer.answer === "true" ? "صح" : "خطأ"}
+                    <span
+                      className={`tf-pill ${answer.answer === q.correct_answer ? "correct" : "wrong"}`}
+                    >
+                      {tr.studentAnswerLabel}:{" "}
+                      {answer.answer === "true" ? tr.trueLabel : tr.falseLabel}
                     </span>
-                    <span className="tf-pill correct-ans">الصحيح: {q.correct_answer === "true" ? "صح" : "خطأ"}</span>
+                    <span className="tf-pill correct-ans">
+                      {tr.correctAnswerLabel}{" "}
+                      {q.correct_answer === "true"
+                        ? tr.trueLabel
+                        : tr.falseLabel}
+                    </span>
                   </div>
                 )}
 
@@ -170,18 +294,57 @@ export default function SchoolAdminSubmissionDetailPage() {
                     <div className="written-box">{answer.answer}</div>
                     {!isReviewed && (
                       <div className="grade-row">
-                        <span className="grade-label">تقييمك:</span>
-                        <button className={`grade-btn g-correct ${writtenGrades[answer.id] === true ? "sel" : ""}`} onClick={() => setWrittenGrades((g) => ({ ...g, [answer.id]: true }))}>
-                          <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><polyline points="20 6 9 17 4 12" /></svg>صحيح
+                        <span className="grade-label">{tr.gradingLabel}</span>
+                        <button
+                          className={`grade-btn g-correct ${writtenGrades[answer.id] === true ? "sel" : ""}`}
+                          onClick={() =>
+                            setWrittenGrades((g) => ({
+                              ...g,
+                              [answer.id]: true,
+                            }))
+                          }
+                        >
+                          <svg
+                            width="12"
+                            height="12"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth={3}
+                          >
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg>
+                          {tr.trueLabel}
                         </button>
-                        <button className={`grade-btn g-wrong ${writtenGrades[answer.id] === false ? "sel" : ""}`} onClick={() => setWrittenGrades((g) => ({ ...g, [answer.id]: false }))}>
-                          <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path d="M18 6L6 18M6 6l12 12" /></svg>خطأ
+                        <button
+                          className={`grade-btn g-wrong ${writtenGrades[answer.id] === false ? "sel" : ""}`}
+                          onClick={() =>
+                            setWrittenGrades((g) => ({
+                              ...g,
+                              [answer.id]: false,
+                            }))
+                          }
+                        >
+                          <svg
+                            width="12"
+                            height="12"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth={3}
+                          >
+                            <path d="M18 6L6 18M6 6l12 12" />
+                          </svg>
+                          {tr.falseLabel}
                         </button>
                       </div>
                     )}
                     {isReviewed && answer.is_correct !== null && (
-                      <span className={`result-chip ${answer.is_correct ? "correct" : "wrong"}`} style={{ width: "fit-content" }}>
-                        {answer.is_correct ? "✓ صحيح" : "✗ خطأ"}
+                      <span
+                        className={`result-chip ${answer.is_correct ? "correct" : "wrong"}`}
+                        style={{ width: "fit-content" }}
+                      >
+                        {answer.is_correct ? tr.correct : tr.wrong}
                       </span>
                     )}
                   </div>
@@ -194,46 +357,113 @@ export default function SchoolAdminSubmissionDetailPage() {
         <div className="review-col">
           {!isReviewed ? (
             <div className="review-panel">
-              <h2 className="col-title">المراجعة وتعيين الفصل</h2>
+              <h2 className="col-title">{tr.reviewAndAssign}</h2>
               <div className="score-preview">
-                <div className="sp-label">النتيجة المتوقعة</div>
-                <div className="sp-val">{liveScore} / {attempt.answers.length}</div>
+                <div className="sp-label">{tr.expectedScore}</div>
+                <div className="sp-val">
+                  {liveScore} / {attempt.answers.length}
+                </div>
                 <div className="sp-bar-wrap">
-                  <div className="sp-bar" style={{ width: attempt.answers.length ? `${(liveScore / attempt.answers.length) * 100}%` : "0%" }} />
+                  <div
+                    className="sp-bar"
+                    style={{
+                      width: attempt.answers.length
+                        ? `${(liveScore / attempt.answers.length) * 100}%`
+                        : "0%",
+                    }}
+                  />
                 </div>
                 {writtenAnswers.length > 0 && (
-                  <div className="sp-note">{Object.keys(writtenGrades).length}/{writtenAnswers.length} أسئلة مكتوبة مصححة</div>
+                  <div className="sp-note">
+                    {Object.keys(writtenGrades).length}/{writtenAnswers.length}{" "}
+                    {tr.writtenGradedCount}
+                  </div>
                 )}
               </div>
 
               <div className="review-field">
-                <label className="review-label">تعيين في الفصل <span className="req">*</span></label>
-                <select className="review-select" value={assignedClassId} onChange={(e) => setAssignedClassId(e.target.value)} dir="rtl">
-                  <option value="">اختر الفصل...</option>
-                  {classes.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                <label className="review-label">
+                  {tr.assignToClassRequired} <span className="req">*</span>
+                </label>
+                <select
+                  className="review-select"
+                  value={assignedClassId}
+                  onChange={(e) => setAssignedClassId(e.target.value)}
+                  dir={dir}
+                >
+                  <option value="">{tr.chooseClass}</option>
+                  {classes.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
                 </select>
               </div>
 
               <div className="review-field">
-                <label className="review-label">ملاحظات <span className="opt-tag">(اختياري)</span></label>
-                <textarea className="review-textarea" placeholder="أضف ملاحظاتك عن أداء الطالب..." value={reviewerNotes} onChange={(e) => setReviewerNotes(e.target.value)} rows={4} dir="rtl" />
+                <label className="review-label">
+                  {tr.notes} <span className="opt-tag">({tr.optional})</span>
+                </label>
+                <textarea
+                  className="review-textarea"
+                  placeholder={tr.notesPlaceholder}
+                  value={reviewerNotes}
+                  onChange={(e) => setReviewerNotes(e.target.value)}
+                  rows={4}
+                  dir={dir}
+                />
               </div>
 
               {error && <div className="review-error">{error}</div>}
 
-              <button className="submit-btn" onClick={handleSubmit} disabled={submitting || !assignedClassId}>
-                {submitting ? <><div className="btn-spin" />جارٍ الحفظ...</> : <>✓ تأكيد المراجعة وتعيين الفصل</>}
+              <button
+                className="submit-btn"
+                onClick={handleSubmit}
+                disabled={submitting || !assignedClassId}
+              >
+                {submitting ? (
+                  <>
+                    <div className="btn-spin" />
+                    {tr.savingReview}
+                  </>
+                ) : (
+                  <>{tr.confirmReview}</>
+                )}
               </button>
             </div>
           ) : (
             <div className="review-panel done">
-              <h2 className="col-title">اكتملت المراجعة</h2>
+              <h2 className="col-title">{tr.reviewDone}</h2>
               <div className="done-icon">✅</div>
               <div className="done-rows">
-                <div className="done-row"><span className="done-label">الفصل المعين</span><span className="done-val">{attempt.assigned_class?.name ?? "—"}</span></div>
-                <div className="done-row"><span className="done-label">راجع بواسطة</span><span className="done-val">{attempt.reviewer?.full_name ?? "—"}</span></div>
-                {attempt.reviewed_at && <div className="done-row"><span className="done-label">تاريخ المراجعة</span><span className="done-val">{new Date(attempt.reviewed_at).toLocaleDateString("ar-SA")}</span></div>}
-                {attempt.reviewer_notes && <div className="done-notes"><div className="done-label">الملاحظات</div><div className="notes-text">{attempt.reviewer_notes}</div></div>}
+                <div className="done-row">
+                  <span className="done-label">{tr.assignedClassLabel}</span>
+                  <span className="done-val">
+                    {attempt.assigned_class?.name ?? "—"}
+                  </span>
+                </div>
+                <div className="done-row">
+                  <span className="done-label">{tr.reviewedBy}</span>
+                  <span className="done-val">
+                    {attempt.reviewer?.full_name ?? "—"}
+                  </span>
+                </div>
+                {attempt.reviewed_at && (
+                  <div className="done-row">
+                    <span className="done-label">{tr.reviewDate}</span>
+                    <span className="done-val">
+                      {new Date(attempt.reviewed_at).toLocaleDateString(
+                        lang === "ar" ? "ar-SA" : "sq-AL",
+                      )}
+                    </span>
+                  </div>
+                )}
+                {attempt.reviewer_notes && (
+                  <div className="done-notes">
+                    <div className="done-label">{tr.notes}</div>
+                    <div className="notes-text">{attempt.reviewer_notes}</div>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -253,7 +483,7 @@ export default function SchoolAdminSubmissionDetailPage() {
         .sr-avatar { width: 42px; height: 42px; border-radius: 11px; background: linear-gradient(135deg, var(--accent), var(--accent2)); display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 800; color: white; flex-shrink: 0; }
         .sr-title { font-size: 19px; font-weight: 800; color: var(--text); }
         .sr-sub { font-size: 12px; color: var(--text2); margin-top: 2px; }
-        .status-chip { font-size: 11.5px; font-weight: 700; padding: 4px 11px; border-radius: 7px; margin-right: auto; }
+        .status-chip { font-size: 11.5px; font-weight: 700; padding: 4px 11px; border-radius: 7px; margin-inline-start: auto; }
         .status-chip.pending { background: rgba(245,158,11,0.1); color: #b45309; border: 1px solid rgba(245,158,11,0.2); }
         .status-chip.reviewed { background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid rgba(16,185,129,0.2); }
 
@@ -264,7 +494,7 @@ export default function SchoolAdminSubmissionDetailPage() {
         .score-t { font-size: 24px; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: var(--text2); }
         .score-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text3); font-weight: 700; }
         .score-pct { font-size: 18px; font-weight: 800; color: var(--text); }
-        .score-class { border-right: 1px solid var(--border); padding-right: 20px; }
+        .score-class { border-inline-start: 1px solid var(--border); padding-inline-start: 20px; }
         .score-class-name { font-size: 15px; font-weight: 700; color: var(--success); margin-top: 2px; }
 
         .sr-body { display: grid; grid-template-columns: 1fr 300px; gap: 18px; align-items: start; }
@@ -290,7 +520,7 @@ export default function SchoolAdminSubmissionDetailPage() {
         .mcq-opt.correct { border-color: rgba(16,185,129,0.35); background: rgba(16,185,129,0.06); color: #10b981; }
         .mcq-opt.student.correct { border-color: rgba(16,185,129,0.45); background: rgba(16,185,129,0.1); }
         .opt-ind { width: 14px; height: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .student-tag { margin-right: auto; font-size: 9.5px; color: var(--text3); font-style: italic; }
+        .student-tag { margin-inline-start: auto; font-size: 9.5px; color: var(--text3); font-style: italic; }
 
         .tf-row { display: flex; gap: 7px; }
         .tf-pill { font-size: 12px; font-weight: 600; padding: 4px 11px; border-radius: 7px; }
