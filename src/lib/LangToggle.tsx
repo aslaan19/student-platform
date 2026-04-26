@@ -2,21 +2,47 @@
 
 import { useLang } from "@/lib/language-context";
 
-export default function LangToggle() {
+export default function LangToggle({ dark = false }: { dark?: boolean }) {
   const { lang, setLang } = useLang();
+
+  const activeStyle = dark
+    ? {
+        background: "white",
+        color: "#111827",
+        boxShadow: "0 1px 4px rgba(0,0,0,0.2)",
+      }
+    : {
+        background: "#111827",
+        color: "white",
+        boxShadow: "0 1px 4px rgba(0,0,0,0.15)",
+      };
+
+  const inactiveStyle = dark
+    ? { background: "transparent", color: "rgba(255,255,255,0.45)" }
+    : { background: "transparent", color: "#6b7280" };
+
+  const containerStyle = dark
+    ? {
+        background: "rgba(255,255,255,0.08)",
+        border: "1px solid rgba(255,255,255,0.12)",
+      }
+    : {
+        background: "white",
+        border: "1.5px solid #e5e7eb",
+        boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+      };
 
   return (
     <div
       style={{
         display: "inline-flex",
         alignItems: "center",
-        background: "rgba(255,255,255,0.08)",
-        border: "1px solid rgba(255,255,255,0.12)",
         borderRadius: "99px",
         padding: "3px",
         gap: "2px",
         width: "100%",
         justifyContent: "center",
+        ...containerStyle,
       }}
     >
       <button
@@ -31,9 +57,7 @@ export default function LangToggle() {
           cursor: "pointer",
           transition: "all 0.2s",
           fontFamily: "Tajawal, sans-serif",
-          background: lang === "ar" ? "white" : "transparent",
-          color: lang === "ar" ? "#111827" : "rgba(255,255,255,0.45)",
-          boxShadow: lang === "ar" ? "0 1px 4px rgba(0,0,0,0.15)" : "none",
+          ...(lang === "ar" ? activeStyle : inactiveStyle),
         }}
       >
         عربي
@@ -50,9 +74,7 @@ export default function LangToggle() {
           cursor: "pointer",
           transition: "all 0.2s",
           fontFamily: "Tajawal, sans-serif",
-          background: lang === "sq" ? "white" : "transparent",
-          color: lang === "sq" ? "#111827" : "rgba(255,255,255,0.45)",
-          boxShadow: lang === "sq" ? "0 1px 4px rgba(0,0,0,0.15)" : "none",
+          ...(lang === "sq" ? activeStyle : inactiveStyle),
         }}
       >
         Shqip

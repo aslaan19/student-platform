@@ -52,13 +52,6 @@ export default function StudentPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  async function handleLogout() {
-    setLoggingOut(true);
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    router.push("/login");
-  }
-
   if (loading)
     return (
       <div className="sd-shell">
@@ -77,64 +70,6 @@ export default function StudentPage() {
 
   return (
     <div className="sd-shell" dir={dir}>
-      {/* Top nav */}
-      <header className="sd-nav">
-        <div className="sd-nav-inner">
-          <div className="sd-nav-brand">
-            <div className="sd-nav-logo">🎓</div>
-            <div className="sd-nav-titles">
-              <span className="sd-nav-platform">{tr.platform}</span>
-              {data?.school && (
-                <span className="sd-nav-school">{data.school.name}</span>
-              )}
-            </div>
-          </div>
-
-          <div className="sd-nav-right">
-            <Link href="/student/quizzes" className="sd-nav-link">
-              <svg
-                width="16"
-                height="16"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" />
-                <rect x="9" y="3" width="6" height="4" rx="1" />
-                <path d="M9 12h6M9 16h4" />
-              </svg>
-              {tr.quizzes}
-            </Link>
-            <div className="sd-user-pill">
-              <div className="sd-avatar">{initials}</div>
-              <span className="sd-user-name">{data?.profile.full_name}</span>
-            </div>
-            <button
-              className="sd-logout-btn"
-              onClick={handleLogout}
-              disabled={loggingOut}
-            >
-              {loggingOut ? (
-                <div className="sd-btn-spin" />
-              ) : (
-                <svg
-                  width="16"
-                  height="16"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-              )}
-              {loggingOut ? "..." : tr.logout}
-            </button>
-          </div>
-        </div>
-      </header>
-
       <main className="sd-main">
         {/* Welcome banner */}
         <div className="sd-welcome">
@@ -351,15 +286,7 @@ const styles = `
     font-size: 11px; font-weight: 800; color: white;
   }
   .sd-user-name { font-size: 12.5px; font-weight: 700; color: #111827; max-width: 120px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .sd-logout-btn {
-    display: flex; align-items: center; gap: 6px;
-    background: none; border: 1.5px solid #e5e7eb;
-    color: #6b7280; padding: 6px 12px; border-radius: 8px;
-    font-size: 13px; font-weight: 700; cursor: pointer;
-    transition: all 0.15s; font-family: Tajawal, sans-serif;
-  }
-  .sd-logout-btn:hover:not(:disabled) { border-color: #ef4444; color: #ef4444; }
-  .sd-logout-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
   .sd-btn-spin { width: 14px; height: 14px; border: 2px solid #d1d5db; border-top-color: #6b7280; border-radius: 50%; animation: spin 0.7s linear infinite; }
 
   /* Main */

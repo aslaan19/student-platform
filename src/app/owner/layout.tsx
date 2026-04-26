@@ -141,7 +141,7 @@ export default function OwnerLayout({
           </div>
           <div className="brand-text">
             <span className="brand-name">منصة المدارس</span>
-            <span className="brand-role">بوابة مالك المدرسة</span>
+            <span className="brand-role">بوابة مالك النظام</span>
           </div>
         </div>
 
@@ -168,7 +168,7 @@ export default function OwnerLayout({
             <div className="owner-avatar">{ownerName.charAt(0)}</div>
             <div className="owner-info">
               <span className="owner-name">{ownerName}</span>
-              <span className="owner-tag">مالك المدرسة</span>
+              <span className="owner-tag">مالك النظام</span>
             </div>
           </div>
           <button

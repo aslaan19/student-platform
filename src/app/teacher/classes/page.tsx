@@ -3,24 +3,15 @@ export const dynamic = "force-dynamic";
 
 import { useEffect, useState, useCallback } from "react";
 
+type Student = { id: string; profile: { full_name: string } };
+type ClassItem = { id: string; name: string; students: Student[] };
+type TeacherData = { classes: ClassItem[] };
 type Announcement = {
-  id: string;
-  content: string;
-  created_at: string;
+  id: string; content: string; created_at: string;
   teacher: { profile: { full_name: string } };
 };
-type ClassItem = {
-  id: string;
-  name: string;
-  students: { id: string; profile: { full_name: string } }[];
-};
-type TeacherData = { profile: { full_name: string }; classes: ClassItem[] };
 
-function Skeleton({ className = "" }: { className?: string }) {
-  return <div className={`td-skeleton ${className}`} />;
-}
-
-export default function TeacherPage() {
+export default function TeacherClassesPage() {
   const [data, setData] = useState<TeacherData | null>(null);
   const [selectedClass, setSelectedClass] = useState<ClassItem | null>(null);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
@@ -28,336 +19,153 @@ export default function TeacherPage() {
   const [posting, setPosting] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [announcementsLoading, setAnnouncementsLoading] = useState(false);
-  const [visible, setVisible] = useState(false);
+  const [annLoading, setAnnLoading] = useState(false);
 
-  const fetchAnnouncements = useCallback(async (classId: string) => {
-    setAnnouncementsLoading(true);
+  const loadAnnouncements = useCallback(async (classId: string) => {
+    setAnnLoading(true);
     const res = await fetch(`/api/teacher/announcements?classId=${classId}`);
     setAnnouncements(await res.json());
-    setAnnouncementsLoading(false);
+    setAnnLoading(false);
   }, []);
 
-  const handleSelectClass = useCallback(
-    async (cls: ClassItem) => {
-      setSelectedClass(cls);
-      await fetchAnnouncements(cls.id);
-    },
-    [fetchAnnouncements],
-  );
+  const selectClass = useCallback(async (cls: ClassItem) => {
+    setSelectedClass(cls);
+    await loadAnnouncements(cls.id);
+  }, [loadAnnouncements]);
 
   useEffect(() => {
     fetch("/api/teacher")
       .then((r) => r.json())
       .then((d: TeacherData) => {
         setData(d);
-        if (d.classes?.length > 0) handleSelectClass(d.classes[0]);
+        if (d.classes?.length > 0) selectClass(d.classes[0]);
         setLoading(false);
-        setTimeout(() => setVisible(true), 50);
       });
-  }, [handleSelectClass]);
+  }, [selectClass]);
 
-  const handlePost = async () => {
+  async function handlePost() {
     if (!newAnnouncement.trim() || !selectedClass) return;
     setPosting(true);
     await fetch("/api/teacher/announcements", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        classId: selectedClass.id,
-        content: newAnnouncement,
-      }),
+      body: JSON.stringify({ classId: selectedClass.id, content: newAnnouncement }),
     });
     setNewAnnouncement("");
-    await fetchAnnouncements(selectedClass.id);
+    await loadAnnouncements(selectedClass.id);
     setPosting(false);
-  };
+  }
 
-  const handleDelete = async (id: string) => {
+  async function handleDelete(id: string) {
     setDeletingId(id);
     await fetch(`/api/teacher/announcements?id=${id}`, { method: "DELETE" });
-    await new Promise((r) => setTimeout(r, 300));
-    if (selectedClass) await fetchAnnouncements(selectedClass.id);
+    if (selectedClass) await loadAnnouncements(selectedClass.id);
     setDeletingId(null);
-  };
+  }
 
-  const initials = data?.profile.full_name
-    ? data.profile.full_name
-        .split(" ")
-        .map((w) => w[0])
-        .slice(0, 2)
-        .join("")
-    : "م";
-
-  const totalStudents = data?.classes.reduce(
-    (acc, c) => acc + c.students.length,
-    0,
+  if (loading) return (
+    <div className="tc-loading"><div className="spin" />جارٍ التحميل...<style>{styles}</style></div>
   );
 
-  if (loading)
-    return (
-      <div className="td-page" dir="rtl">
-        <div className="td-inner">
-          <Skeleton className="td-sk-banner" />
-          <div className="td-grid">
-            <div className="td-sk-col">
-              {[1, 2, 3].map((i) => (
-                <Skeleton key={i} className="td-sk-cls" />
-              ))}
-            </div>
-            <div className="td-sk-col">
-              <Skeleton className="td-sk-compose" />
-              {[1, 2].map((i) => (
-                <Skeleton key={i} className="td-sk-ann" />
-              ))}
-            </div>
-          </div>
-        </div>
-        <style>{styles}</style>
-      </div>
-    );
-
   return (
-    <div
-      className="td-page"
-      dir="rtl"
-      style={{
-        opacity: visible ? 1 : 0,
-        transform: visible ? "translateY(0)" : "translateY(14px)",
-        transition: "opacity 0.45s ease, transform 0.45s ease",
-      }}
-    >
-      <div className="td-inner">
-        {/* Banner */}
-        <div className="td-banner">
-          <div className="td-banner-left">
-            <p className="td-banner-greeting">مرحباً بك،</p>
-            <h1 className="td-banner-name">{data?.profile.full_name} 👋</h1>
-            <p className="td-banner-sub">
-              أنت تشرف على <strong>{data?.classes.length} فصل</strong> و{" "}
-              <strong>{totalStudents} طالب</strong>
-            </p>
-          </div>
-          <div className="td-banner-stats">
-            <div className="td-stat">
-              <span className="td-stat-val">{data?.classes.length}</span>
-              <span className="td-stat-label">فصل</span>
-            </div>
-            <div className="td-stat-sep" />
-            <div className="td-stat">
-              <span className="td-stat-val">{totalStudents}</span>
-              <span className="td-stat-label">طالب</span>
-            </div>
-          </div>
-        </div>
-
-        {!data?.classes.length ? (
-          <div className="td-empty-state">
-            <div className="td-empty-icon">📋</div>
-            <h2>لم يتم تعيينك في أي فصل بعد</h2>
-            <p>تواصل مع مدير المدرسة لإضافتك إلى فصول دراسية</p>
-          </div>
-        ) : (
-          <div className="td-grid">
-            {/* Sidebar */}
-            <aside className="td-sidebar">
-              <p className="td-col-label">الفصول الدراسية</p>
-              <div className="td-classes-list">
-                {data?.classes.map((cls, i) => (
-                  <button
-                    key={cls.id}
-                    onClick={() => handleSelectClass(cls)}
-                    style={{ animationDelay: `${i * 50}ms` }}
-                    className={`td-class-btn ${selectedClass?.id === cls.id ? "active" : ""}`}
-                  >
-                    <div className="td-class-icon">
-                      <svg
-                        width="14"
-                        height="14"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                      >
-                        <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
-                        <circle cx="9" cy="7" r="4" />
-                        <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" />
-                      </svg>
-                    </div>
-                    <div className="td-class-info">
-                      <span className="td-class-name">{cls.name}</span>
-                      <span className="td-class-count">
-                        {cls.students.length} طالب
-                      </span>
-                    </div>
-                    {selectedClass?.id === cls.id && (
-                      <span className="td-class-dot" />
-                    )}
-                  </button>
-                ))}
-              </div>
-
-              {selectedClass && (
-                <div className="td-students-card">
-                  <div className="td-card-header">
-                    <span className="td-card-icon">👥</span>
-                    <span className="td-card-title">
-                      طلاب {selectedClass.name}
-                    </span>
-                    <span className="td-badge">
-                      {selectedClass.students.length}
-                    </span>
-                  </div>
-                  <div className="td-students-list">
-                    {selectedClass.students.length === 0 ? (
-                      <p className="td-no-students">لا يوجد طلاب مسجلون</p>
-                    ) : (
-                      selectedClass.students.map((s, i) => (
-                        <div
-                          key={s.id}
-                          className="td-student-row"
-                          style={{ animationDelay: `${i * 35}ms` }}
-                        >
-                          <div className="td-student-av">
-                            {s.profile.full_name.charAt(0)}
-                          </div>
-                          <span className="td-student-name">
-                            {s.profile.full_name}
-                          </span>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </div>
-              )}
-            </aside>
-
-            {/* Announcements */}
-            <section className="td-content">
-              <p className="td-col-label">
-                إعلانات{" "}
-                {selectedClass && (
-                  <span className="td-col-label-accent">
-                    {selectedClass.name}
-                  </span>
-                )}
-              </p>
-
-              <div className="td-compose">
-                <div className="td-compose-head">
-                  <div className="td-compose-av">{initials}</div>
-                  <span className="td-compose-label">إعلان جديد للفصل</span>
-                </div>
-                <textarea
-                  className="td-textarea"
-                  rows={3}
-                  placeholder="اكتب إعلاناً، تنبيهاً، أو رسالة للطلاب..."
-                  value={newAnnouncement}
-                  onChange={(e) => setNewAnnouncement(e.target.value)}
-                />
-                <div className="td-compose-foot">
-                  <span className="td-char-count">
-                    {newAnnouncement.length} حرف
-                  </span>
-                  <button
-                    onClick={handlePost}
-                    disabled={posting || !newAnnouncement.trim()}
-                    className="td-post-btn"
-                  >
-                    {posting ? (
-                      <>
-                        <span className="td-spin" />
-                        جارٍ النشر...
-                      </>
-                    ) : (
-                      <>
-                        <svg
-                          width="13"
-                          height="13"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2.2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <line x1="22" y1="2" x2="11" y2="13" />
-                          <polygon points="22 2 15 22 11 13 2 9 22 2" />
-                        </svg>
-                        نشر الإعلان
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              <div className="td-ann-list">
-                {announcementsLoading ? (
-                  [1, 2, 3].map((i) => (
-                    <Skeleton key={i} className="td-sk-ann" />
-                  ))
-                ) : announcements.length === 0 ? (
-                  <div className="td-ann-empty">
-                    <span className="td-ann-empty-icon">📣</span>
-                    <p>لا توجد إعلانات منشورة بعد</p>
-                    <span>ابدأ بكتابة إعلانك أعلاه</span>
-                  </div>
-                ) : (
-                  announcements.map((a) => (
-                    <div
-                      key={a.id}
-                      className={`td-ann-item ${deletingId === a.id ? "deleting" : ""}`}
-                    >
-                      <div className="td-ann-body">
-                        <div className="td-ann-meta-row">
-                          <div className="td-ann-av">{initials}</div>
-                          <span className="td-ann-author">
-                            {a.teacher.profile.full_name}
-                          </span>
-                          <span className="td-ann-sep">·</span>
-                          <span className="td-ann-date">
-                            {new Date(a.created_at).toLocaleDateString(
-                              "ar-SA",
-                              {
-                                year: "numeric",
-                                month: "long",
-                                day: "numeric",
-                              },
-                            )}
-                          </span>
-                        </div>
-                        <p className="td-ann-content">{a.content}</p>
-                      </div>
-                      <button
-                        onClick={() => handleDelete(a.id)}
-                        disabled={deletingId === a.id}
-                        className="td-del-btn"
-                      >
-                        <svg
-                          width="12"
-                          height="12"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <polyline points="3 6 5 6 21 6" />
-                          <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
-                          <path d="M10 11v6M14 11v6M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2" />
-                        </svg>
-                        حذف
-                      </button>
-                    </div>
-                  ))
-                )}
-              </div>
-            </section>
-          </div>
-        )}
+    <div className="tc-shell" dir="rtl">
+      <div className="tc-header">
+        <h1 className="tc-title">فصولي</h1>
+        <p className="tc-sub">{data?.classes.length ?? 0} فصل مُعيَّن لك</p>
       </div>
+
+      {!data?.classes.length ? (
+        <div className="tc-empty">
+          <div className="tc-empty-icon">📚</div>
+          <h3>لم يتم تعيينك في أي فصل بعد</h3>
+          <p>تواصل مع مدير المدرسة</p>
+        </div>
+      ) : (
+        <>
+          <div className="tc-tabs">
+            {data.classes.map((cls) => (
+              <button key={cls.id}
+                className={`tc-tab ${selectedClass?.id === cls.id ? "active" : ""}`}
+                onClick={() => selectClass(cls)}>
+                <span className="tc-tab-name">{cls.name}</span>
+                <span className="tc-tab-count">{cls.students.length}</span>
+              </button>
+            ))}
+          </div>
+
+          {selectedClass && (
+            <div className="tc-grid">
+              {/* Students */}
+              <div className="tc-card">
+                <div className="tc-card-header">
+                  <div className="tc-card-icon">👥</div>
+                  <h2 className="tc-card-title">الطلاب</h2>
+                  <span className="tc-card-badge">{selectedClass.students.length}</span>
+                </div>
+                <div className="tc-students">
+                  {selectedClass.students.length === 0 ? (
+                    <div className="tc-inner-empty">لا يوجد طلاب في هذا الفصل</div>
+                  ) : (
+                    selectedClass.students.map((s, i) => (
+                      <div key={s.id} className="tc-student-row" style={{ animationDelay: `${i * 35}ms` }}>
+                        <div className="tc-student-avatar">{s.profile.full_name.charAt(0)}</div>
+                        <span className="tc-student-name">{s.profile.full_name}</span>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              {/* Announcements */}
+              <div className="tc-card">
+                <div className="tc-card-header">
+                  <div className="tc-card-icon">📢</div>
+                  <h2 className="tc-card-title">الإعلانات</h2>
+                  <span className="tc-card-badge">{announcements.length}</span>
+                </div>
+
+                <div className="tc-ann-composer">
+                  <textarea className="tc-textarea" placeholder="اكتب إعلاناً للفصل..."
+                    value={newAnnouncement} onChange={(e) => setNewAnnouncement(e.target.value)}
+                    rows={3} dir="rtl" />
+                  <button className="tc-post-btn" onClick={handlePost}
+                    disabled={posting || !newAnnouncement.trim()}>
+                    {posting ? <><div className="tc-btn-spin" />جارٍ النشر...</> : "نشر الإعلان"}
+                  </button>
+                </div>
+
+                <div className="tc-ann-list">
+                  {annLoading ? (
+                    <div className="tc-loading sm"><div className="spin" /></div>
+                  ) : announcements.length === 0 ? (
+                    <div className="tc-inner-empty">لا توجد إعلانات بعد</div>
+                  ) : (
+                    announcements.map((a) => (
+                      <div key={a.id} className={`tc-ann-item ${deletingId === a.id ? "deleting" : ""}`}>
+                        <p className="tc-ann-content">{a.content}</p>
+                        <div className="tc-ann-footer">
+                          <div className="tc-ann-meta">
+                            <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" /><circle cx="12" cy="7" r="4" />
+                            </svg>
+                            {a.teacher.profile.full_name}
+                            <span className="tc-ann-dot" />
+                            {new Date(a.created_at).toLocaleDateString("ar-SA", { month: "short", day: "numeric" })}
+                          </div>
+                          <button className="tc-del-ann-btn" onClick={() => handleDelete(a.id)}
+                            disabled={deletingId === a.id}>
+                            {deletingId === a.id ? <div className="spin sm" /> : "حذف"}
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </>
+      )}
       <style>{styles}</style>
     </div>
   );
@@ -365,109 +173,56 @@ export default function TeacherPage() {
 
 const styles = `
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-  @keyframes spin{to{transform:rotate(360deg)}}
-  @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
   @keyframes fadeOut{to{opacity:0;transform:scale(0.97)}}
-  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.45}}
-
-  .td-page{min-height:100%;background:#f4f5f7;font-family:Tajawal,sans-serif;color:#111827}
-  .td-inner{padding:28px 28px 52px;display:flex;flex-direction:column;gap:24px}
-
-  .td-banner{background:#111827;border-radius:20px;padding:28px 32px;display:flex;align-items:center;justify-content:space-between;gap:16px;animation:fadeUp 0.4s ease both;position:relative;overflow:hidden}
-  .td-banner::before{content:'';position:absolute;top:-40px;left:-40px;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,0.025);pointer-events:none}
-  .td-banner-left{position:relative;z-index:1}
-  .td-banner-greeting{font-size:13px;color:rgba(255,255,255,0.45);font-weight:500;margin-bottom:4px}
-  .td-banner-name{font-size:24px;font-weight:900;color:white;letter-spacing:-0.5px}
-  .td-banner-sub{font-size:13px;color:rgba(255,255,255,0.55);margin-top:6px}
-  .td-banner-sub strong{color:rgba(255,255,255,0.85);font-weight:700}
-  .td-banner-stats{display:flex;align-items:center;gap:18px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:14px 20px;position:relative;z-index:1}
-  .td-stat{display:flex;flex-direction:column;align-items:center;gap:2px}
-  .td-stat-val{font-size:22px;font-weight:900;color:white;letter-spacing:-0.5px;line-height:1}
-  .td-stat-label{font-size:11px;color:rgba(255,255,255,0.45);font-weight:500}
-  .td-stat-sep{width:1px;height:30px;background:rgba(255,255,255,0.1)}
-
-  .td-grid{display:grid;grid-template-columns:272px 1fr;gap:20px;align-items:start}
-  @media(max-width:800px){.td-grid{grid-template-columns:1fr}}
-
-  .td-col-label{font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px}
-  .td-col-label-accent{color:#111827;text-transform:none;letter-spacing:0}
-
-  .td-sidebar{display:flex;flex-direction:column;gap:14px}
-  .td-classes-list{display:flex;flex-direction:column;gap:5px}
-  .td-class-btn{width:100%;display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:12px;border:1px solid #e5e7eb;background:white;cursor:pointer;text-align:right;transition:all 0.18s ease;animation:fadeUp 0.3s ease both}
-  .td-class-btn:hover{border-color:#d1d5db;background:#fafafa;transform:translateX(-2px)}
-  .td-class-btn.active{background:#111827;border-color:#111827;transform:translateX(-2px);box-shadow:0 4px 14px rgba(17,24,39,0.2)}
-  .td-class-icon{width:32px;height:32px;border-radius:8px;flex-shrink:0;background:#f4f5f7;display:flex;align-items:center;justify-content:center;color:#6b7280;transition:all 0.18s}
-  .td-class-btn.active .td-class-icon{background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.75)}
-  .td-class-info{flex:1;display:flex;flex-direction:column;gap:1px}
-  .td-class-name{font-size:13px;font-weight:700;color:#111827}
-  .td-class-btn.active .td-class-name{color:white}
-  .td-class-count{font-size:11px;color:#9ca3af}
-  .td-class-btn.active .td-class-count{color:rgba(255,255,255,0.45)}
-  .td-class-dot{width:6px;height:6px;border-radius:50%;background:white;opacity:0.5;flex-shrink:0}
-
-  .td-students-card{background:white;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;animation:fadeUp 0.35s ease both}
-  .td-card-header{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid #f1f3f6}
-  .td-card-icon{font-size:15px}
-  .td-card-title{flex:1;font-size:13px;font-weight:800;color:#111827}
-  .td-badge{font-size:10.5px;font-weight:700;color:#6b7280;background:#f4f5f7;padding:2px 8px;border-radius:99px;border:1px solid #e5e7eb}
-  .td-students-list{padding:8px 10px;display:flex;flex-direction:column;gap:2px;max-height:300px;overflow-y:auto}
-  .td-no-students{font-size:12px;color:#9ca3af;padding:10px;text-align:center}
-  .td-student-row{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;transition:background 0.15s;animation:fadeUp 0.25s ease both}
-  .td-student-row:hover{background:#f7f8fa}
-  .td-student-av{width:26px;height:26px;border-radius:6px;flex-shrink:0;background:#f4f5f7;border:1px solid #e5e7eb;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#374151}
-  .td-student-name{font-size:12.5px;font-weight:600;color:#374151}
-
-  .td-content{display:flex;flex-direction:column;gap:14px}
-  .td-compose{background:white;border:1px solid #e5e7eb;border-radius:16px;padding:16px 18px;display:flex;flex-direction:column;gap:12px;animation:fadeUp 0.35s ease both}
-  .td-compose-head{display:flex;align-items:center;gap:10px}
-  .td-compose-av{width:32px;height:32px;border-radius:8px;flex-shrink:0;background:#111827;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;color:white}
-  .td-compose-label{font-size:12.5px;font-weight:700;color:#6b7280}
-  .td-textarea{width:100%;border:1.5px solid #e5e7eb;border-radius:10px;padding:10px 13px;font-size:14px;font-family:Tajawal,sans-serif;resize:none;outline:none;color:#111827;background:#fafafa;transition:border-color 0.18s,box-shadow 0.18s;line-height:1.6}
-  .td-textarea:focus{border-color:#111827;background:white;box-shadow:0 0 0 3px rgba(17,24,39,0.07)}
-  .td-textarea::placeholder{color:#9ca3af}
-  .td-compose-foot{display:flex;align-items:center;justify-content:space-between}
-  .td-char-count{font-size:11px;color:#9ca3af}
-  .td-post-btn{display:flex;align-items:center;gap:7px;background:#111827;color:white;padding:8px 18px;border-radius:9px;font-size:13px;font-weight:700;font-family:Tajawal,sans-serif;border:none;cursor:pointer;transition:all 0.18s}
-  .td-post-btn:hover:not(:disabled){background:#1f2937;transform:translateY(-1px);box-shadow:0 4px 14px rgba(17,24,39,0.22)}
-  .td-post-btn:disabled{opacity:0.4;cursor:not-allowed}
-  .td-spin{width:12px;height:12px;border:2px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin 0.6s linear infinite}
-
-  .td-ann-list{display:flex;flex-direction:column;gap:10px}
-  .td-ann-empty{background:white;border:1px solid #e5e7eb;border-radius:16px;padding:44px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;animation:fadeUp 0.35s ease both}
-  .td-ann-empty-icon{font-size:30px}
-  .td-ann-empty p{font-size:14px;font-weight:700;color:#374151}
-  .td-ann-empty span{font-size:12px;color:#9ca3af}
-  .td-ann-item{background:white;border:1px solid #e5e7eb;border-radius:14px;padding:15px 16px;display:flex;align-items:flex-start;gap:12px;animation:fadeUp 0.3s ease both;transition:border-color 0.15s,box-shadow 0.15s}
-  .td-ann-item:hover{border-color:#d1d5db;box-shadow:0 2px 10px rgba(0,0,0,0.05)}
-  .td-ann-item.deleting{animation:fadeOut 0.3s ease forwards}
-  .td-ann-body{flex:1;display:flex;flex-direction:column;gap:7px}
-  .td-ann-meta-row{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
-  .td-ann-av{width:24px;height:24px;border-radius:6px;flex-shrink:0;background:#111827;display:flex;align-items:center;justify-content:center;font-size:8.5px;font-weight:900;color:white}
-  .td-ann-author{font-size:12px;font-weight:700;color:#111827}
-  .td-ann-sep{color:#d1d5db;font-size:10px}
-  .td-ann-date{font-size:11px;color:#9ca3af}
-  .td-ann-content{font-size:14px;color:#374151;line-height:1.65}
-  .td-del-btn{display:flex;align-items:center;gap:4px;background:none;border:1px solid #fecaca;color:#ef4444;padding:5px 9px;border-radius:7px;font-size:11.5px;font-weight:700;font-family:Tajawal,sans-serif;cursor:pointer;flex-shrink:0;transition:all 0.15s;white-space:nowrap;margin-top:1px}
-  .td-del-btn:hover:not(:disabled){background:#fef2f2;border-color:#ef4444}
-  .td-del-btn:disabled{opacity:0.4;cursor:not-allowed}
-
-  .td-empty-state{background:white;border:1px solid #e5e7eb;border-radius:20px;padding:60px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px;animation:fadeUp 0.4s ease both}
-  .td-empty-icon{font-size:40px}
-  .td-empty-state h2{font-size:17px;font-weight:800;color:#111827}
-  .td-empty-state p{font-size:13px;color:#6b7280}
-
-  .td-skeleton{background:#e9eaec;border-radius:10px;animation:pulse 1.6s ease-in-out infinite}
-  .td-sk-banner{height:108px;border-radius:20px}
-  .td-sk-cls{height:54px;border-radius:12px}
-  .td-sk-compose{height:116px;border-radius:16px}
-  .td-sk-ann{height:76px;border-radius:14px}
-  .td-sk-col{display:flex;flex-direction:column;gap:10px}
-
-  @media(max-width:600px){
-    .td-inner{padding:16px 16px 40px;gap:18px}
-    .td-banner{padding:20px}
-    .td-banner-name{font-size:20px}
-    .td-banner-stats{display:none}
-  }
+  .tc-shell{display:flex;flex-direction:column;gap:20px;font-family:Tajawal,sans-serif}
+  .tc-loading{display:flex;align-items:center;gap:10px;height:160px;justify-content:center;color:#6b7280;font-size:14px}
+  .tc-loading.sm{height:60px;justify-content:center}
+  .spin{width:18px;height:18px;border:2px solid #e5e7eb;border-top-color:#2563eb;border-radius:50%;animation:sp 0.7s linear infinite;flex-shrink:0}
+  .spin.sm{width:13px;height:13px}
+  .tc-header{display:flex;flex-direction:column;gap:2px}
+  .tc-title{font-size:21px;font-weight:800;color:var(--text)}
+  .tc-sub{font-size:13px;color:var(--text2)}
+  .tc-tabs{display:flex;gap:6px;flex-wrap:wrap}
+  .tc-tab{display:flex;align-items:center;gap:8px;padding:8px 16px;border-radius:10px;border:1.5px solid #e5e7eb;background:white;cursor:pointer;transition:all 0.15s;font-family:Tajawal,sans-serif;font-size:13.5px;font-weight:600;color:#374151}
+  .tc-tab:hover{border-color:#9ca3af}
+  .tc-tab.active{background:#111827;border-color:#111827;color:white}
+  .tc-tab-count{font-size:11px;font-weight:700;padding:1px 7px;border-radius:99px;background:rgba(255,255,255,0.15);color:inherit}
+  .tc-tab:not(.active) .tc-tab-count{background:#f1f3f6;color:#6b7280}
+  .tc-grid{display:grid;grid-template-columns:300px 1fr;gap:16px;align-items:start}
+  @media(max-width:768px){.tc-grid{grid-template-columns:1fr}}
+  .tc-card{background:white;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden}
+  .tc-card-header{display:flex;align-items:center;gap:9px;padding:14px 18px;border-bottom:1px solid #f1f3f6}
+  .tc-card-icon{font-size:18px}
+  .tc-card-title{font-size:14px;font-weight:800;color:var(--text,#111827);flex:1}
+  .tc-card-badge{font-size:11px;font-weight:700;color:#6b7280;background:#f1f3f6;padding:2px 8px;border-radius:99px}
+  .tc-students{padding:10px 14px;display:flex;flex-direction:column;gap:4px;max-height:400px;overflow-y:auto}
+  .tc-student-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:9px;transition:background 0.15s;animation:fadeUp 0.25s ease both}
+  .tc-student-row:hover{background:#f7f8fa}
+  .tc-student-avatar{width:30px;height:30px;border-radius:8px;flex-shrink:0;background:linear-gradient(135deg,#2563eb,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:white}
+  .tc-student-name{font-size:13px;font-weight:600;color:#374151}
+  .tc-ann-composer{padding:14px 16px;border-bottom:1px solid #f1f3f6;display:flex;flex-direction:column;gap:10px}
+  .tc-textarea{width:100%;padding:10px 12px;background:#f7f8fa;border:1.5px solid #e5e7eb;border-radius:9px;font-size:13px;font-family:Tajawal,sans-serif;color:#111827;outline:none;resize:none;line-height:1.6;transition:border-color 0.15s}
+  .tc-textarea:focus{border-color:#2563eb;background:white}
+  .tc-post-btn{display:flex;align-items:center;justify-content:center;gap:7px;background:#111827;color:white;padding:10px;border-radius:9px;border:none;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.15s;font-family:Tajawal,sans-serif}
+  .tc-post-btn:hover:not(:disabled){background:#1f2937}
+  .tc-post-btn:disabled{opacity:0.4;cursor:not-allowed}
+  .tc-btn-spin{width:13px;height:13px;border:2px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:sp 0.7s linear infinite}
+  .tc-ann-list{padding:10px 14px;display:flex;flex-direction:column;gap:8px;max-height:420px;overflow-y:auto}
+  .tc-ann-item{padding:13px 14px;border-radius:11px;border:1px solid #f1f3f6;background:#fafafa;animation:fadeUp 0.25s ease both;transition:border-color 0.15s}
+  .tc-ann-item:hover{border-color:#e5e7eb}
+  .tc-ann-item.deleting{animation:fadeOut 0.3s ease forwards}
+  .tc-ann-content{font-size:13.5px;color:#111827;line-height:1.65;margin-bottom:10px}
+  .tc-ann-footer{display:flex;align-items:center;justify-content:space-between}
+  .tc-ann-meta{display:flex;align-items:center;gap:5px;font-size:11.5px;color:#9ca3af;font-weight:500}
+  .tc-ann-dot{width:3px;height:3px;border-radius:50%;background:#d1d5db}
+  .tc-del-ann-btn{background:none;border:none;color:#ef4444;font-size:12px;font-weight:600;cursor:pointer;padding:3px 8px;border-radius:6px;transition:background 0.15s;font-family:Tajawal,sans-serif;display:flex;align-items:center}
+  .tc-del-ann-btn:hover:not(:disabled){background:rgba(239,68,68,0.08)}
+  .tc-del-ann-btn:disabled{opacity:0.4;cursor:not-allowed}
+  .tc-empty{background:white;border:1px solid #e5e7eb;border-radius:16px;padding:52px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px}
+  .tc-empty-icon{font-size:38px}
+  .tc-empty h3{font-size:16px;font-weight:800;color:#111827}
+  .tc-empty p{font-size:13px;color:#6b7280}
+  .tc-inner-empty{text-align:center;color:#9ca3af;font-size:13px;padding:20px 0}
 `;

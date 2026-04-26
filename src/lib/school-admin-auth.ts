@@ -1,6 +1,4 @@
-// lib/school-admin-auth.ts
-// Shared helper — returns { adminProfile, school } or null
-import { createClient } from "@/lib/supabase/server";
+﻿import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 
 export async function requireSchoolAdmin() {

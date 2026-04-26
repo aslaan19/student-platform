@@ -68,6 +68,7 @@ model School {
   quizzes            Quiz[]
   assessments        Assessment[]
   assessmentAttempts AssessmentAttempt[]
+  roadmap            Roadmap?
 
   @@map("schools")
 }
@@ -100,6 +101,7 @@ model Student {
   class               Class?              @relation(fields: [class_id], references: [id], onDelete: SetNull)
   quiz_attempts       QuizAttempt[]
   assessment_attempts AssessmentAttempt[]
+  moduleAttempts      ModuleAttempt[]
 
   @@map("students")
 }
@@ -291,4 +293,99 @@ model AssessmentAnswer {
   question AssessmentQuestion @relation(fields: [question_id], references: [id], onDelete: Cascade)
 
   @@map("assessment_answers")
+}
+
+model Roadmap {
+  id         String   @id @default(uuid()) @db.Uuid
+  school_id  String   @unique @db.Uuid
+  title      String   @default("بنك الأسئلة")
+  created_at DateTime @default(now())
+
+  school School         @relation(fields: [school_id], references: [id], onDelete: Cascade)
+  stages RoadmapStage[]
+
+  @@map("roadmaps")
+}
+
+model RoadmapStage {
+  id         String   @id @default(uuid()) @db.Uuid
+  roadmap_id String   @db.Uuid
+  title      String
+  order      Int
+  created_at DateTime @default(now())
+
+  roadmap Roadmap         @relation(fields: [roadmap_id], references: [id], onDelete: Cascade)
+  modules RoadmapModule[]
+
+  @@map("roadmap_stages")
+}
+
+model RoadmapModule {
+  id         String   @id @default(uuid()) @db.Uuid
+  stage_id   String   @db.Uuid
+  title      String
+  order      Int
+  created_at DateTime @default(now())
+
+  stage     RoadmapStage      @relation(fields: [stage_id], references: [id], onDelete: Cascade)
+  questions RoadmapQuestion[]
+  attempts  ModuleAttempt[]
+
+  @@map("roadmap_modules")
+}
+
+model RoadmapQuestion {
+  id             String       @id @default(uuid()) @db.Uuid
+  module_id      String       @db.Uuid
+  type           QuestionType
+  text           String
+  correct_answer String
+  order          Int
+  created_at     DateTime     @default(now())
+
+  module  RoadmapModule           @relation(fields: [module_id], references: [id], onDelete: Cascade)
+  options RoadmapQuestionOption[]
+  answers ModuleAnswer[]
+
+  @@map("roadmap_questions")
+}
+
+model RoadmapQuestionOption {
+  id          String @id @default(uuid()) @db.Uuid
+  question_id String @db.Uuid
+  text        String
+  order       Int
+
+  question RoadmapQuestion @relation(fields: [question_id], references: [id], onDelete: Cascade)
+
+  @@map("roadmap_question_options")
+}
+
+model ModuleAttempt {
+  id         String   @id @default(uuid()) @db.Uuid
+  module_id  String   @db.Uuid
+  student_id String   @db.Uuid
+  score      Int
+  total      Int
+  passed     Boolean
+  created_at DateTime @default(now())
+
+  module  RoadmapModule  @relation(fields: [module_id], references: [id], onDelete: Cascade)
+  student Student        @relation(fields: [student_id], references: [id], onDelete: Cascade)
+  answers ModuleAnswer[]
+
+  @@map("module_attempts")
+}
+
+model ModuleAnswer {
+  id          String  @id @default(uuid()) @db.Uuid
+  attempt_id  String  @db.Uuid
+  question_id String  @db.Uuid
+  answer      String
+  is_correct  Boolean
+
+  attempt  ModuleAttempt   @relation(fields: [attempt_id], references: [id], onDelete: Cascade)
+  question RoadmapQuestion @relation(fields: [question_id], references: [id], onDelete: Cascade)
+
+  @@map("module_answers")
 }
