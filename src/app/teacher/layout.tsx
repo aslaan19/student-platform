@@ -98,7 +98,6 @@ export default function TeacherLayout({
               .join(""),
           );
         }
-        // Auto-set language from school
         if (d?.school?.language) {
           setLang(d.school.language as "ar" | "sq");
           if (d.school.language === "sq") setShowToggle(true);
@@ -142,11 +141,12 @@ export default function TeacherLayout({
 
       <div className="tl-body">
         <aside className={`tl-sidebar ${sidebarOpen ? "open" : ""}`}>
+          {/* Brand */}
           <div className="tl-brand">
             <div className="tl-brand-icon">
               <svg
-                width="20"
-                height="20"
+                width="18"
+                height="18"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -183,6 +183,7 @@ export default function TeacherLayout({
             </button>
           </div>
 
+          {/* Profile */}
           <div className="tl-profile">
             <div className="tl-profile-avatar">{initials}</div>
             <div className="tl-profile-info">
@@ -194,13 +195,14 @@ export default function TeacherLayout({
           </div>
 
           {showToggle && (
-            <div style={{ padding: "0 12px 12px" }}>
+            <div style={{ padding: "0 14px 14px" }}>
               <LangToggle />
             </div>
           )}
 
           <div className="tl-divider" />
 
+          {/* Nav */}
           <nav className="tl-nav">
             <span className="tl-nav-group-label">
               {lang === "ar" ? "القائمة الرئيسية" : "Menuja Kryesore"}
@@ -219,12 +221,13 @@ export default function TeacherLayout({
                 >
                   <span className="tl-nav-icon">{item.icon}</span>
                   <span className="tl-nav-label">{tr[item.key]}</span>
-                  {isActive && <span className="tl-nav-active-bar" />}
+                  {isActive && <span className="tl-nav-pip" />}
                 </Link>
               );
             })}
           </nav>
 
+          {/* Footer */}
           <div className="tl-sidebar-footer">
             <div className="tl-divider" style={{ marginBottom: 12 }} />
             <button
@@ -262,46 +265,264 @@ export default function TeacherLayout({
 }
 
 const styles = `
-  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-  @keyframes slideIn{from{transform:translateX(100%)}to{transform:translateX(0)}}
-  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
-  @keyframes sp{to{transform:rotate(360deg)}}
-  .tl-root{min-height:100vh;background:#f4f5f7;font-family:Tajawal,sans-serif}
-  .tl-body{display:flex;min-height:100vh}
-  .tl-sidebar{width:256px;flex-shrink:0;background:#111827;display:flex;flex-direction:column;min-height:100vh;position:sticky;top:0;height:100vh;overflow-y:auto;overflow-x:hidden;z-index:30}
-  .tl-brand{display:flex;align-items:center;gap:10px;padding:20px 18px 16px;flex-shrink:0}
-  .tl-brand-icon{width:36px;height:36px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.12);border-radius:10px;display:flex;align-items:center;justify-content:center;color:white;flex-shrink:0}
-  .tl-brand-text{flex:1;display:flex;flex-direction:column}
-  .tl-brand-title{font-size:13px;font-weight:800;color:white;letter-spacing:-0.2px}
-  .tl-brand-sub{font-size:10.5px;color:rgba(255,255,255,0.4);font-weight:500}
-  .tl-close-btn{display:none;background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;padding:4px;border-radius:6px;transition:color 0.15s}
-  .tl-close-btn:hover{color:white}
-  .tl-profile{display:flex;align-items:center;gap:10px;margin:0 12px 16px;padding:12px 14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:12px;flex-shrink:0}
-  .tl-profile-avatar{width:36px;height:36px;border-radius:9px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:white;flex-shrink:0}
-  .tl-profile-info{display:flex;flex-direction:column;gap:1px;overflow:hidden}
-  .tl-profile-name{font-size:13px;font-weight:800;color:white;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .tl-profile-role{font-size:11px;color:rgba(255,255,255,0.4);font-weight:500}
-  .tl-divider{height:1px;background:rgba(255,255,255,0.07);margin:0 12px 16px;flex-shrink:0}
-  .tl-nav{display:flex;flex-direction:column;gap:2px;padding:0 10px;flex:1}
-  .tl-nav-group-label{font-size:10px;font-weight:700;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:0.8px;padding:0 8px 8px}
-  .tl-nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;text-decoration:none;color:rgba(255,255,255,0.55);font-size:13.5px;font-weight:600;transition:all 0.16s ease;position:relative}
-  .tl-nav-item:hover{background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.9)}
-  .tl-nav-item.active{background:rgba(255,255,255,0.11);color:white;font-weight:800}
-  .tl-nav-icon{width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:8px;background:rgba(255,255,255,0.06);flex-shrink:0;transition:background 0.16s}
-  .tl-nav-item:hover .tl-nav-icon{background:rgba(255,255,255,0.1)}
-  .tl-nav-item.active .tl-nav-icon{background:rgba(255,255,255,0.15)}
-  .tl-nav-label{flex:1}
-  .tl-nav-active-bar{width:3px;height:16px;background:white;border-radius:99px;opacity:0.6}
-  .tl-sidebar-footer{padding:0 10px 20px;flex-shrink:0}
-  .tl-logout{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:10px;color:rgba(255,255,255,0.4);background:none;border:none;font-size:13px;font-weight:600;font-family:Tajawal,sans-serif;cursor:pointer;transition:all 0.16s;width:100%}
-  .tl-logout:hover:not(:disabled){background:rgba(239,68,68,0.12);color:#fca5a5}
-  .tl-logout:disabled{opacity:0.5;cursor:not-allowed}
-  .tl-logout-spin{width:14px;height:14px;border:2px solid rgba(255,255,255,0.2);border-top-color:rgba(255,255,255,0.6);border-radius:50%;animation:sp 0.7s linear infinite;flex-shrink:0}
-  .tl-main{flex:1;min-width:0;overflow-x:hidden}
-  .tl-mobile-bar{display:none;align-items:center;justify-content:space-between;padding:0 18px;height:54px;background:#111827;position:sticky;top:0;z-index:40}
-  .tl-hamburger{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:white;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer}
-  .tl-mobile-title{font-size:14px;font-weight:800;color:white}
-  .tl-mobile-avatar{width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:white}
-  .tl-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:29;animation:fadeIn 0.2s ease}
-  @media(max-width:768px){.tl-mobile-bar{display:flex}.tl-sidebar{position:fixed;right:0;top:0;bottom:0;transform:translateX(100%);transition:transform 0.28s cubic-bezier(0.4,0,0.2,1);height:100%}.tl-sidebar.open{transform:translateX(0);box-shadow:-8px 0 32px rgba(0,0,0,0.3)}.tl-close-btn{display:flex}.tl-body{flex-direction:column}.tl-main{min-height:calc(100vh - 54px)}}
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap');
+
+*,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+@keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+@keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes sp      { to   { transform: rotate(360deg); } }
+
+.tl-root {
+  min-height: 100vh;
+  background: #F5F3EE;
+  font-family: 'Cairo', sans-serif;
+}
+
+.tl-body {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ── Sidebar ── */
+.tl-sidebar {
+  width: 252px;
+  flex-shrink: 0;
+  background: #0B0B0C;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  z-index: 30;
+}
+
+/* Brand */
+.tl-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 22px 16px 18px;
+  flex-shrink: 0;
+}
+.tl-brand-icon {
+  width: 36px; height: 36px;
+  background: #C8A96A;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  color: #0B0B0C;
+  flex-shrink: 0;
+}
+.tl-brand-text {
+  flex: 1;
+  display: flex; flex-direction: column;
+  gap: 1px;
+}
+.tl-brand-title {
+  font-size: 13px; font-weight: 800;
+  color: #F5F3EE; letter-spacing: -0.2px;
+}
+.tl-brand-sub {
+  font-size: 10.5px;
+  color: rgba(200, 169, 106, 0.55);
+  font-weight: 500;
+}
+.tl-close-btn {
+  display: none;
+  background: none; border: none;
+  color: rgba(245,243,238,0.4);
+  cursor: pointer; padding: 4px;
+  border-radius: 6px; transition: color 0.15s;
+}
+.tl-close-btn:hover { color: #F5F3EE; }
+
+/* Profile */
+.tl-profile {
+  display: flex; align-items: center; gap: 10px;
+  margin: 0 12px 16px;
+  padding: 12px 13px;
+  background: rgba(200, 169, 106, 0.08);
+  border: 1px solid rgba(200, 169, 106, 0.15);
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+.tl-profile-avatar {
+  width: 36px; height: 36px;
+  border-radius: 9px;
+  background: #C8A96A;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 900;
+  color: #0B0B0C;
+  flex-shrink: 0;
+}
+.tl-profile-info {
+  display: flex; flex-direction: column; gap: 2px;
+  overflow: hidden;
+}
+.tl-profile-name {
+  font-size: 13px; font-weight: 700;
+  color: #F5F3EE;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.tl-profile-role {
+  font-size: 11px;
+  color: rgba(200, 169, 106, 0.6);
+  font-weight: 500;
+}
+
+/* Divider */
+.tl-divider {
+  height: 1px;
+  background: rgba(200, 169, 106, 0.1);
+  margin: 0 12px 16px;
+  flex-shrink: 0;
+}
+
+/* Nav */
+.tl-nav {
+  display: flex; flex-direction: column;
+  gap: 2px; padding: 0 10px; flex: 1;
+}
+.tl-nav-group-label {
+  font-size: 9.5px; font-weight: 700;
+  color: rgba(200, 169, 106, 0.4);
+  text-transform: uppercase; letter-spacing: 0.9px;
+  padding: 0 8px 10px;
+}
+.tl-nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 11px;
+  border-radius: 10px;
+  text-decoration: none;
+  color: rgba(245, 243, 238, 0.45);
+  font-size: 13.5px; font-weight: 600;
+  transition: all 0.16s ease;
+  position: relative;
+}
+.tl-nav-item:hover {
+  background: rgba(200, 169, 106, 0.08);
+  color: rgba(245, 243, 238, 0.9);
+}
+.tl-nav-item.active {
+  background: rgba(200, 169, 106, 0.12);
+  color: #C8A96A;
+  font-weight: 800;
+}
+.tl-nav-icon {
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 8px;
+  background: rgba(245, 243, 238, 0.05);
+  flex-shrink: 0;
+  transition: background 0.16s;
+}
+.tl-nav-item:hover .tl-nav-icon {
+  background: rgba(200, 169, 106, 0.1);
+}
+.tl-nav-item.active .tl-nav-icon {
+  background: rgba(200, 169, 106, 0.18);
+  color: #C8A96A;
+}
+.tl-nav-label { flex: 1; }
+.tl-nav-pip {
+  width: 3px; height: 16px;
+  background: #C8A96A;
+  border-radius: 99px;
+  opacity: 0.8;
+}
+
+/* Footer */
+.tl-sidebar-footer {
+  padding: 0 10px 22px;
+  flex-shrink: 0;
+}
+.tl-logout {
+  display: flex; align-items: center; gap: 9px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  color: rgba(245, 243, 238, 0.3);
+  background: none; border: none;
+  font-size: 13px; font-weight: 600;
+  font-family: 'Cairo', sans-serif;
+  cursor: pointer;
+  transition: all 0.16s;
+  width: 100%;
+}
+.tl-logout:hover:not(:disabled) {
+  background: rgba(200, 60, 60, 0.1);
+  color: #f5a0a0;
+}
+.tl-logout:disabled { opacity: 0.4; cursor: not-allowed; }
+.tl-logout-spin {
+  width: 14px; height: 14px;
+  border: 2px solid rgba(200, 169, 106, 0.2);
+  border-top-color: #C8A96A;
+  border-radius: 50%;
+  animation: sp 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+/* Main */
+.tl-main { flex: 1; min-width: 0; overflow-x: hidden; }
+
+/* Mobile bar */
+.tl-mobile-bar {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 18px;
+  height: 54px;
+  background: #0B0B0C;
+  position: sticky; top: 0; z-index: 40;
+  border-bottom: 1px solid rgba(200, 169, 106, 0.15);
+}
+.tl-hamburger {
+  background: rgba(200, 169, 106, 0.1);
+  border: 1px solid rgba(200, 169, 106, 0.2);
+  border-radius: 8px;
+  color: #C8A96A;
+  width: 34px; height: 34px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+}
+.tl-mobile-title {
+  font-size: 14px; font-weight: 800;
+  color: #F5F3EE;
+}
+.tl-mobile-avatar {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  background: #C8A96A;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 900;
+  color: #0B0B0C;
+}
+
+.tl-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 29;
+  animation: fadeIn 0.2s ease;
+}
+
+@media (max-width: 768px) {
+  .tl-mobile-bar { display: flex; }
+  .tl-sidebar {
+    position: fixed;
+    right: 0; top: 0; bottom: 0;
+    transform: translateX(100%);
+    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    height: 100%;
+  }
+  .tl-sidebar.open {
+    transform: translateX(0);
+    box-shadow: -8px 0 40px rgba(0, 0, 0, 0.4);
+  }
+  .tl-close-btn { display: flex; }
+  .tl-body { flex-direction: column; }
+  .tl-main { min-height: calc(100vh - 54px); }
+}
 `;

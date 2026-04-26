@@ -143,7 +143,6 @@ export default function StudentLayout({
           router.push("/login");
           return;
         }
-
         if (data?.profile?.full_name) {
           setName(data.profile.full_name);
           setInitials(
@@ -155,40 +154,29 @@ export default function StudentLayout({
           );
         }
         if (data?.school?.name) setSchoolName(data.school.name);
-
-        // Auto-set language from school
         if (data.school?.language) {
           setLang(data.school.language as "ar" | "sq");
           if (data.school.language === "sq") setShowToggle(true);
         }
-
         const status: string = data.onboarding_status;
         const allowed = ALLOWED_PAGES[status];
-
         if (!allowed) {
           setChecked(true);
           return;
         }
-
         if (status === "CLASS_ASSIGNED") {
           const onDashboard =
             pathname === "/student" || pathname.startsWith("/student/");
-          if (!onDashboard || pathname === "/student/school-assigned") {
+          if (!onDashboard || pathname === "/student/school-assigned")
             router.push("/student/welcome");
-          } else {
-            setChecked(true);
-          }
+          else setChecked(true);
           return;
         }
-
         const isAllowed = allowed.some(
           (p) => p === pathname || pathname.startsWith(p + "/"),
         );
-        if (!isAllowed) {
-          router.push(ONBOARDING_ROUTES[status] ?? "/student");
-        } else {
-          setChecked(true);
-        }
+        if (!isAllowed) router.push(ONBOARDING_ROUTES[status] ?? "/student");
+        else setChecked(true);
       })
       .catch(() => router.push("/login"));
   }, [pathname]);
@@ -208,15 +196,15 @@ export default function StudentLayout({
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "#f7f8fa",
+          background: "#faf7f4",
         }}
       >
         <div
           style={{
             width: 32,
             height: 32,
-            border: "3px solid #e5e7eb",
-            borderTopColor: "#4f8ef7",
+            border: "3px solid rgba(200,169,106,0.3)",
+            borderTopColor: "#7A1E1E",
             borderRadius: "50%",
             animation: "spin 0.7s linear infinite",
           }}
@@ -227,7 +215,6 @@ export default function StudentLayout({
 
   return (
     <div className="sl-root" dir={isRtl ? "rtl" : "ltr"}>
-      {/* Mobile top bar */}
       <header className="sl-mobile-bar">
         <button className="sl-hamburger" onClick={() => setSidebarOpen(true)}>
           <svg
@@ -253,9 +240,7 @@ export default function StudentLayout({
       )}
 
       <div className="sl-body">
-        {/* Sidebar */}
         <aside className={`sl-sidebar ${sidebarOpen ? "open" : ""}`}>
-          {/* Brand */}
           <div className="sl-brand">
             <div className="sl-brand-icon">
               <svg
@@ -299,7 +284,6 @@ export default function StudentLayout({
             </button>
           </div>
 
-          {/* Profile */}
           <div className="sl-profile">
             <div className="sl-profile-avatar">{initials}</div>
             <div className="sl-profile-info">
@@ -310,7 +294,6 @@ export default function StudentLayout({
             </div>
           </div>
 
-          {/* Lang toggle — only for Albanian schools */}
           {showToggle && (
             <div style={{ padding: "0 12px 12px" }}>
               <LangToggle dark />
@@ -319,7 +302,6 @@ export default function StudentLayout({
 
           <div className="sl-divider" />
 
-          {/* Nav */}
           <nav className="sl-nav">
             <span className="sl-nav-group-label">
               {lang === "ar" ? "القائمة الرئيسية" : "Menuja Kryesore"}
@@ -348,7 +330,6 @@ export default function StudentLayout({
             })}
           </nav>
 
-          {/* Footer */}
           <div className="sl-sidebar-footer">
             <div className="sl-divider" style={{ marginBottom: 12 }} />
             <button
@@ -390,57 +371,68 @@ const styles = `
   @keyframes fadeIn{from{opacity:0}to{opacity:1}}
   @keyframes sp{to{transform:rotate(360deg)}}
 
-  .sl-root{min-height:100vh;background:#f4f5f7;font-family:Tajawal,sans-serif}
+  :root{
+    --red:#7A1E1E;
+    --red-dark:#5c1616;
+    --red-muted:rgba(122,30,30,0.1);
+    --red-border:rgba(122,30,30,0.25);
+    --gold:#C8A96A;
+    --gold-muted:rgba(200,169,106,0.1);
+    --gold-border:rgba(200,169,106,0.2);
+    --black:#0B0B0C;
+  }
+
+  .sl-root{min-height:100vh;background:#faf7f4;font-family:Tajawal,sans-serif}
   .sl-body{display:flex;min-height:100vh}
 
-  .sl-sidebar{width:256px;flex-shrink:0;background:#111827;display:flex;flex-direction:column;min-height:100vh;position:sticky;top:0;height:100vh;overflow-y:auto;overflow-x:hidden;z-index:30}
+  .sl-sidebar{width:256px;flex-shrink:0;background:var(--black);display:flex;flex-direction:column;min-height:100vh;position:sticky;top:0;height:100vh;overflow-y:auto;overflow-x:hidden;z-index:30;border-left:1px solid rgba(200,169,106,0.08)}
 
   .sl-brand{display:flex;align-items:center;gap:10px;padding:20px 18px 16px;flex-shrink:0}
-  .sl-brand-icon{width:36px;height:36px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.12);border-radius:10px;display:flex;align-items:center;justify-content:center;color:white;flex-shrink:0}
+  .sl-brand-icon{width:36px;height:36px;background:var(--red-muted);border:1px solid var(--red-border);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--gold);flex-shrink:0}
   .sl-brand-text{flex:1;display:flex;flex-direction:column;min-width:0}
-  .sl-brand-title{font-size:13px;font-weight:800;color:white;letter-spacing:-0.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .sl-brand-sub{font-size:10.5px;color:rgba(255,255,255,0.4);font-weight:500}
-  .sl-close-btn{display:none;background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;padding:4px;border-radius:6px;transition:color 0.15s;flex-shrink:0}
-  .sl-close-btn:hover{color:white}
+  .sl-brand-title{font-size:13px;font-weight:800;color:var(--gold);letter-spacing:-0.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sl-brand-sub{font-size:10.5px;color:rgba(200,169,106,0.5);font-weight:500}
+  .sl-close-btn{display:none;background:none;border:none;color:rgba(200,169,106,0.4);cursor:pointer;padding:4px;border-radius:6px;transition:color 0.15s;flex-shrink:0}
+  .sl-close-btn:hover{color:var(--gold)}
 
-  .sl-profile{display:flex;align-items:center;gap:10px;margin:0 12px 16px;padding:12px 14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:12px;flex-shrink:0}
-  .sl-profile-avatar{width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,rgba(79,70,229,0.8),rgba(124,58,237,0.8));border:1px solid rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:white;flex-shrink:0}
+  .sl-profile{display:flex;align-items:center;gap:10px;margin:0 12px 16px;padding:12px 14px;background:var(--red-muted);border:1px solid var(--red-border);border-radius:12px;flex-shrink:0}
+  .sl-profile-avatar{width:36px;height:36px;border-radius:9px;background:var(--red);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:var(--gold);flex-shrink:0;border:1px solid rgba(200,169,106,0.2)}
   .sl-profile-info{display:flex;flex-direction:column;gap:1px;overflow:hidden;min-width:0}
   .sl-profile-name{font-size:13px;font-weight:800;color:white;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .sl-profile-role{font-size:11px;color:rgba(255,255,255,0.4);font-weight:500}
+  .sl-profile-role{font-size:11px;color:rgba(200,169,106,0.5);font-weight:500}
 
-  .sl-divider{height:1px;background:rgba(255,255,255,0.07);margin:0 12px 16px;flex-shrink:0}
+  .sl-divider{height:1px;background:rgba(200,169,106,0.1);margin:0 12px 16px;flex-shrink:0}
 
   .sl-nav{display:flex;flex-direction:column;gap:2px;padding:0 10px;flex:1}
-  .sl-nav-group-label{font-size:10px;font-weight:700;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:0.8px;padding:0 8px 8px}
-  .sl-nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;text-decoration:none;color:rgba(255,255,255,0.55);font-size:13.5px;font-weight:600;transition:all 0.16s ease;position:relative}
-  .sl-nav-item:hover{background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.9)}
-  .sl-nav-item.active{background:rgba(255,255,255,0.11);color:white;font-weight:800}
-  .sl-nav-icon{width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:8px;background:rgba(255,255,255,0.06);flex-shrink:0;transition:background 0.16s}
-  .sl-nav-item:hover .sl-nav-icon{background:rgba(255,255,255,0.1)}
-  .sl-nav-item.active .sl-nav-icon{background:rgba(255,255,255,0.15)}
+  .sl-nav-group-label{font-size:10px;font-weight:700;color:rgba(200,169,106,0.35);text-transform:uppercase;letter-spacing:0.8px;padding:0 8px 8px}
+  .sl-nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;text-decoration:none;color:rgba(200,169,106,0.5);font-size:13.5px;font-weight:600;transition:all 0.16s ease;position:relative}
+  .sl-nav-item:hover{background:var(--red-muted);color:var(--gold)}
+  .sl-nav-item.active{background:var(--red-muted);color:var(--gold);font-weight:800;border:1px solid var(--red-border)}
+  .sl-nav-icon{width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:8px;background:rgba(200,169,106,0.05);flex-shrink:0;transition:background 0.16s}
+  .sl-nav-item:hover .sl-nav-icon{background:var(--red-muted)}
+  .sl-nav-item.active .sl-nav-icon{background:var(--red-muted)}
   .sl-nav-label{flex:1}
-  .sl-nav-active-bar{width:3px;height:16px;background:white;border-radius:99px;opacity:0.6}
+  .sl-nav-active-bar{width:3px;height:16px;background:var(--gold);border-radius:99px;opacity:0.8}
 
   .sl-sidebar-footer{padding:0 10px 20px;flex-shrink:0}
-  .sl-logout{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:10px;color:rgba(255,255,255,0.4);background:none;border:none;font-size:13px;font-weight:600;font-family:Tajawal,sans-serif;cursor:pointer;transition:all 0.16s;width:100%}
-  .sl-logout:hover:not(:disabled){background:rgba(239,68,68,0.12);color:#fca5a5}
+  .sl-logout{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:10px;color:rgba(200,169,106,0.35);background:none;border:none;font-size:13px;font-weight:600;font-family:Tajawal,sans-serif;cursor:pointer;transition:all 0.16s;width:100%}
+  .sl-logout:hover:not(:disabled){background:var(--red-muted);color:var(--gold)}
   .sl-logout:disabled{opacity:0.5;cursor:not-allowed}
-  .sl-logout-spin{width:14px;height:14px;border:2px solid rgba(255,255,255,0.2);border-top-color:rgba(255,255,255,0.6);border-radius:50%;animation:sp 0.7s linear infinite;flex-shrink:0}
+  .sl-logout-spin{width:14px;height:14px;border:2px solid rgba(200,169,106,0.2);border-top-color:var(--gold);border-radius:50%;animation:sp 0.7s linear infinite;flex-shrink:0}
 
   .sl-main{flex:1;min-width:0;overflow-x:hidden;padding:28px}
 
-  .sl-mobile-bar{display:none;align-items:center;justify-content:space-between;padding:0 18px;height:54px;background:#111827;position:sticky;top:0;z-index:40}
-  .sl-hamburger{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:white;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer}
-  .sl-mobile-title{font-size:14px;font-weight:800;color:white}
-  .sl-mobile-avatar{width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:white}
+  .sl-mobile-bar{display:none;align-items:center;justify-content:space-between;padding:0 18px;height:54px;background:var(--black);position:sticky;top:0;z-index:40;border-bottom:1px solid rgba(200,169,106,0.12)}
+  .sl-hamburger{background:var(--red-muted);border:1px solid var(--red-border);border-radius:8px;color:var(--gold);width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+  .sl-mobile-title{font-size:14px;font-weight:800;color:var(--gold)}
+  .sl-mobile-avatar{width:32px;height:32px;border-radius:8px;background:var(--red);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:var(--gold)}
 
-  .sl-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:29;animation:fadeIn 0.2s ease}
+  .sl-backdrop{position:fixed;inset:0;background:rgba(11,11,12,0.6);z-index:29;animation:fadeIn 0.2s ease}
 
   @media(max-width:768px){
     .sl-mobile-bar{display:flex}
     .sl-sidebar{position:fixed;right:0;top:0;bottom:0;transform:translateX(100%);transition:transform 0.28s cubic-bezier(0.4,0,0.2,1);height:100%}
-    .sl-sidebar.open{transform:translateX(0);box-shadow:-8px 0 32px rgba(0,0,0,0.3)}
+    .sl-sidebar.open{transform:translateX(0);box-shadow:-8px 0 40px rgba(11,11,12,0.5)}
     .sl-close-btn{display:flex}
     .sl-body{flex-direction:column}
     .sl-main{min-height:calc(100vh - 54px);padding:16px}
