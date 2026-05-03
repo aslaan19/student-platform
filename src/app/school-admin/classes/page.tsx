@@ -4,7 +4,7 @@ export const dynamic = "force-dynamic";
 import { useEffect, useState } from "react";
 import { useLang } from "@/lib/language-context";
 import { t } from "@/lib/translations";
-
+import MandalaLoader from "@/components/MandalaLoader";
 interface ClassItem {
   id: string;
   name: string;
@@ -83,30 +83,7 @@ export default function SchoolAdminClassesPage() {
 
   if (loading)
     return (
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          height: 200,
-          gap: 10,
-          color: "#6b7280",
-          fontFamily: "Tajawal, sans-serif",
-        }}
-      >
-        <div
-          style={{
-            width: 18,
-            height: 18,
-            border: "2px solid #e5e7eb",
-            borderTopColor: "#2563eb",
-            borderRadius: "50%",
-            animation: "sp 0.7s linear infinite",
-          }}
-        />
-        {tr.loading}
-        <style>{`@keyframes sp{to{transform:rotate(360deg)}}`}</style>
-      </div>
+      <MandalaLoader label={tr.loading} />
     );
 
   return (

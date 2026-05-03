@@ -11,7 +11,7 @@ export async function GET() {
 
     const school = await prisma.school.findFirst({
       where: { admin_id: user.id },
-      select: { id: true, name: true, language: true },
+      select: { id: true, name: true, language: true, slug: true },
     });
 
     if (!school) return NextResponse.json({ error: "School not found" }, { status: 404 });
@@ -21,6 +21,7 @@ export async function GET() {
         prisma.teacher.count({ where: { school_id: school.id } }),
         prisma.student.count({ where: { school_id: school.id } }),
         prisma.class.count({ where: { school_id: school.id } }),
+    
         prisma.assessmentAttempt.count({
           where: {
             assessment: { school_id: school.id, type: "SCHOOL_PLACEMENT" },

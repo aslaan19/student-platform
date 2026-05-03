@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useLang } from "@/lib/language-context";
 import { t } from "@/lib/translations";
-
+import MandalaLoader from "@/components/MandalaLoader";
 interface Submission {
   id: string;
   submitted_at: string;
@@ -83,10 +83,7 @@ function SubmissionsContent() {
       </div>
 
       {loading ? (
-        <div className="sub-loading">
-          <div className="spin" />
-          {tr.loading}
-        </div>
+        <MandalaLoader label={tr.loading} /> 
       ) : submissions.length === 0 ? (
         <div className="sub-empty">{tr.noSubmissions}</div>
       ) : (

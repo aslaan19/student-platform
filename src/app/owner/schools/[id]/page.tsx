@@ -1,21 +1,19 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
-async function updateLanguage(schoolId: string, lang: string) {
-  await fetch(`/api/owner/schools/${schoolId}`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ language: lang }),
-  });
-}
-
 interface SchoolDetail {
   id: string;
   name: string;
+  slug: string;
+  description: string | null;
   language: string;
   created_at: string;
+  color_primary: string;
+  color_secondary: string;
+  color_bg: string;
   admin: { id: string; full_name: string } | null;
   teachers: {
     id: string;
@@ -43,15 +41,29 @@ const STATUS_LABELS: Record<string, string> = {
   SCHOOL_PLACEMENT_SUBMITTED: "تم تقديم التوزيع",
   CLASS_ASSIGNED: "تم تعيين الفصل",
 };
-const STATUS_GOLD: Record<string, string> = {
-  PENDING_INTAKE: "#C8A96A",
-  INTAKE_SUBMITTED: "#E5B93C",
-  SCHOOL_ASSIGNED: "#C8A96A",
-  SCHOOL_PLACEMENT_SUBMITTED: "#E5B93C",
-  CLASS_ASSIGNED: "#C8A96A",
-};
 
-type Tab = "overview" | "teachers" | "students" | "classes";
+type Tab = "overview" | "teachers" | "students" | "classes" | "settings";
+
+const PRESET_THEMES = [
+  {
+    name: "الهوية الرئيسية",
+    primary: "#C8A96A",
+    secondary: "#E5B93C",
+    bg: "#0B0B0C",
+  },
+  { name: "الشباب", primary: "#E5B93C", secondary: "#C8A96A", bg: "#0B0B0C" },
+  { name: "القيم", primary: "#C8A96A", secondary: "#E5B93C", bg: "#7A1E1E" },
+  {
+    name: "أزرق ليلي",
+    primary: "#60A5FA",
+    secondary: "#93C5FD",
+    bg: "#0F172A",
+  },
+  { name: "زمرد", primary: "#34D399", secondary: "#6EE7B7", bg: "#064E3B" },
+  { name: "بنفسجي", primary: "#A78BFA", secondary: "#C4B5FD", bg: "#1E1B4B" },
+  { name: "وردي", primary: "#F472B6", secondary: "#FBCFE8", bg: "#1A0A14" },
+  { name: "برتقالي", primary: "#FB923C", secondary: "#FED7AA", bg: "#1A0A00" },
+];
 
 export default function OwnerSchoolDetailPage() {
   const params = useParams();
@@ -60,14 +72,74 @@ export default function OwnerSchoolDetailPage() {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<Tab>("overview");
   const [search, setSearch] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [saveMsg, setSaveMsg] = useState("");
+
+  const [settingsName, setSettingsName] = useState("");
+  const [settingsSlug, setSettingsSlug] = useState("");
+  const [settingsDesc, setSettingsDesc] = useState("");
+  const [settingsLang, setSettingsLang] = useState("ar");
+  const [colorPrimary, setColorPrimary] = useState("#C8A96A");
+  const [colorSecondary, setColorSecondary] = useState("#E5B93C");
+  const [colorBg, setColorBg] = useState("#0B0B0C");
 
   useEffect(() => {
     if (!id) return;
     fetch(`/api/owner/schools/${id}`)
       .then((r) => r.json())
-      .then((d) => setSchool(d.school))
-      .finally(() => setLoading(false));
+      .then((d) => {
+        setSchool(d.school);
+        setSettingsName(d.school?.name ?? "");
+        setSettingsSlug(d.school?.slug ?? "");
+        setSettingsDesc(d.school?.description ?? "");
+        setSettingsLang(d.school?.language ?? "ar");
+        setColorPrimary(d.school?.color_primary || "#C8A96A");
+        setColorSecondary(d.school?.color_secondary || "#E5B93C");
+        setColorBg(d.school?.color_bg || "#0B0B0C");
+        setLoading(false);
+      });
   }, [id]);
+
+  async function saveSettings() {
+    setSaving(true);
+    setSaveMsg("");
+    const r = await fetch(`/api/owner/schools/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: settingsName,
+        slug: settingsSlug,
+        description: settingsDesc,
+        language: settingsLang,
+        color_primary: colorPrimary,
+        color_secondary: colorSecondary,
+        color_bg: colorBg,
+      }),
+    });
+    const d = await r.json();
+    if (!r.ok) {
+      setSaveMsg(d.error ?? "فشل الحفظ");
+    } else {
+      setSchool((prev) =>
+        prev
+          ? {
+              ...prev,
+              name: d.school.name,
+              slug: d.school.slug,
+              description: d.school.description,
+              language: d.school.language,
+              color_primary: d.school.color_primary,
+              color_secondary: d.school.color_secondary,
+              color_bg: d.school.color_bg,
+              admin: d.school.admin,
+            }
+          : prev,
+      );
+      setSaveMsg("✓ تم الحفظ بنجاح");
+    }
+    setSaving(false);
+    setTimeout(() => setSaveMsg(""), 3000);
+  }
 
   if (loading)
     return (
@@ -88,6 +160,7 @@ export default function OwnerSchoolDetailPage() {
     { id: "teachers", label: "المعلمون", count: school.teachers.length },
     { id: "students", label: "الطلاب", count: school.students.length },
     { id: "classes", label: "الفصول", count: school.classes.length },
+    { id: "settings", label: "⚙️ الإعدادات" },
   ];
 
   const filteredStudents = school.students.filter((s) =>
@@ -99,7 +172,6 @@ export default function OwnerSchoolDetailPage() {
 
   return (
     <div className="sd-page" dir="rtl">
-      {/* Header */}
       <div className="sd-header">
         <Link href="/owner/schools" className="sd-back">
           <svg
@@ -115,7 +187,15 @@ export default function OwnerSchoolDetailPage() {
           جميع المدارس
         </Link>
         <div className="sd-title-row">
-          <div className="sd-icon">🏫</div>
+          <div
+            className="sd-icon"
+            style={{
+              background: `${school.color_primary || "#C8A96A"}20`,
+              border: `1px solid ${school.color_primary || "#C8A96A"}40`,
+            }}
+          >
+            🏫
+          </div>
           <div className="sd-title-body">
             <h1 className="sd-title">{school.name}</h1>
             <p className="sd-sub">
@@ -133,10 +213,48 @@ export default function OwnerSchoolDetailPage() {
               })}
             </p>
           </div>
+          {/* Color preview dots */}
+          <div style={{ display: "flex", gap: 5, alignItems: "center" }}>
+            {[
+              school.color_bg,
+              school.color_primary,
+              school.color_secondary,
+            ].map((c, i) => (
+              <div
+                key={i}
+                style={{
+                  width: 14,
+                  height: 14,
+                  borderRadius: "50%",
+                  background: c || "#C8A96A",
+                  border: "1.5px solid rgba(0,0,0,0.15)",
+                }}
+              />
+            ))}
+          </div>
+          <a
+            href={`/schools/${school.slug}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="sd-landing-btn"
+          >
+            <svg
+              width="12"
+              height="12"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" />
+              <polyline points="15 3 21 3 21 9" />
+              <line x1="10" y1="14" x2="21" y2="3" />
+            </svg>
+            صفحة المدرسة
+          </a>
         </div>
       </div>
 
-      {/* Tabs */}
       <div className="sd-tabs-wrap">
         <div className="sd-tabs">
           {tabs.map((t) => (
@@ -203,6 +321,37 @@ export default function OwnerSchoolDetailPage() {
               </div>
             ))}
           </div>
+          <div className="sd-landing-preview">
+            <div className="sd-landing-preview-left">
+              <div className="sd-landing-preview-icon">🌐</div>
+              <div>
+                <div className="sd-landing-preview-title">
+                  صفحة المدرسة العامة
+                </div>
+                <div className="sd-landing-preview-url">{`/schools/${school.slug}`}</div>
+              </div>
+            </div>
+            <a
+              href={`/schools/${school.slug}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="sd-landing-btn"
+            >
+              <svg
+                width="12"
+                height="12"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" />
+                <polyline points="15 3 21 3 21 9" />
+                <line x1="10" y1="14" x2="21" y2="3" />
+              </svg>
+              فتح الصفحة
+            </a>
+          </div>
         </div>
       )}
 
@@ -232,7 +381,7 @@ export default function OwnerSchoolDetailPage() {
             </div>
           )}
           {filteredTeachers.length === 0 ? (
-            <div className="sd-empty">لا توجد نتائج مطابقة.</div>
+            <div className="sd-empty">لا توجد نتائج.</div>
           ) : (
             filteredTeachers.map((t) => (
               <div key={t.id} className="sd-row">
@@ -282,7 +431,7 @@ export default function OwnerSchoolDetailPage() {
             </div>
           )}
           {filteredStudents.length === 0 ? (
-            <div className="sd-empty">لا توجد نتائج مطابقة.</div>
+            <div className="sd-empty">لا توجد نتائج.</div>
           ) : (
             filteredStudents.map((s) => (
               <div key={s.id} className="sd-row">
@@ -298,9 +447,9 @@ export default function OwnerSchoolDetailPage() {
                 <div
                   className="sd-status-chip"
                   style={{
-                    color: STATUS_GOLD[s.onboarding_status] ?? "#C8A96A",
-                    background: `${STATUS_GOLD[s.onboarding_status] ?? "#C8A96A"}15`,
-                    border: `1px solid ${STATUS_GOLD[s.onboarding_status] ?? "#C8A96A"}30`,
+                    color: "var(--gold)",
+                    background: "var(--gold-muted)",
+                    border: "1px solid var(--gold-border)",
                   }}
                 >
                   {STATUS_LABELS[s.onboarding_status] ?? s.onboarding_status}
@@ -315,7 +464,7 @@ export default function OwnerSchoolDetailPage() {
       {tab === "classes" && (
         <div className="sd-list">
           {school.classes.length === 0 ? (
-            <div className="sd-empty">لا توجد فصول في هذه المدرسة.</div>
+            <div className="sd-empty">لا توجد فصول.</div>
           ) : (
             school.classes.map((c) => (
               <div key={c.id} className="sd-row">
@@ -333,18 +482,283 @@ export default function OwnerSchoolDetailPage() {
         </div>
       )}
 
-      {/* Language selector */}
-      <div className="sd-lang-card">
-        <span className="sd-lang-label">لغة المدرسة</span>
-        <select
-          className="sd-lang-select"
-          defaultValue={school.language ?? "ar"}
-          onChange={(e) => updateLanguage(school.id, e.target.value)}
-        >
-          <option value="ar">🇸🇦 العربية</option>
-          <option value="sq">🇦🇱 Shqip (Albanian)</option>
-        </select>
-      </div>
+      {/* Settings */}
+      {tab === "settings" && (
+        <div className="sd-settings">
+          <div className="sd-settings-card">
+            <h2 className="sd-settings-title">إعدادات المدرسة</h2>
+
+            <div className="sd-field">
+              <label className="sd-field-label">اسم المدرسة</label>
+              <input
+                className="sd-input"
+                value={settingsName}
+                onChange={(e) => setSettingsName(e.target.value)}
+              />
+            </div>
+
+            <div className="sd-field">
+              <label className="sd-field-label">رابط الصفحة (Slug)</label>
+              <div className="sd-slug-wrap">
+                <span className="sd-slug-prefix">/schools/</span>
+                <input
+                  className="sd-input sd-slug-input"
+                  value={settingsSlug}
+                  onChange={(e) =>
+                    setSettingsSlug(
+                      e.target.value.toLowerCase().replace(/\s/g, "-"),
+                    )
+                  }
+                  dir="ltr"
+                />
+              </div>
+              <div className="sd-field-hint">
+                رابط الصفحة العامة:{" "}
+                <a
+                  href={`/schools/${settingsSlug}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: "var(--gold)", textDecoration: "none" }}
+                >
+                  /schools/{settingsSlug}
+                </a>
+              </div>
+            </div>
+
+            <div className="sd-field">
+              <label className="sd-field-label">وصف المدرسة</label>
+              <textarea
+                className="sd-textarea"
+                value={settingsDesc}
+                onChange={(e) => setSettingsDesc(e.target.value)}
+                rows={3}
+                placeholder="وصف مختصر يظهر في الصفحة العامة..."
+              />
+            </div>
+
+            <div className="sd-field">
+              <label className="sd-field-label">لغة المدرسة</label>
+              <select
+                className="sd-select"
+                value={settingsLang}
+                onChange={(e) => setSettingsLang(e.target.value)}
+              >
+                <option value="ar">🇸🇦 العربية (الافتراضي)</option>
+                <option value="sq">🇦🇱 Shqip — الألبانية</option>
+              </select>
+            </div>
+
+            {/* ── COLOR THEME ── */}
+            <div className="sd-divider" />
+
+            <div className="sd-field">
+              <label className="sd-field-label">قوالب ألوان جاهزة</label>
+              <div className="sd-presets">
+                {PRESET_THEMES.map((theme, i) => (
+                  <button
+                    key={i}
+                    className="sd-preset-btn"
+                    onClick={() => {
+                      setColorPrimary(theme.primary);
+                      setColorSecondary(theme.secondary);
+                      setColorBg(theme.bg);
+                    }}
+                  >
+                    <div className="sd-preset-dots">
+                      <div style={{ background: theme.bg }} />
+                      <div style={{ background: theme.primary }} />
+                      <div style={{ background: theme.secondary }} />
+                    </div>
+                    {theme.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="sd-field">
+              <label className="sd-field-label">ألوان مخصصة</label>
+              <div className="sd-colors-grid">
+                {[
+                  {
+                    label: "اللون الرئيسي",
+                    hint: "الأزرار والعناوين والأيقونة",
+                    value: colorPrimary,
+                    setter: setColorPrimary,
+                  },
+                  {
+                    label: "اللون الثانوي",
+                    hint: "الزخارف والتفاصيل الهندسية",
+                    value: colorSecondary,
+                    setter: setColorSecondary,
+                  },
+                  {
+                    label: "لون الخلفية",
+                    hint: "خلفية صفحة المدرسة",
+                    value: colorBg,
+                    setter: setColorBg,
+                  },
+                ].map((c, i) => (
+                  <div key={i} className="sd-color-field">
+                    <div className="sd-color-label">{c.label}</div>
+                    <div className="sd-color-input-wrap">
+                      <input
+                        type="color"
+                        value={c.value}
+                        onChange={(e) => c.setter(e.target.value)}
+                        className="sd-color-picker"
+                      />
+                      <input
+                        type="text"
+                        value={c.value}
+                        onChange={(e) => c.setter(e.target.value)}
+                        className="sd-color-hex"
+                        maxLength={7}
+                        placeholder="#000000"
+                        dir="ltr"
+                      />
+                    </div>
+                    <div className="sd-color-hint">{c.hint}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Live preview */}
+            <div className="sd-field">
+              <label className="sd-field-label">معاينة مباشرة</label>
+              <div className="sd-preview" style={{ background: colorBg }}>
+                <div
+                  className="sd-preview-header"
+                  style={{ borderBottom: `1px solid rgba(255,255,255,0.08)` }}
+                >
+                  <div
+                    className="sd-preview-logo"
+                    style={{ background: colorPrimary, color: colorBg }}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                      <path d="M12 2L2 7l10 5 10-5-10-5z" fill="currentColor" />
+                    </svg>
+                  </div>
+                  <span
+                    style={{
+                      color: colorPrimary,
+                      fontSize: 12,
+                      fontWeight: 800,
+                    }}
+                  >
+                    بناء الأهلية
+                  </span>
+                  <div
+                    className="sd-preview-btn"
+                    style={{ background: colorPrimary, color: colorBg }}
+                  >
+                    دخول
+                  </div>
+                </div>
+                <div className="sd-preview-body">
+                  <div
+                    className="sd-preview-ring"
+                    style={{
+                      border: `1.5px solid ${colorSecondary}`,
+                      borderRadius: "50%",
+                      width: 40,
+                      height: 40,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: 24,
+                        height: 24,
+                        borderRadius: "50%",
+                        background: colorPrimary,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: 10,
+                        fontWeight: 900,
+                        color: colorBg,
+                      }}
+                    >
+                      {settingsName.charAt(0) || "م"}
+                    </div>
+                  </div>
+                  <div
+                    style={{
+                      color: "white",
+                      fontSize: 13,
+                      fontWeight: 800,
+                      marginTop: 8,
+                    }}
+                  >
+                    {settingsName || "اسم المدرسة"}
+                  </div>
+                  <div
+                    style={{
+                      color: colorPrimary,
+                      fontSize: 9,
+                      opacity: 0.6,
+                      marginTop: 4,
+                    }}
+                  >
+                    المنصة التعليمية
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {saveMsg && (
+              <div
+                className={`sd-save-msg ${saveMsg.startsWith("✓") ? "success" : "error"}`}
+              >
+                {saveMsg}
+              </div>
+            )}
+
+            <button
+              className="sd-save-btn"
+              onClick={saveSettings}
+              disabled={saving}
+            >
+              {saving ? "جارٍ الحفظ..." : "حفظ جميع التغييرات"}
+            </button>
+          </div>
+
+          <div className="sd-landing-preview">
+            <div className="sd-landing-preview-left">
+              <div className="sd-landing-preview-icon">🌐</div>
+              <div>
+                <div className="sd-landing-preview-title">
+                  صفحة المدرسة العامة
+                </div>
+                <div className="sd-landing-preview-url">{`/schools/${school.slug}`}</div>
+              </div>
+            </div>
+            <a
+              href={`/schools/${school.slug}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="sd-landing-btn"
+            >
+              <svg
+                width="12"
+                height="12"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" />
+                <polyline points="15 3 21 3 21 9" />
+                <line x1="10" y1="14" x2="21" y2="3" />
+              </svg>
+              فتح الصفحة
+            </a>
+          </div>
+        </div>
+      )}
 
       <style>{css}</style>
     </div>
@@ -364,12 +778,14 @@ const css = `
   .sd-back{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--text3);text-decoration:none;font-weight:600;transition:color 0.15s}
   .sd-back:hover{color:var(--gold)}
   .sd-title-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-  .sd-icon{width:52px;height:52px;border-radius:14px;flex-shrink:0;background:var(--gold-muted);border:1px solid var(--gold-border);display:flex;align-items:center;justify-content:center;font-size:28px}
+  .sd-icon{width:52px;height:52px;border-radius:14px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:28px}
   .sd-title-body{flex:1}
   .sd-title{font-size:22px;font-weight:800;color:var(--black);letter-spacing:-0.4px}
   .sd-sub{font-size:13px;color:var(--text3);margin-top:3px}
   .sd-sep{opacity:0.4}
   .sd-no-admin{color:var(--danger);font-style:italic}
+  .sd-landing-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;border:1px solid var(--gold-border);color:var(--gold);font-size:12px;font-weight:700;text-decoration:none;transition:all 0.15s;background:var(--gold-muted);white-space:nowrap}
+  .sd-landing-btn:hover{background:rgba(200,169,106,0.18);border-color:var(--gold)}
 
   .sd-tabs-wrap{border-bottom:2px solid var(--border)}
   .sd-tabs{display:flex;gap:2px}
@@ -381,41 +797,84 @@ const css = `
 
   .sd-ov{display:flex;flex-direction:column;gap:14px}
   .sd-ov-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-  .sd-ov-card{background:var(--surface);border:1px solid var(--border);border-top:2px solid var(--gold);border-radius:var(--radius);padding:20px 16px;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;box-shadow:var(--shadow-sm);transition:box-shadow 0.15s}
-  .sd-ov-card:hover{box-shadow:var(--shadow)}
+  .sd-ov-card{background:var(--surface);border:1px solid var(--border);border-top:2px solid var(--gold);border-radius:var(--radius);padding:20px 16px;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;box-shadow:var(--shadow-sm)}
   .sd-ov-icon{font-size:24px}
   .sd-ov-val{font-size:26px;font-weight:900;font-family:'IBM Plex Mono',monospace;color:var(--gold);letter-spacing:-1px}
   .sd-ov-lab{font-size:12px;color:var(--text3);font-weight:700}
-
   .sd-ov-info-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
   .sd-info-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;display:flex;align-items:center;justify-content:space-between}
   .sd-info-label{font-size:12.5px;color:var(--text2);font-weight:600}
   .sd-info-val{font-size:18px;font-weight:800;color:var(--black);font-family:'IBM Plex Mono',monospace}
+  .sd-landing-preview{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;background:var(--gold-muted);border:1px solid var(--gold-border);border-radius:12px;gap:12px}
+  .sd-landing-preview-left{display:flex;align-items:center;gap:12px}
+  .sd-landing-preview-icon{font-size:22px}
+  .sd-landing-preview-title{font-size:13px;font-weight:700;color:var(--black)}
+  .sd-landing-preview-url{font-size:12px;color:var(--text3);font-family:'IBM Plex Mono',monospace;margin-top:2px}
 
   .sd-list{display:flex;flex-direction:column;gap:8px}
-  .sd-empty{text-align:center;color:var(--text3);padding:48px;font-size:14px;font-weight:500}
+  .sd-empty{text-align:center;color:var(--text3);padding:48px;font-size:14px}
   .sd-search-wrap{position:relative;display:flex;align-items:center}
   .sd-search-icon{position:absolute;right:13px;color:var(--text3);pointer-events:none}
-  .sd-search{width:100%;background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:9px 40px 9px 13px;font-size:13.5px;font-family:'Cairo',sans-serif;color:var(--text);outline:none;transition:border-color 0.15s,box-shadow 0.15s}
-  .sd-search:focus{border-color:var(--gold);box-shadow:0 0 0 3px var(--gold-muted)}
-
+  .sd-search{width:100%;background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:9px 40px 9px 13px;font-size:13.5px;font-family:'Cairo',sans-serif;color:var(--text);outline:none}
+  .sd-search:focus{border-color:var(--gold)}
   .sd-row{display:flex;align-items:center;gap:13px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow-sm);transition:border-color 0.15s}
   .sd-row:hover{border-color:var(--gold-border)}
   .sd-av{width:38px;height:38px;border-radius:10px;flex-shrink:0;background:var(--black);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:var(--gold)}
-  .sd-av.teacher{background:var(--black);color:var(--gold)}
   .sd-av.student{background:rgba(200,169,106,0.15);color:var(--gold);border:1px solid var(--gold-border)}
   .sd-av.class-av{background:var(--surface2);font-size:20px;border:1px solid var(--border)}
   .sd-row-body{flex:1;min-width:0}
   .sd-row-name{font-size:14px;font-weight:700;color:var(--black)}
-  .sd-row-sub{font-size:12px;color:var(--text3);margin-top:2px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sd-row-sub{font-size:12px;color:var(--text3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .sd-tag{font-size:12px;font-weight:700;color:var(--text2);background:var(--surface2);border:1px solid var(--border);padding:4px 12px;border-radius:20px;white-space:nowrap;flex-shrink:0}
   .sd-status-chip{font-size:11px;font-weight:700;white-space:nowrap;padding:4px 11px;border-radius:20px;flex-shrink:0}
 
-  .sd-lang-card{display:flex;align-items:center;gap:12px;padding:14px 18px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-sm)}
-  .sd-lang-label{font-size:13px;font-weight:700;color:var(--text2)}
-  .sd-lang-select{padding:7px 13px;border-radius:8px;border:1px solid var(--gold-border);background:var(--surface);font-size:13px;font-family:'Cairo',sans-serif;cursor:pointer;color:var(--text);outline:none;transition:border-color 0.15s}
-  .sd-lang-select:focus{border-color:var(--gold)}
+  .sd-settings{display:flex;flex-direction:column;gap:16px}
+  .sd-settings-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;display:flex;flex-direction:column;gap:18px;box-shadow:var(--shadow-sm)}
+  .sd-settings-title{font-size:15px;font-weight:800;color:var(--black)}
+  .sd-divider{height:1px;background:var(--border);margin:4px 0}
+  .sd-field{display:flex;flex-direction:column;gap:7px}
+  .sd-field-label{font-size:11.5px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px}
+  .sd-field-hint{font-size:11px;color:var(--text3);font-weight:500}
+  .sd-input{background:var(--surface);border:1px solid var(--border2);color:var(--text);border-radius:8px;padding:10px 13px;font-size:13.5px;font-family:'Cairo',sans-serif;outline:none;width:100%;transition:border-color 0.15s}
+  .sd-input:focus{border-color:var(--gold);box-shadow:0 0 0 3px var(--gold-muted)}
+  .sd-textarea{background:var(--surface);border:1px solid var(--border2);color:var(--text);border-radius:8px;padding:10px 13px;font-size:13.5px;font-family:'Cairo',sans-serif;outline:none;width:100%;resize:vertical;line-height:1.6;transition:border-color 0.15s}
+  .sd-textarea:focus{border-color:var(--gold)}
+  .sd-select{background:var(--surface);border:1px solid var(--border2);color:var(--text);border-radius:8px;padding:10px 13px;font-size:13.5px;font-family:'Cairo',sans-serif;outline:none;width:100%;cursor:pointer}
+  .sd-select:focus{border-color:var(--gold)}
+  .sd-slug-wrap{display:flex;align-items:center;border:1px solid var(--border2);border-radius:8px;overflow:hidden;background:var(--surface)}
+  .sd-slug-prefix{padding:10px 12px;background:var(--surface3);color:var(--text3);font-size:12.5px;font-family:'IBM Plex Mono',monospace;border-left:1px solid var(--border2);white-space:nowrap}
+  .sd-slug-input{border:none!important;box-shadow:none!important;flex:1}
 
-  @media(max-width:900px){.sd-ov-grid{grid-template-columns:repeat(2,1fr)}.sd-ov-info-grid{grid-template-columns:1fr}}
+  /* Presets */
+  .sd-presets{display:flex;gap:7px;flex-wrap:wrap}
+  .sd-preset-btn{display:flex;align-items:center;gap:7px;padding:7px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface);cursor:pointer;font-size:12px;font-weight:600;color:var(--text2);font-family:'Cairo',sans-serif;transition:all 0.15s}
+  .sd-preset-btn:hover{border-color:var(--gold-border);background:var(--gold-muted)}
+  .sd-preset-dots{display:flex;gap:3px}
+  .sd-preset-dots div{width:11px;height:11px;border-radius:50%;border:1.5px solid rgba(0,0,0,0.12)}
+
+  /* Color fields */
+  .sd-colors-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .sd-color-field{display:flex;flex-direction:column;gap:6px}
+  .sd-color-label{font-size:12px;font-weight:700;color:var(--text2)}
+  .sd-color-input-wrap{display:flex;align-items:center;gap:8px;border:1px solid var(--border2);border-radius:8px;padding:6px 10px;background:var(--surface)}
+  .sd-color-picker{width:32px;height:32px;border-radius:6px;border:none;cursor:pointer;padding:0;background:none;flex-shrink:0}
+  .sd-color-hex{flex:1;border:none;outline:none;font-size:13px;font-family:'IBM Plex Mono',monospace;color:var(--text);background:none}
+  .sd-color-hint{font-size:10.5px;color:var(--text3)}
+
+  /* Live preview */
+  .sd-preview{border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.08)}
+  .sd-preview-header{display:flex;align-items:center;gap:10px;padding:10px 14px}
+  .sd-preview-logo{width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .sd-preview-btn{margin-right:auto;padding:5px 12px;border-radius:6px;font-size:11px;font-weight:700}
+  .sd-preview-body{display:flex;flex-direction:column;align-items:center;padding:16px;gap:0}
+
+  .sd-save-btn{display:flex;align-items:center;justify-content:center;gap:8px;background:var(--black);color:var(--gold);border:1px solid rgba(200,169,106,0.3);border-radius:9px;padding:12px 20px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:'Cairo',sans-serif;transition:all 0.18s;width:fit-content}
+  .sd-save-btn:hover:not(:disabled){background:rgba(200,169,106,0.1);border-color:var(--gold)}
+  .sd-save-btn:disabled{opacity:0.5;cursor:not-allowed}
+  .sd-save-msg{font-size:13px;font-weight:600;padding:10px 14px;border-radius:8px}
+  .sd-save-msg.success{background:rgba(26,107,60,0.1);color:#1a6b3c;border:1px solid rgba(26,107,60,0.2)}
+  .sd-save-msg.error{background:rgba(139,26,26,0.1);color:var(--danger);border:1px solid rgba(139,26,26,0.2)}
+
+  @media(max-width:900px){.sd-ov-grid{grid-template-columns:repeat(2,1fr)}.sd-ov-info-grid{grid-column:1fr}.sd-colors-grid{grid-template-columns:1fr}}
   @media(max-width:600px){.sd-tabs{overflow-x:auto}}
 `;

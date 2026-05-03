@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -19,6 +19,10 @@ export default function SchoolAdminLayout({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [showToggle, setShowToggle] = useState(false);
+
+  // Use a ref so handleLogout always reads the latest value, no stale closure
+  const schoolSlugRef = useRef<string>("");
+
   const pathname = usePathname();
   const router = useRouter();
   const { lang, setLang } = useLang();
@@ -75,7 +79,21 @@ export default function SchoolAdminLayout({
       .then((r) => r.json())
       .then((d) => {
         if (d?.school) {
-          setSchoolName(d.school.name);
+          setSchoolName(d.school.name ?? "");
+
+          // Write to ref immediately — no re-render needed, no closure issue
+          if (d.school?.slug) {
+            schoolSlugRef.current = d.school.slug;
+          } else if (d.school?.id) {
+            // Fallback: fetch slug from public schools API using school id
+            fetch(`/api/owner/schools/${d.school.id}`)
+              .then((r) => r.json())
+              .then((sd) => {
+                if (sd.school?.slug) schoolSlugRef.current = sd.school.slug;
+              })
+              .catch(() => {});
+          }
+
           if (d.school.language) {
             setLang(d.school.language as "ar" | "sq");
             if (d.school.language === "sq") setShowToggle(true);
@@ -99,7 +117,12 @@ export default function SchoolAdminLayout({
     setLoggingOut(true);
     const supabase = createClient();
     await supabase.auth.signOut();
-    router.push("/login");
+
+    // Read from ref — always current, never stale
+    const slug = schoolSlugRef.current;
+    const destination = slug ? `/schools/${slug}` : "/login";
+
+    window.location.href = destination;
   }
 
   return (
@@ -266,7 +289,6 @@ const styles = `
     border-left:1px solid rgba(229,185,60,0.1);
   }
 
-  /* Brand */
   .sa-brand{display:flex;align-items:center;gap:10px;padding:20px 18px 16px;flex-shrink:0}
   .sa-brand-icon{
     width:36px;height:36px;
@@ -280,7 +302,6 @@ const styles = `
   .sa-close-btn{display:none;background:none;border:none;color:rgba(229,185,60,0.4);cursor:pointer;padding:4px;border-radius:6px;flex-shrink:0;transition:color 0.15s}
   .sa-close-btn:hover{color:var(--gold1)}
 
-  /* Profile */
   .sa-profile{
     display:flex;align-items:center;gap:10px;
     margin:0 12px 16px;padding:12px 14px;
@@ -300,7 +321,6 @@ const styles = `
 
   .sa-divider{height:1px;background:rgba(229,185,60,0.1);margin:0 12px 16px;flex-shrink:0}
 
-  /* Nav */
   .sa-nav{display:flex;flex-direction:column;gap:2px;padding:0 10px;flex:1}
   .sa-nav-group-label{font-size:10px;font-weight:700;color:rgba(200,169,106,0.4);text-transform:uppercase;letter-spacing:0.8px;padding:0 8px 8px}
   .sa-nav-item{
@@ -320,7 +340,6 @@ const styles = `
   .sa-nav-label{flex:1}
   .sa-nav-bar{width:3px;height:16px;background:var(--gold1);border-radius:99px;opacity:0.8}
 
-  /* Footer */
   .sa-footer{padding:0 10px 20px;flex-shrink:0}
   .sa-logout{
     display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:10px;
@@ -332,10 +351,8 @@ const styles = `
   .sa-logout:disabled{opacity:0.5;cursor:not-allowed}
   .sa-spin{width:14px;height:14px;border:2px solid rgba(229,185,60,0.2);border-top-color:var(--gold1);border-radius:50%;animation:sp 0.7s linear infinite;flex-shrink:0}
 
-  /* Main */
   .sa-main{flex:1;min-width:0;overflow-x:hidden;padding:28px}
 
-  /* Mobile bar */
   .sa-mobile-bar{display:none;align-items:center;justify-content:space-between;padding:0 18px;height:54px;background:var(--black);position:sticky;top:0;z-index:40;border-bottom:1px solid rgba(229,185,60,0.15)}
   .sa-hamburger{background:rgba(229,185,60,0.08);border:1px solid rgba(229,185,60,0.15);border-radius:8px;color:var(--gold1);width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer}
   .sa-mobile-title{font-size:14px;font-weight:800;color:var(--gold1)}

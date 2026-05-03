@@ -1,6 +1,6 @@
 ﻿"use client";
 export const dynamic = "force-dynamic";
-
+import MandalaLoader from "@/components/MandalaLoader";
 import { useEffect, useState } from "react";
 
 interface AssessmentOption {
@@ -204,11 +204,7 @@ export default function OwnerIntakeAssessmentPage() {
 
   if (loading)
     return (
-      <div className="ia-load">
-        <div className="ia-spin" />
-        <span>جارٍ التحميل...</span>
-        <style>{css}</style>
-      </div>
+      <MandalaLoader label="جارٍ تحميل الاختبار" sublabel="يرجى الانتظار..." />
     );
 
   if (!assessment)

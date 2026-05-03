@@ -5,6 +5,7 @@ export const dynamic = "force-dynamic";
 import { useEffect, useState } from "react";
 import { useLang } from "@/lib/language-context";
 import { t } from "@/lib/translations";
+import MandalaLoader from "@/components/MandalaLoader";
 
 interface Student {
   id: string;
@@ -92,10 +93,7 @@ export default function SchoolAdminStudentsPage() {
       </div>
 
       {loading ? (
-        <div className="st-loading">
-          <div className="spin" />
-          {tr.loading}
-        </div>
+        <MandalaLoader label={tr.loading} />
       ) : filtered.length === 0 ? (
         <div className="st-empty">{search ? tr.noStudents : tr.noStudents}</div>
       ) : (

@@ -135,11 +135,14 @@ export default function StudentLayout({
   const { lang, setLang } = useLang();
   const tr = t[lang];
   const isRtl = lang === "ar";
+  const [schoolSlug, setSchoolSlug] = useState("");
 
   useEffect(() => {
     fetch("/api/student")
       .then((r) => r.json())
       .then((data) => {
+        if (data?.school?.slug) setSchoolSlug(data.school.slug);
+
         if (data.error) {
           router.push("/login");
           return;
@@ -195,7 +198,7 @@ export default function StudentLayout({
     setLoggingOut(true);
     const supabase = createClient();
     await supabase.auth.signOut();
-    router.push("/login");
+    router.push(schoolSlug ? `/schools/${schoolSlug}` : "/login");
   }
 
   if (!checked)

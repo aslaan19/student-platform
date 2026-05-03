@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useLang } from "@/lib/language-context";
 import { t } from "@/lib/translations";
+import MandalaLoader from "@/components/MandalaLoader";
 
 type Announcement = {
   id: string;
@@ -45,9 +46,7 @@ export default function StudentClassPage() {
 
   if (!data)
     return (
-      <div className="p-6" dir={dir}>
-        {tr.loading}
-      </div>
+      <MandalaLoader label={tr.loading} />
     );
 
   if (!data.class) {

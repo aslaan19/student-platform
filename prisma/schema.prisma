@@ -69,6 +69,11 @@ model School {
   assessments        Assessment[]
   assessmentAttempts AssessmentAttempt[]
   roadmap            Roadmap?
+  slug               String              @unique @default("")
+  description        String?
+  color_primary      String              @default("#ac8e52")
+  color_secondary    String              @default("#E5B93C")
+  color_bg           String              @default("#0B0B0C")
 
   @@map("schools")
 }

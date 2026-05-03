@@ -1,7 +1,7 @@
 ﻿/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 export const dynamic = "force-dynamic";
-
+import MandalaLoader from "@/components/MandalaLoader";
 import { useEffect, useState } from "react";
 import { useLang } from "@/lib/language-context";
 import { t } from "@/lib/translations";
@@ -209,33 +209,7 @@ export default function PlacementAssessmentPage() {
 
   const dir = lang === "ar" ? "rtl" : "ltr";
 
-  if (loading)
-    return (
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          height: 200,
-          gap: 10,
-          color: "#6b7280",
-          fontFamily: "Tajawal, sans-serif",
-        }}
-      >
-        <div
-          style={{
-            width: 18,
-            height: 18,
-            border: "2px solid #e5e7eb",
-            borderTopColor: "#2563eb",
-            borderRadius: "50%",
-            animation: "sp 0.7s linear infinite",
-          }}
-        />
-        {tr.loading}
-        <style>{`@keyframes sp{to{transform:rotate(360deg)}}`}</style>
-      </div>
-    );
+  if (loading) return <MandalaLoader label={tr.loading} />;
 
   if (!assessment)
     return (

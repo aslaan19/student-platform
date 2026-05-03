@@ -4,6 +4,33 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "../../lib/supabase/client";
+import Image from "next/image";
+
+// Pre-compute all trig values as rounded constants OUTSIDE the component.
+// This ensures identical values on server and client (no floating-point drift).
+const r2 = (n: number) => Math.round(n * 1000) / 1000;
+
+const STAR_LINES = Array.from({ length: 12 }, (_, i) => {
+  const a1 = (i * 30 * Math.PI) / 180;
+  const a2 = ((i * 30 + 15) * Math.PI) / 180;
+  return {
+    x1: r2(100 + 80 * Math.sin(a1)),
+    y1: r2(100 - 80 * Math.cos(a1)),
+    x2: r2(100 + 40 * Math.sin(a2)),
+    y2: r2(100 - 40 * Math.cos(a2)),
+  };
+});
+
+const PETAL_CIRCLES = Array.from({ length: 8 }, (_, i) => {
+  const a = (i * 45 * Math.PI) / 180;
+  return { cx: r2(100 + 52 * Math.sin(a)), cy: r2(100 - 52 * Math.cos(a)) };
+});
+
+const BOTTOM_DIAMONDS = Array.from({ length: 30 }, (_, i) => ({
+  x: 20 + i * 40,
+}));
+
+const BOTTOM_CENTER_ORNAMENT = { cx: 600, cy: 60 };
 
 const navItems = [
   {
@@ -12,12 +39,12 @@ const navItems = [
     exact: true,
     icon: (
       <svg
-        width="17"
-        height="17"
+        width="16"
+        height="16"
         fill="none"
         viewBox="0 0 24 24"
         stroke="currentColor"
-        strokeWidth={1.6}
+        strokeWidth={1.5}
       >
         <rect x="3" y="3" width="7" height="7" rx="1.5" />
         <rect x="14" y="3" width="7" height="7" rx="1.5" />
@@ -31,12 +58,12 @@ const navItems = [
     label: "المدارس",
     icon: (
       <svg
-        width="17"
-        height="17"
+        width="16"
+        height="16"
         fill="none"
         viewBox="0 0 24 24"
         stroke="currentColor"
-        strokeWidth={1.6}
+        strokeWidth={1.5}
       >
         <path d="M3 21V9l9-6 9 6v12" />
         <path d="M9 21V12h6v9" />
@@ -48,12 +75,12 @@ const navItems = [
     label: "اختبار القبول",
     icon: (
       <svg
-        width="17"
-        height="17"
+        width="16"
+        height="16"
         fill="none"
         viewBox="0 0 24 24"
         stroke="currentColor"
-        strokeWidth={1.6}
+        strokeWidth={1.5}
       >
         <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" />
         <rect x="9" y="3" width="6" height="4" rx="1" />
@@ -66,12 +93,12 @@ const navItems = [
     label: "الطلبات المقدمة",
     icon: (
       <svg
-        width="17"
-        height="17"
+        width="16"
+        height="16"
         fill="none"
         viewBox="0 0 24 24"
         stroke="currentColor"
-        strokeWidth={1.6}
+        strokeWidth={1.5}
       >
         <path d="M17 21H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z" />
         <path d="M12 11v6M9 14l3 3 3-3" />
@@ -89,6 +116,7 @@ export default function OwnerLayout({
   const router = useRouter();
   const [ownerName, setOwnerName] = useState("المالك");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [currentTime, setCurrentTime] = useState("");
 
   useEffect(() => {
     const supabase = createClient();
@@ -96,6 +124,22 @@ export default function OwnerLayout({
       if (user?.user_metadata?.full_name)
         setOwnerName(user.user_metadata.full_name);
     });
+  }, []);
+
+  useEffect(() => {
+    const tick = () => {
+      const now = new Date();
+      setCurrentTime(
+        now.toLocaleTimeString("en-SA", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+        }),
+      );
+    };
+    tick();
+    const t = setInterval(tick, 1000);
+    return () => clearInterval(t);
   }, []);
 
   const handleLogout = async () => {
@@ -115,60 +159,38 @@ export default function OwnerLayout({
         <div className="ow-overlay" onClick={() => setSidebarOpen(false)} />
       )}
 
+      {/* ── Sidebar ── */}
       <aside className={`ow-sidebar ${sidebarOpen ? "open" : ""}`}>
-        {/* Logo area */}
-        <div className="ow-logo">
-          <div className="ow-logo-mark">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M12 2L2 7l10 5 10-5-10-5z"
-                fill="currentColor"
-                opacity="0.9"
-              />
-              <path
-                d="M2 17l10 5 10-5"
-                stroke="currentColor"
-                strokeWidth="1.6"
-                fill="none"
-                opacity="0.6"
-              />
-              <path
-                d="M2 12l10 5 10-5"
-                stroke="currentColor"
-                strokeWidth="1.6"
-                fill="none"
-                opacity="0.8"
-              />
-            </svg>
-          </div>
-          <div className="ow-logo-text">
-            <span className="ow-logo-name">منصة الرواد</span>
-            <span className="ow-logo-sub">بوابة الإدارة العليا</span>
-          </div>
-          <button
-            className="ow-close-btn"
-            onClick={() => setSidebarOpen(false)}
-          >
-            <svg
-              width="13"
-              height="13"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2.5}
-              strokeLinecap="round"
-            >
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </button>
+        {/* Vertical gold rule */}
+        <div className="ow-sidebar-rule" />
+
+        {/* Logo */}
+        <div className="ow-logo-wrap">
+          <Image
+            src="/ahlia.png"
+            alt="بناء الأهلية"
+            width={2400}
+            height={250}
+            style={{
+              objectFit: "cover",
+              width: "100%",
+              height: "auto",
+              display: "block",
+            }}
+            priority
+          />
         </div>
 
-        <div className="ow-rule" />
+        {/* Divider */}
+        <div className="ow-divider">
+          <div className="ow-divider-line" />
+          <div className="ow-divider-diamond" />
+          <div className="ow-divider-line" />
+        </div>
 
         {/* Nav */}
         <nav className="ow-nav">
-          <div className="ow-nav-label">القوائم الرئيسية</div>
+          <div className="ow-nav-section-label">القوائم الرئيسية</div>
           {navItems.map((item) => {
             const active = isActive(item);
             return (
@@ -178,17 +200,87 @@ export default function OwnerLayout({
                 className={`ow-nav-item ${active ? "active" : ""}`}
                 onClick={() => setSidebarOpen(false)}
               >
+                {active && <div className="ow-nav-active-bar" />}
                 <span className="ow-nav-icon">{item.icon}</span>
-                <span className="ow-nav-label-text">{item.label}</span>
-                {active && <span className="ow-nav-pip" />}
+                <span className="ow-nav-text">{item.label}</span>
+                {active && (
+                  <span className="ow-nav-chevron">
+                    <svg
+                      width="10"
+                      height="10"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2.5}
+                    >
+                      <path d="M15 18l-6-6 6-6" />
+                    </svg>
+                  </span>
+                )}
               </Link>
             );
           })}
         </nav>
 
-        {/* Footer */}
-        <div className="ow-sidebar-foot">
-          <div className="ow-rule" style={{ marginBottom: 14 }} />
+        {/* Geometric mandala watermark */}
+        <div className="ow-mandala" aria-hidden="true">
+          <svg viewBox="0 0 200 200" fill="none">
+            {[80, 65, 52, 40, 30, 21, 13, 7].map((r, i) => (
+              <circle
+                key={i}
+                cx="100"
+                cy="100"
+                r={r}
+                stroke="#C8A96A"
+                strokeWidth={i === 0 ? 0.6 : 0.4}
+                opacity={0.04 + i * 0.055}
+                strokeDasharray={i % 2 === 0 ? "none" : `${r * 0.3} ${r * 0.2}`}
+              />
+            ))}
+            {STAR_LINES.map((l, i) => (
+              <line
+                key={i}
+                x1={l.x1}
+                y1={l.y1}
+                x2={l.x2}
+                y2={l.y2}
+                stroke="#C8A96A"
+                strokeWidth="0.35"
+                opacity="0.12"
+              />
+            ))}
+            {PETAL_CIRCLES.map((p, i) => (
+              <circle
+                key={i}
+                cx={p.cx}
+                cy={p.cy}
+                r="18"
+                stroke="#C8A96A"
+                strokeWidth="0.4"
+                opacity="0.09"
+                fill="none"
+              />
+            ))}
+            <circle cx="100" cy="100" r="2.5" fill="#C8A96A" opacity="0.3" />
+            <circle
+              cx="100"
+              cy="100"
+              r="5.5"
+              stroke="#C8A96A"
+              strokeWidth="0.4"
+              opacity="0.15"
+              fill="none"
+            />
+          </svg>
+        </div>
+
+        {/* User / logout */}
+        <div className="ow-foot">
+          <div className="ow-divider" style={{ margin: "0 0 14px" }}>
+            <div className="ow-divider-line" />
+            <div className="ow-divider-diamond" />
+            <div className="ow-divider-line" />
+          </div>
           <div className="ow-user">
             <div className="ow-user-av">{ownerName.charAt(0)}</div>
             <div className="ow-user-info">
@@ -201,8 +293,8 @@ export default function OwnerLayout({
               title="تسجيل الخروج"
             >
               <svg
-                width="14"
-                height="14"
+                width="13"
+                height="13"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -215,6 +307,7 @@ export default function OwnerLayout({
         </div>
       </aside>
 
+      {/* ── Main ── */}
       <div className="ow-main">
         {/* Top bar */}
         <header className="ow-topbar">
@@ -230,152 +323,504 @@ export default function OwnerLayout({
               <path d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
+
           <div className="ow-breadcrumb">
-            <span className="ow-breadcrumb-home">الرئيسية</span>
-            <svg
-              width="12"
-              height="12"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
-              style={{ opacity: 0.3 }}
-            >
-              <path d="M15 18l-6-6 6-6" />
-            </svg>
-            <span className="ow-breadcrumb-current">{currentLabel}</span>
+            <span className="ow-bc-home">الرئيسية</span>
+            <div className="ow-bc-sep">
+              <svg
+                width="10"
+                height="10"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
+            </div>
+            <span className="ow-bc-cur">{currentLabel}</span>
           </div>
+
+          <div className="ow-topbar-spacer" />
         </header>
 
+        {/* Content */}
         <main className="ow-content">{children}</main>
+
+        {/* Bottom decorative band */}
+        <div className="ow-bottom-band" aria-hidden="true">
+          <svg
+            viewBox="0 0 1200 120"
+            fill="none"
+            preserveAspectRatio="xMidYMax meet"
+          >
+            {/* Base line */}
+            <line
+              x1="0"
+              y1="60"
+              x2="1200"
+              y2="60"
+              stroke="#C8A96A"
+              strokeWidth="0.3"
+              opacity="0.15"
+            />
+            {/* Repeating diamond pattern */}
+            {Array.from({ length: 30 }).map((_, i) => {
+              const x = 20 + i * 40;
+              return (
+                <polygon
+                  key={i}
+                  points={`${x},50 ${x + 8},60 ${x},70 ${x - 8},60`}
+                  stroke="#C8A96A"
+                  strokeWidth="0.4"
+                  fill="none"
+                  opacity={i % 3 === 0 ? 0.18 : 0.07}
+                />
+              );
+            })}
+            {/* Center larger ornament */}
+            <polygon
+              points="600,38 616,60 600,82 584,60"
+              stroke="#C8A96A"
+              strokeWidth="0.6"
+              fill="none"
+              opacity="0.25"
+            />
+            <polygon
+              points="600,48 608,60 600,72 592,60"
+              stroke="#C8A96A"
+              strokeWidth="0.5"
+              fill="#C8A96A"
+              fillOpacity="0.04"
+              opacity="0.3"
+            />
+            <line
+              x1="540"
+              y1="60"
+              x2="575"
+              y2="60"
+              stroke="#C8A96A"
+              strokeWidth="0.4"
+              opacity="0.2"
+            />
+            <line
+              x1="625"
+              y1="60"
+              x2="660"
+              y2="60"
+              stroke="#C8A96A"
+              strokeWidth="0.4"
+              opacity="0.2"
+            />
+            <circle cx="600" cy="60" r="3" fill="#C8A96A" opacity="0.3" />
+          </svg>
+        </div>
       </div>
 
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
-
-        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-        @keyframes fadeIn{from{opacity:0}to{opacity:1}}
-        @keyframes sp{to{transform:rotate(360deg)}}
-
-        :root{
-          --gold:#C8A96A;
-          --gold2:#E5B93C;
-          --gold-muted:rgba(200,169,106,0.12);
-          --gold-border:rgba(200,169,106,0.22);
-          --gold2-muted:rgba(229,185,60,0.1);
-          --gold2-border:rgba(229,185,60,0.25);
-          --black:#0B0B0C;
-          --off-white:#F5F3EE;
-          --text:#0B0B0C;
-          --text2:#4a3f2f;
-          --text3:#9a8a6a;
-          --surface:#ffffff;
-          --surface2:#faf8f4;
-          --surface3:#f5f0e8;
-          --border:#e8dfd0;
-          --border2:#d8ccb8;
-          --success:#1a6b3c;
-          --success-bg:rgba(26,107,60,0.08);
-          --success-border:rgba(26,107,60,0.2);
-          --warning:#9a6200;
-          --warning-bg:rgba(154,98,0,0.08);
-          --warning-border:rgba(154,98,0,0.2);
-          --danger:#8b1a1a;
-          --danger-bg:rgba(139,26,26,0.08);
-          --danger-border:rgba(139,26,26,0.2);
-          --radius:10px;
-          --shadow-sm:0 1px 3px rgba(11,11,12,0.06),0 1px 2px rgba(11,11,12,0.04);
-          --shadow:0 4px 12px rgba(11,11,12,0.08),0 1px 4px rgba(11,11,12,0.04);
-          --shadow-md:0 8px 24px rgba(11,11,12,0.10),0 2px 8px rgba(11,11,12,0.05);
-          --sidebar-w:260px;
-        }
-
-        html,body{background:var(--off-white);color:var(--text);font-family:'Cairo',sans-serif;direction:rtl}
-
-        .ow-shell{display:flex;min-height:100vh;background:var(--off-white)}
-
-        /* Sidebar */
-        .ow-sidebar{
-          width:var(--sidebar-w);min-height:100vh;
-          background:var(--black);
-          display:flex;flex-direction:column;
-          position:fixed;top:0;right:0;
-          z-index:50;
-          transition:transform 0.28s cubic-bezier(0.4,0,0.2,1);
-        }
-
-        .ow-logo{display:flex;align-items:center;gap:11px;padding:22px 18px 18px;flex-shrink:0}
-        .ow-logo-mark{
-          width:38px;height:38px;border-radius:10px;flex-shrink:0;
-          background:var(--gold);
-          display:flex;align-items:center;justify-content:center;
-          color:var(--black);
-        }
-        .ow-logo-text{flex:1;display:flex;flex-direction:column;min-width:0}
-        .ow-logo-name{font-size:13.5px;font-weight:900;color:var(--gold);letter-spacing:-0.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-        .ow-logo-sub{font-size:10px;color:rgba(200,169,106,0.5);font-weight:600;margin-top:1px}
-        .ow-close-btn{display:none;background:none;border:none;color:rgba(200,169,106,0.4);cursor:pointer;padding:4px;border-radius:6px;flex-shrink:0;transition:color 0.15s}
-        .ow-close-btn:hover{color:var(--gold)}
-
-        .ow-rule{height:1px;background:rgba(200,169,106,0.1);margin:0 16px 16px}
-
-        .ow-nav{display:flex;flex-direction:column;gap:2px;padding:0 10px;flex:1}
-        .ow-nav-label{font-size:9.5px;font-weight:700;color:rgba(200,169,106,0.3);text-transform:uppercase;letter-spacing:1px;padding:0 8px 10px}
-        .ow-nav-item{
-          display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px;
-          text-decoration:none;color:rgba(200,169,106,0.45);
-          font-size:13px;font-weight:600;transition:all 0.16s ease;position:relative;
-        }
-        .ow-nav-item:hover{background:rgba(200,169,106,0.07);color:rgba(200,169,106,0.8)}
-        .ow-nav-item.active{background:rgba(200,169,106,0.1);color:var(--gold);font-weight:700;border:1px solid rgba(200,169,106,0.18)}
-        .ow-nav-icon{width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:7px;background:rgba(200,169,106,0.05);flex-shrink:0;transition:background 0.16s}
-        .ow-nav-item:hover .ow-nav-icon,.ow-nav-item.active .ow-nav-icon{background:rgba(200,169,106,0.1)}
-        .ow-nav-label-text{flex:1}
-        .ow-nav-pip{width:3px;height:14px;background:var(--gold);border-radius:99px;opacity:0.8}
-
-        .ow-sidebar-foot{padding:0 10px 20px;flex-shrink:0}
-        .ow-user{display:flex;align-items:center;gap:9px;padding:10px 12px;border-radius:10px;background:rgba(200,169,106,0.07);border:1px solid rgba(200,169,106,0.12)}
-        .ow-user-av{width:32px;height:32px;border-radius:8px;flex-shrink:0;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:var(--black)}
-        .ow-user-info{flex:1;display:flex;flex-direction:column;gap:1px;min-width:0}
-        .ow-user-name{font-size:12.5px;font-weight:700;color:white;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-        .ow-user-role{font-size:10px;color:rgba(200,169,106,0.5);font-weight:600}
-        .ow-logout-btn{background:none;border:none;color:rgba(200,169,106,0.3);cursor:pointer;padding:4px;border-radius:6px;display:flex;align-items:center;justify-content:center;transition:color 0.15s;flex-shrink:0}
-        .ow-logout-btn:hover{color:rgba(200,169,106,0.8)}
-
-        /* Main */
-        .ow-main{flex:1;margin-right:var(--sidebar-w);display:flex;flex-direction:column;min-height:100vh}
-
-        .ow-topbar{
-          height:56px;
-          background:var(--surface);
-          border-bottom:1px solid var(--border);
-          display:flex;align-items:center;padding:0 28px;gap:14px;
-          position:sticky;top:0;z-index:40;
-          box-shadow:var(--shadow-sm);
-        }
-        .ow-hamburger{display:none;background:none;border:none;color:var(--text2);cursor:pointer;padding:4px}
-        .ow-breadcrumb{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--text)}
-        .ow-breadcrumb-home{color:var(--text3);font-weight:500}
-        .ow-breadcrumb-current{color:var(--text)}
-        .ow-topbar-right{margin-right:auto;display:flex;align-items:center;gap:7px}
-        .ow-live-dot{width:7px;height:7px;border-radius:50%;background:var(--success);box-shadow:0 0 6px rgba(26,107,60,0.5);animation:pulse 2.5s infinite}
-        @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
-        .ow-live-text{font-size:11px;font-weight:700;color:var(--success)}
-
-        .ow-content{padding:28px 30px;flex:1}
-
-        .ow-overlay{position:fixed;inset:0;background:rgba(11,11,12,0.55);z-index:49;backdrop-filter:blur(2px);animation:fadeIn 0.2s ease}
-
-        @media(max-width:768px){
-          .ow-sidebar{transform:translateX(100%)}
-          .ow-sidebar.open{transform:translateX(0);box-shadow:-8px 0 40px rgba(11,11,12,0.4)}
-          .ow-close-btn{display:flex}
-          .ow-main{margin-right:0}
-          .ow-hamburger{display:flex}
-          .ow-content{padding:18px 16px}
-          .ow-topbar{padding:0 16px}
-        }
-      `}</style>
+      <style>{styles}</style>
     </div>
   );
 }
+
+const styles = `
+  @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600&family=Playfair+Display:wght@400;600;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  @keyframes fadeIn  { from { opacity: 0 } to { opacity: 1 } }
+  @keyframes slideIn { from { opacity: 0; transform: translateY(-4px) } to { opacity: 1; transform: translateY(0) } }
+  @keyframes pulse   { 0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(26,107,60,0.4) } 70% { opacity: 0.8; box-shadow: 0 0 0 5px rgba(26,107,60,0) } }
+
+  :root {
+    --gold:       #C8A96A;
+    --gold2:      #E5B93C;
+    --gold3:      #F0D080;
+    --gold-dim:   rgba(200,169,106,0.08);
+    --gold-mid:   rgba(200,169,106,0.16);
+    --gold-bdr:   rgba(200,169,106,0.22);
+    --black:      #0A0A0B;
+    --black2:     #111115;
+    --off-white:  #F6F3EE;
+    --cream:      #EDE9E0;
+    --text:       #0B0B0C;
+    --text2:      #3E3526;
+    --text3:      #8A7A5A;
+    --surface:    #FFFFFF;
+    --surface2:   #FAF8F4;
+    --surface3:   #F3EEE5;
+    --border:     #E2D9CA;
+    --border2:    #CEC2AD;
+    --success:    #1a6b3c;
+    --success-bg: rgba(26,107,60,0.07);
+    --warning:    #9a6200;
+    --warning-bg: rgba(154,98,0,0.07);
+    --danger:     #8b1a1a;
+    --danger-bg:  rgba(139,26,26,0.07);
+    --radius:     10px;
+    --shadow-sm:  0 1px 3px rgba(11,11,12,0.05);
+    --shadow:     0 4px 16px rgba(11,11,12,0.08);
+    --shadow-md:  0 8px 28px rgba(11,11,12,0.10);
+    --sidebar-w:  268px;
+    --topbar-h:   60px;
+  }
+
+  html, body {
+    background: var(--off-white);
+    color: var(--text);
+    font-family: 'Cairo', sans-serif;
+    direction: rtl;
+  }
+
+  /* ── Shell ── */
+  .ow-shell { display: flex; min-height: 100vh; background: var(--off-white); }
+
+  /* ── Sidebar ── */
+  .ow-sidebar {
+    width: var(--sidebar-w);
+    min-height: 100vh;
+    background: var(--black);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    right: 0;
+    z-index: 50;
+    transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+    overflow: hidden;
+  }
+
+  /* Subtle inner glow */
+  .ow-sidebar::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 50% -5%, rgba(200,169,106,0.07) 0%, transparent 55%),
+      radial-gradient(ellipse at 140% 110%, rgba(200,169,106,0.04) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Vertical accent rule on the right edge */
+  .ow-sidebar-rule {
+    position: absolute;
+    top: 60px; bottom: 60px;
+    left: 0;
+    width: 1px;
+    background: linear-gradient(180deg, transparent, rgba(200,169,106,0.25) 30%, rgba(200,169,106,0.25) 70%, transparent);
+    z-index: 2;
+  }
+
+  .ow-logo-wrap {
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Ornamental divider */
+  .ow-divider {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin: 14px 18px;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+  }
+  .ow-divider-line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(200,169,106,0.18), transparent);
+  }
+  .ow-divider-diamond {
+    width: 5px; height: 5px;
+    background: rgba(200,169,106,0.3);
+    transform: rotate(45deg);
+    margin: 0 8px;
+    flex-shrink: 0;
+  }
+
+  /* Nav */
+  .ow-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    padding: 0 10px;
+    flex: 1;
+    position: relative;
+    z-index: 1;
+  }
+  .ow-nav-section-label {
+    font-size: 9px;
+    font-weight: 700;
+    color: rgba(200,169,106,0.22);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    padding: 0 10px 10px;
+  }
+  .ow-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: rgba(200,169,106,0.38);
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.18s ease;
+    position: relative;
+    border: 1px solid transparent;
+    overflow: hidden;
+  }
+  .ow-nav-item:hover {
+    background: rgba(200,169,106,0.05);
+    color: rgba(200,169,106,0.68);
+  }
+  .ow-nav-item.active {
+    background: rgba(200,169,106,0.08);
+    color: var(--gold);
+    font-weight: 700;
+    border-color: rgba(200,169,106,0.16);
+  }
+  .ow-nav-active-bar {
+    position: absolute;
+    right: 0; top: 6px; bottom: 6px;
+    width: 2px;
+    background: linear-gradient(180deg, var(--gold2), var(--gold));
+    border-radius: 2px 0 0 2px;
+  }
+  .ow-nav-icon {
+    width: 28px; height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 7px;
+    background: rgba(200,169,106,0.04);
+    flex-shrink: 0;
+    transition: background 0.18s;
+  }
+  .ow-nav-item:hover .ow-nav-icon,
+  .ow-nav-item.active .ow-nav-icon {
+    background: rgba(200,169,106,0.1);
+  }
+  .ow-nav-text { flex: 1; }
+  .ow-nav-chevron {
+    color: rgba(200,169,106,0.4);
+    display: flex;
+    align-items: center;
+  }
+
+  /* Mandala */
+  .ow-mandala {
+    width: 160px;
+    height: 160px;
+    margin: auto auto 0;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 0;
+    opacity: 0.9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .ow-mandala svg { width: 100%; height: 100%; }
+
+  /* Footer */
+  .ow-foot {
+    padding: 0 10px 16px;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+  }
+  .ow-user {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 10px 12px;
+    border-radius: 9px;
+    background: rgba(200,169,106,0.06);
+    border: 1px solid rgba(200,169,106,0.12);
+  }
+  .ow-user-av {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, var(--gold2), var(--gold));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 900;
+    color: var(--black);
+  }
+  .ow-user-info { flex: 1; display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+  .ow-user-name {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.9);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .ow-user-role {
+    font-size: 9px;
+    color: rgba(200,169,106,0.4);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .ow-logout-btn {
+    background: none;
+    border: none;
+    color: rgba(200,169,106,0.28);
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .ow-logout-btn:hover {
+    color: rgba(200,169,106,0.75);
+    background: rgba(200,169,106,0.08);
+  }
+
+  /* ── Main area ── */
+  .ow-main {
+    flex: 1;
+    margin-right: var(--sidebar-w);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    position: relative;
+  }
+
+  /* Top bar */
+  .ow-topbar {
+    height: var(--topbar-h);
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 36px;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    box-shadow: 0 1px 0 var(--border), 0 2px 12px rgba(11,11,12,0.04);
+  }
+  /* Gold top rule on topbar */
+  .ow-topbar::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(200,169,106,0.4) 20%, rgba(229,185,60,0.5) 50%, rgba(200,169,106,0.4) 80%, transparent);
+  }
+
+  .ow-hamburger {
+    display: none;
+    background: none;
+    border: none;
+    color: var(--text2);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 6px;
+  }
+  .ow-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+  }
+  .ow-bc-home { color: var(--text3); font-weight: 500; }
+  .ow-bc-sep { color: var(--text3); opacity: 0.4; display: flex; align-items: center; }
+  .ow-bc-cur { color: var(--text); font-weight: 700; }
+  .ow-topbar-spacer { flex: 1; }
+  .ow-topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .ow-clock {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text3);
+    letter-spacing: 1px;
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface2);
+  }
+  .ow-live-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border: 1px solid rgba(26,107,60,0.2);
+    border-radius: 20px;
+    background: var(--success-bg);
+  }
+  .ow-live-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--success);
+    animation: pulse 2.5s infinite;
+  }
+  .ow-live-text {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--success);
+    letter-spacing: 0.5px;
+  }
+
+  /* Content */
+  .ow-content {
+    padding: 36px 40px;
+    flex: 1;
+    background:
+      radial-gradient(ellipse at 0% 0%, rgba(200,169,106,0.035) 0%, transparent 55%),
+      radial-gradient(ellipse at 100% 100%, rgba(229,185,60,0.025) 0%, transparent 55%),
+      var(--off-white);
+    animation: fadeIn 0.3s ease;
+  }
+
+  /* Bottom decorative band */
+  .ow-bottom-band {
+    width: 100%;
+    height: 120px;
+    pointer-events: none;
+    flex-shrink: 0;
+    opacity: 0.7;
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 40%);
+    mask-image: linear-gradient(to bottom, transparent 0%, black 40%);
+  }
+  .ow-bottom-band svg { width: 100%; height: 100%; display: block; }
+
+  /* Overlay */
+  .ow-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(10,10,11,0.6);
+    z-index: 49;
+    backdrop-filter: blur(3px);
+    animation: fadeIn 0.2s ease;
+  }
+
+  @media (max-width: 768px) {
+    .ow-sidebar { transform: translateX(100%); }
+    .ow-sidebar.open { transform: translateX(0); box-shadow: -12px 0 48px rgba(10,10,11,0.45); }
+    .ow-main { margin-right: 0; }
+    .ow-hamburger { display: flex; }
+    .ow-content { padding: 20px 18px; }
+    .ow-topbar { padding: 0 18px; }
+  }
+`;

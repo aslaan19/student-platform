@@ -30,8 +30,11 @@ export async function proxy(request: NextRequest) {
 
   if (pathname.startsWith("/api/")) return response;
 
-  const isPublicRoute = pathname === "/" || pathname === "/login" || pathname === "/signup";
-
+const isPublicRoute =
+  pathname === "/" ||
+  pathname === "/login" ||
+  pathname === "/signup" ||
+  pathname.startsWith("/schools/");   // ← add this line
   if (!user && !isPublicRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";

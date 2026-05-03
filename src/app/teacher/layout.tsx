@@ -83,11 +83,14 @@ export default function TeacherLayout({
   const { lang, setLang } = useLang();
   const tr = t[lang];
   const isRtl = lang === "ar";
+  const [schoolSlug, setSchoolSlug] = useState("");
 
   useEffect(() => {
     fetch("/api/teacher")
       .then((r) => r.json())
       .then((d) => {
+        if (d?.school?.slug) setSchoolSlug(d.school.slug);
+
         if (d?.profile?.full_name) {
           setName(d.profile.full_name);
           setInitials(
@@ -109,7 +112,7 @@ export default function TeacherLayout({
     setLoggingOut(true);
     const supabase = createClient();
     await supabase.auth.signOut();
-    router.push("/login");
+    router.push(schoolSlug ? `/schools/${schoolSlug}` : "/login");
   }
 
   return (

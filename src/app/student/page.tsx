@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useLang } from "@/lib/language-context";
 import { t } from "@/lib/translations";
+import MandalaLoader from "@/components/MandalaLoader";
 
 type Announcement = {
   id: string;
@@ -49,10 +50,7 @@ export default function StudentPage() {
 
   if (loading)
     return (
-      <div className="sd-shell">
-        <div className="sd-spinner" />
-        <style>{styles}</style>
-      </div>
+      <MandalaLoader label={tr.loading} />
     );
 
   const initials = data?.profile?.full_name

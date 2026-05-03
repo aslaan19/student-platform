@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useLang } from "@/lib/language-context";
 import { t } from "@/lib/translations";
-
+import MandalaLoader from "@/components/MandalaLoader";
 interface Stats {
   school: { name: string };
   teacherCount: number;
@@ -39,26 +39,31 @@ export default function SchoolAdminDashboard() {
 
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     fetch("/api/school-admin/stats")
       .then((r) => r.json())
-      .then(setStats)
+      .then((d) => {
+        // Guard: if the response has no school (e.g. error payload), don't set stats
+        if (d?.school) {
+          setStats(d as Stats);
+        } else {
+          setError(true);
+        }
+      })
+      .catch(() => setError(true))
       .finally(() => setLoading(false));
   }, []);
 
   if (loading)
     return (
       <>
-        <div className="dash-loading">
-          <div className="spin" />
-          {tr.loading}
-        </div>
-        <style>{css}</style>
+        <MandalaLoader label={tr.loading} />
       </>
     );
 
-  if (!stats)
+  if (error || !stats)
     return (
       <>
         <div className="dash-loading">{tr.failedLoad}</div>
@@ -149,7 +154,7 @@ export default function SchoolAdminDashboard() {
       <div className="dash-header">
         <div>
           <p className="dash-eyebrow">{tr.schoolAdminDashboard}</p>
-          <h1 className="dash-title">{stats.school.name}</h1>
+          <h1 className="dash-title">{stats.school?.name ?? ""}</h1>
         </div>
         {!stats.hasPlacementAssessment && (
           <Link href="/school-admin/placement-assessment" className="dash-cta">
@@ -279,7 +284,6 @@ const css = `
   color: #0B0B0C;
 }
 
-/* Loading */
 .dash-loading {
   display: flex; align-items: center; gap: 10px;
   height: 180px; justify-content: center;
@@ -295,7 +299,6 @@ const css = `
 }
 @keyframes sp { to { transform: rotate(360deg); } }
 
-/* Header */
 .dash-header {
   display: flex; align-items: flex-start;
   justify-content: space-between; gap: 16px; flex-wrap: wrap;
@@ -318,7 +321,6 @@ const css = `
 }
 .dash-cta:hover { background: #1e1e20; }
 
-/* Alert banners */
 .alert-banner {
   display: flex; align-items: center; gap: 10px;
   font-size: 13px; padding: 11px 15px;
@@ -340,7 +342,6 @@ const css = `
 }
 .alert-link:hover { text-decoration: underline; }
 
-/* Stat Cards */
 .stat-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -392,7 +393,6 @@ const css = `
 }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
-/* Pipeline */
 .section { display: flex; flex-direction: column; gap: 12px; }
 .section-title {
   font-size: 13px; font-weight: 800; color: #0B0B0C;
