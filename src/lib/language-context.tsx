@@ -8,7 +8,7 @@ import {
   ReactNode,
 } from "react";
 
-export type Lang = "ar" | "sq";
+export type Lang = "ar" | "sq" | "en";
 type LanguageContextType = { lang: Lang; setLang: (l: Lang) => void };
 
 const LanguageContext = createContext<LanguageContextType>({
@@ -22,7 +22,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const saved = localStorage.getItem("lang") as Lang;
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (saved === "ar" || saved === "sq") setLangState(saved);
+    if (saved === "ar" || saved === "sq" || saved === "en") setLangState(saved);
   }, []);
 
   function setLang(l: Lang) {

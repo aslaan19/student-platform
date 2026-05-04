@@ -1,84 +1,66 @@
 "use client";
-
 import { useLang } from "@/lib/language-context";
+import type { Lang } from "@/lib/language-context";
 
-export default function LangToggle({ dark = false }: { dark?: boolean }) {
+const LANG_LABELS: Record<string, string> = {
+  ar: "عربي",
+  sq: "Shqip",
+  en: "EN",
+};
+
+interface Props {
+  dark?: boolean;
+  secondaryLang?: string;
+}
+
+export default function LangToggle({ dark, secondaryLang = "sq" }: Props) {
   const { lang, setLang } = useLang();
 
-  const activeStyle = dark
-    ? {
-        background: "white",
-        color: "#111827",
-        boxShadow: "0 1px 4px rgba(0,0,0,0.2)",
-      }
-    : {
-        background: "#111827",
-        color: "white",
-        boxShadow: "0 1px 4px rgba(0,0,0,0.15)",
-      };
-
-  const inactiveStyle = dark
-    ? { background: "transparent", color: "rgba(255,255,255,0.45)" }
-    : { background: "transparent", color: "#6b7280" };
-
-  const containerStyle = dark
-    ? {
-        background: "rgba(255,255,255,0.08)",
-        border: "1px solid rgba(255,255,255,0.12)",
-      }
-    : {
-        background: "white",
-        border: "1.5px solid #e5e7eb",
-        boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
-      };
+  const options: Lang[] = ["ar", secondaryLang as Lang];
 
   return (
-    <div
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        borderRadius: "99px",
-        padding: "3px",
-        gap: "2px",
-        width: "100%",
-        justifyContent: "center",
-        ...containerStyle,
-      }}
-    >
-      <button
-        onClick={() => setLang("ar")}
-        style={{
-          flex: 1,
-          padding: "6px 14px",
-          borderRadius: "99px",
-          border: "none",
-          fontSize: "12.5px",
-          fontWeight: 700,
-          cursor: "pointer",
-          transition: "all 0.2s",
-          fontFamily: "Tajawal, sans-serif",
-          ...(lang === "ar" ? activeStyle : inactiveStyle),
-        }}
-      >
-        عربي
-      </button>
-      <button
-        onClick={() => setLang("sq")}
-        style={{
-          flex: 1,
-          padding: "6px 14px",
-          borderRadius: "99px",
-          border: "none",
-          fontSize: "12.5px",
-          fontWeight: 700,
-          cursor: "pointer",
-          transition: "all 0.2s",
-          fontFamily: "Tajawal, sans-serif",
-          ...(lang === "sq" ? activeStyle : inactiveStyle),
-        }}
-      >
-        Shqip
-      </button>
+    <div className={`lt-wrap ${dark ? "dark" : ""}`}>
+      {options.map((l) => (
+        <button
+          key={l}
+          className={`lt-btn ${lang === l ? "active" : ""}`}
+          onClick={() => setLang(l)}
+        >
+          {LANG_LABELS[l] ?? l}
+        </button>
+      ))}
+      <style>{css}</style>
     </div>
   );
 }
+
+const css = `
+  .lt-wrap {
+    display: inline-flex;
+    align-items: center;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(200,169,106,0.15);
+    border-radius: 99px;
+    padding: 3px;
+    gap: 2px;
+  }
+  .lt-btn {
+    padding: 5px 13px;
+    border-radius: 99px;
+    border: none;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Cairo', sans-serif;
+    background: transparent;
+    color: rgba(200,169,106,0.4);
+  }
+  .lt-btn.active {
+    background: #C8A96A;
+    color: #0B0B0C;
+  }
+  .lt-wrap.dark .lt-btn { color: rgba(200,169,106,0.4); }
+  .lt-wrap:not(.dark) .lt-btn { color: #8A7A5A; }
+  .lt-wrap:not(.dark) .lt-btn.active { background: #C8A96A; color: #0B0B0C; }
+`;

@@ -6,8 +6,6 @@ import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "../../lib/supabase/client";
 import Image from "next/image";
 
-// Pre-compute all trig values as rounded constants OUTSIDE the component.
-// This ensures identical values on server and client (no floating-point drift).
 const r2 = (n: number) => Math.round(n * 1000) / 1000;
 
 const STAR_LINES = Array.from({ length: 12 }, (_, i) => {
@@ -26,11 +24,10 @@ const PETAL_CIRCLES = Array.from({ length: 8 }, (_, i) => {
   return { cx: r2(100 + 52 * Math.sin(a)), cy: r2(100 - 52 * Math.cos(a)) };
 });
 
-const BOTTOM_DIAMONDS = Array.from({ length: 30 }, (_, i) => ({
-  x: 20 + i * 40,
-}));
-
-const BOTTOM_CENTER_ORNAMENT = { cx: 600, cy: 60 };
+const INNER_PETALS = Array.from({ length: 4 }, (_, i) => {
+  const a = (i * 90 * Math.PI) / 180;
+  return { cx: r2(100 + 24 * Math.sin(a)), cy: r2(100 - 24 * Math.cos(a)) };
+});
 
 const navItems = [
   {
@@ -116,7 +113,6 @@ export default function OwnerLayout({
   const router = useRouter();
   const [ownerName, setOwnerName] = useState("المالك");
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [currentTime, setCurrentTime] = useState("");
 
   useEffect(() => {
     const supabase = createClient();
@@ -124,22 +120,6 @@ export default function OwnerLayout({
       if (user?.user_metadata?.full_name)
         setOwnerName(user.user_metadata.full_name);
     });
-  }, []);
-
-  useEffect(() => {
-    const tick = () => {
-      const now = new Date();
-      setCurrentTime(
-        now.toLocaleTimeString("en-SA", {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: false,
-        }),
-      );
-    };
-    tick();
-    const t = setInterval(tick, 1000);
-    return () => clearInterval(t);
   }, []);
 
   const handleLogout = async () => {
@@ -159,12 +139,9 @@ export default function OwnerLayout({
         <div className="ow-overlay" onClick={() => setSidebarOpen(false)} />
       )}
 
-      {/* ── Sidebar ── */}
       <aside className={`ow-sidebar ${sidebarOpen ? "open" : ""}`}>
-        {/* Vertical gold rule */}
         <div className="ow-sidebar-rule" />
 
-        {/* Logo */}
         <div className="ow-logo-wrap">
           <Image
             src="/ahlia.png"
@@ -181,14 +158,12 @@ export default function OwnerLayout({
           />
         </div>
 
-        {/* Divider */}
         <div className="ow-divider">
           <div className="ow-divider-line" />
           <div className="ow-divider-diamond" />
           <div className="ow-divider-line" />
         </div>
 
-        {/* Nav */}
         <nav className="ow-nav">
           <div className="ow-nav-section-label">القوائم الرئيسية</div>
           {navItems.map((item) => {
@@ -222,21 +197,100 @@ export default function OwnerLayout({
           })}
         </nav>
 
-        {/* Geometric mandala watermark */}
+        {/* Enhanced Mandala */}
         <div className="ow-mandala" aria-hidden="true">
           <svg viewBox="0 0 200 200" fill="none">
-            {[80, 65, 52, 40, 30, 21, 13, 7].map((r, i) => (
+            {/* Outer halos */}
+            <circle
+              cx="100"
+              cy="100"
+              r="92"
+              stroke="#C8A96A"
+              strokeWidth="0.3"
+              opacity="0.05"
+            />
+            <circle
+              cx="100"
+              cy="100"
+              r="86"
+              stroke="#C8A96A"
+              strokeWidth="0.3"
+              opacity="0.04"
+            />
+            {/* 8-petal flower */}
+            {PETAL_CIRCLES.map((p, i) => (
               <circle
                 key={i}
-                cx="100"
-                cy="100"
-                r={r}
+                cx={p.cx}
+                cy={p.cy}
+                r="52"
                 stroke="#C8A96A"
-                strokeWidth={i === 0 ? 0.6 : 0.4}
-                opacity={0.04 + i * 0.055}
-                strokeDasharray={i % 2 === 0 ? "none" : `${r * 0.3} ${r * 0.2}`}
+                strokeWidth="0.5"
+                opacity="0.10"
+                fill="none"
               />
             ))}
+            {/* Concentric rings */}
+            <circle
+              cx="100"
+              cy="100"
+              r="74"
+              stroke="#C8A96A"
+              strokeWidth="0.4"
+              opacity="0.13"
+              strokeDasharray="3 8"
+            />
+            <circle
+              cx="100"
+              cy="100"
+              r="62"
+              stroke="#E5B93C"
+              strokeWidth="0.35"
+              opacity="0.10"
+            />
+            <circle
+              cx="100"
+              cy="100"
+              r="50"
+              stroke="#C8A96A"
+              strokeWidth="0.5"
+              opacity="0.15"
+              strokeDasharray="5 5"
+            />
+            <circle
+              cx="100"
+              cy="100"
+              r="38"
+              stroke="#C8A96A"
+              strokeWidth="0.35"
+              opacity="0.12"
+            />
+            <circle
+              cx="100"
+              cy="100"
+              r="28"
+              stroke="#E5B93C"
+              strokeWidth="0.45"
+              opacity="0.18"
+              strokeDasharray="3 4"
+            />
+            <circle
+              cx="100"
+              cy="100"
+              r="18"
+              stroke="#C8A96A"
+              strokeWidth="0.35"
+              opacity="0.20"
+            />
+            <circle
+              cx="100"
+              cy="100"
+              r="9"
+              stroke="#E5B93C"
+              strokeWidth="0.55"
+              opacity="0.26"
+            />
+            {/* 12-spoke radial lines */}
             {STAR_LINES.map((l, i) => (
               <line
                 key={i}
@@ -246,35 +300,73 @@ export default function OwnerLayout({
                 y2={l.y2}
                 stroke="#C8A96A"
                 strokeWidth="0.35"
-                opacity="0.12"
+                opacity="0.13"
               />
             ))}
-            {PETAL_CIRCLES.map((p, i) => (
+            {/* Inner 4-petal rosette */}
+            {INNER_PETALS.map((p, i) => (
               <circle
                 key={i}
                 cx={p.cx}
                 cy={p.cy}
-                r="18"
+                r="24"
                 stroke="#C8A96A"
-                strokeWidth="0.4"
-                opacity="0.09"
+                strokeWidth="0.45"
+                opacity="0.16"
                 fill="none"
               />
             ))}
-            <circle cx="100" cy="100" r="2.5" fill="#C8A96A" opacity="0.3" />
+            {/* 6-pointed star */}
+            <line
+              x1="100"
+              y1="73"
+              x2="100"
+              y2="127"
+              stroke="#E5B93C"
+              strokeWidth="0.6"
+              opacity="0.20"
+            />
+            <line
+              x1="76"
+              y1="87"
+              x2="124"
+              y2="113"
+              stroke="#E5B93C"
+              strokeWidth="0.6"
+              opacity="0.20"
+            />
+            <line
+              x1="124"
+              y1="87"
+              x2="76"
+              y2="113"
+              stroke="#E5B93C"
+              strokeWidth="0.6"
+              opacity="0.20"
+            />
+            {/* Center */}
             <circle
               cx="100"
               cy="100"
-              r="5.5"
-              stroke="#C8A96A"
-              strokeWidth="0.4"
-              opacity="0.15"
+              r="7"
               fill="none"
+              stroke="#E5B93C"
+              strokeWidth="0.7"
+              opacity="0.38"
             />
+            <circle
+              cx="100"
+              cy="100"
+              r="4"
+              fill="none"
+              stroke="#C8A96A"
+              strokeWidth="0.45"
+              opacity="0.45"
+            />
+            <circle cx="100" cy="100" r="2" fill="#E5B93C" opacity="0.55" />
           </svg>
         </div>
 
-        {/* User / logout */}
         <div className="ow-foot">
           <div className="ow-divider" style={{ margin: "0 0 14px" }}>
             <div className="ow-divider-line" />
@@ -307,9 +399,7 @@ export default function OwnerLayout({
         </div>
       </aside>
 
-      {/* ── Main ── */}
       <div className="ow-main">
-        {/* Top bar */}
         <header className="ow-topbar">
           <button className="ow-hamburger" onClick={() => setSidebarOpen(true)}>
             <svg
@@ -323,7 +413,6 @@ export default function OwnerLayout({
               <path d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-
           <div className="ow-breadcrumb">
             <span className="ow-bc-home">الرئيسية</span>
             <div className="ow-bc-sep">
@@ -340,21 +429,17 @@ export default function OwnerLayout({
             </div>
             <span className="ow-bc-cur">{currentLabel}</span>
           </div>
-
           <div className="ow-topbar-spacer" />
         </header>
 
-        {/* Content */}
         <main className="ow-content">{children}</main>
 
-        {/* Bottom decorative band */}
         <div className="ow-bottom-band" aria-hidden="true">
           <svg
             viewBox="0 0 1200 120"
             fill="none"
             preserveAspectRatio="xMidYMax meet"
           >
-            {/* Base line */}
             <line
               x1="0"
               y1="60"
@@ -364,21 +449,16 @@ export default function OwnerLayout({
               strokeWidth="0.3"
               opacity="0.15"
             />
-            {/* Repeating diamond pattern */}
-            {Array.from({ length: 30 }).map((_, i) => {
-              const x = 20 + i * 40;
-              return (
-                <polygon
-                  key={i}
-                  points={`${x},50 ${x + 8},60 ${x},70 ${x - 8},60`}
-                  stroke="#C8A96A"
-                  strokeWidth="0.4"
-                  fill="none"
-                  opacity={i % 3 === 0 ? 0.18 : 0.07}
-                />
-              );
-            })}
-            {/* Center larger ornament */}
+            {Array.from({ length: 30 }).map((_, i) => (
+              <polygon
+                key={i}
+                points={`${20 + i * 40},50 ${28 + i * 40},60 ${20 + i * 40},70 ${12 + i * 40},60`}
+                stroke="#C8A96A"
+                strokeWidth="0.4"
+                fill="none"
+                opacity={i % 3 === 0 ? 0.18 : 0.07}
+              />
+            ))}
             <polygon
               points="600,38 616,60 600,82 584,60"
               stroke="#C8A96A"
@@ -423,7 +503,7 @@ export default function OwnerLayout({
 }
 
 const styles = `
-  @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600&family=Playfair+Display:wght@400;600;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -432,36 +512,36 @@ const styles = `
   @keyframes pulse   { 0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(26,107,60,0.4) } 70% { opacity: 0.8; box-shadow: 0 0 0 5px rgba(26,107,60,0) } }
 
   :root {
-    --gold:       #C8A96A;
-    --gold2:      #E5B93C;
-    --gold3:      #F0D080;
-    --gold-dim:   rgba(200,169,106,0.08);
-    --gold-mid:   rgba(200,169,106,0.16);
-    --gold-bdr:   rgba(200,169,106,0.22);
-    --black:      #0A0A0B;
-    --black2:     #111115;
-    --off-white:  #F6F3EE;
-    --cream:      #EDE9E0;
-    --text:       #0B0B0C;
-    --text2:      #3E3526;
-    --text3:      #8A7A5A;
-    --surface:    #FFFFFF;
-    --surface2:   #FAF8F4;
-    --surface3:   #F3EEE5;
-    --border:     #E2D9CA;
-    --border2:    #CEC2AD;
-    --success:    #1a6b3c;
-    --success-bg: rgba(26,107,60,0.07);
-    --warning:    #9a6200;
-    --warning-bg: rgba(154,98,0,0.07);
-    --danger:     #8b1a1a;
-    --danger-bg:  rgba(139,26,26,0.07);
-    --radius:     10px;
-    --shadow-sm:  0 1px 3px rgba(11,11,12,0.05);
-    --shadow:     0 4px 16px rgba(11,11,12,0.08);
-    --shadow-md:  0 8px 28px rgba(11,11,12,0.10);
-    --sidebar-w:  268px;
-    --topbar-h:   60px;
+    --gold:      #C8A96A;
+    --gold2:     #E5B93C;
+    --gold3:     #F0D080;
+    --gold-dim:  rgba(200,169,106,0.08);
+    --gold-mid:  rgba(200,169,106,0.16);
+    --gold-bdr:  rgba(200,169,106,0.22);
+    --black:     #0A0A0B;
+    --black2:    #111115;
+    --off-white: #F6F3EE;
+    --cream:     #EDE9E0;
+    --text:      #0B0B0C;
+    --text2:     #3E3526;
+    --text3:     #8A7A5A;
+    --surface:   #FFFFFF;
+    --surface2:  #FAF8F4;
+    --surface3:  #F3EEE5;
+    --border:    #E2D9CA;
+    --border2:   #CEC2AD;
+    --success:   #1a6b3c;
+    --success-bg:rgba(26,107,60,0.07);
+    --warning:   #9a6200;
+    --warning-bg:rgba(154,98,0,0.07);
+    --danger:    #8b1a1a;
+    --danger-bg: rgba(139,26,26,0.07);
+    --radius:    10px;
+    --shadow-sm: 0 1px 3px rgba(11,11,12,0.05);
+    --shadow:    0 4px 16px rgba(11,11,12,0.08);
+    --shadow-md: 0 8px 28px rgba(11,11,12,0.10);
+    --sidebar-w: 268px;
+    --topbar-h:  60px;
   }
 
   html, body {
@@ -471,7 +551,6 @@ const styles = `
     direction: rtl;
   }
 
-  /* ── Shell ── */
   .ow-shell { display: flex; min-height: 100vh; background: var(--off-white); }
 
   /* ── Sidebar ── */
@@ -482,30 +561,22 @@ const styles = `
     display: flex;
     flex-direction: column;
     position: fixed;
-    top: 0;
-    right: 0;
+    top: 0; right: 0;
     z-index: 50;
     transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
     overflow: hidden;
   }
-
-  /* Subtle inner glow */
   .ow-sidebar::after {
     content: '';
-    position: absolute;
-    inset: 0;
+    position: absolute; inset: 0;
     background:
       radial-gradient(ellipse at 50% -5%, rgba(200,169,106,0.07) 0%, transparent 55%),
       radial-gradient(ellipse at 140% 110%, rgba(200,169,106,0.04) 0%, transparent 50%);
-    pointer-events: none;
-    z-index: 0;
+    pointer-events: none; z-index: 0;
   }
-
-  /* Vertical accent rule on the right edge */
   .ow-sidebar-rule {
     position: absolute;
-    top: 60px; bottom: 60px;
-    left: 0;
+    top: 60px; bottom: 60px; left: 0;
     width: 1px;
     background: linear-gradient(180deg, transparent, rgba(200,169,106,0.25) 30%, rgba(200,169,106,0.25) 70%, transparent);
     z-index: 2;
@@ -513,279 +584,134 @@ const styles = `
 
   .ow-logo-wrap {
     padding: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    position: relative;
-    z-index: 1;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; position: relative; z-index: 1;
   }
 
-  /* Ornamental divider */
   .ow-divider {
-    display: flex;
-    align-items: center;
-    gap: 0;
-    margin: 14px 18px;
-    flex-shrink: 0;
-    position: relative;
-    z-index: 1;
+    display: flex; align-items: center; gap: 0;
+    margin: 14px 18px; flex-shrink: 0; position: relative; z-index: 1;
   }
   .ow-divider-line {
-    flex: 1;
-    height: 1px;
+    flex: 1; height: 1px;
     background: linear-gradient(90deg, transparent, rgba(200,169,106,0.18), transparent);
   }
   .ow-divider-diamond {
     width: 5px; height: 5px;
     background: rgba(200,169,106,0.3);
-    transform: rotate(45deg);
-    margin: 0 8px;
-    flex-shrink: 0;
+    transform: rotate(45deg); margin: 0 8px; flex-shrink: 0;
   }
 
-  /* Nav */
   .ow-nav {
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-    padding: 0 10px;
-    flex: 1;
-    position: relative;
-    z-index: 1;
+    display: flex; flex-direction: column; gap: 1px;
+    padding: 0 10px; flex: 1; position: relative; z-index: 1;
   }
   .ow-nav-section-label {
-    font-size: 9px;
-    font-weight: 700;
+    font-size: 9px; font-weight: 700;
     color: rgba(200,169,106,0.22);
-    text-transform: uppercase;
-    letter-spacing: 2px;
+    text-transform: uppercase; letter-spacing: 2px;
     padding: 0 10px 10px;
   }
   .ow-nav-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 12px;
-    border-radius: 8px;
-    text-decoration: none;
-    color: rgba(200,169,106,0.38);
-    font-size: 13px;
-    font-weight: 600;
-    transition: all 0.18s ease;
-    position: relative;
-    border: 1px solid transparent;
-    overflow: hidden;
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; border-radius: 8px;
+    text-decoration: none; color: rgba(200,169,106,0.38);
+    font-size: 13px; font-weight: 600;
+    transition: all 0.18s ease; position: relative;
+    border: 1px solid transparent; overflow: hidden;
   }
-  .ow-nav-item:hover {
-    background: rgba(200,169,106,0.05);
-    color: rgba(200,169,106,0.68);
-  }
+  .ow-nav-item:hover { background: rgba(200,169,106,0.05); color: rgba(200,169,106,0.68); }
   .ow-nav-item.active {
-    background: rgba(200,169,106,0.08);
-    color: var(--gold);
-    font-weight: 700;
-    border-color: rgba(200,169,106,0.16);
+    background: rgba(200,169,106,0.08); color: var(--gold);
+    font-weight: 700; border-color: rgba(200,169,106,0.16);
   }
   .ow-nav-active-bar {
-    position: absolute;
-    right: 0; top: 6px; bottom: 6px;
+    position: absolute; right: 0; top: 6px; bottom: 6px;
     width: 2px;
     background: linear-gradient(180deg, var(--gold2), var(--gold));
     border-radius: 2px 0 0 2px;
   }
   .ow-nav-icon {
     width: 28px; height: 28px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 7px;
-    background: rgba(200,169,106,0.04);
-    flex-shrink: 0;
-    transition: background 0.18s;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 7px; background: rgba(200,169,106,0.04);
+    flex-shrink: 0; transition: background 0.18s;
   }
   .ow-nav-item:hover .ow-nav-icon,
-  .ow-nav-item.active .ow-nav-icon {
-    background: rgba(200,169,106,0.1);
-  }
+  .ow-nav-item.active .ow-nav-icon { background: rgba(200,169,106,0.1); }
   .ow-nav-text { flex: 1; }
-  .ow-nav-chevron {
-    color: rgba(200,169,106,0.4);
-    display: flex;
-    align-items: center;
-  }
+  .ow-nav-chevron { color: rgba(200,169,106,0.4); display: flex; align-items: center; }
 
   /* Mandala */
   .ow-mandala {
-    width: 160px;
-    height: 160px;
+    width: 160px; height: 160px;
     margin: auto auto 0;
-    flex-shrink: 0;
-    position: relative;
-    z-index: 0;
+    flex-shrink: 0; position: relative; z-index: 0;
     opacity: 0.9;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: flex; align-items: center; justify-content: center;
   }
   .ow-mandala svg { width: 100%; height: 100%; }
 
-  /* Footer */
   .ow-foot {
-    padding: 0 10px 16px;
-    flex-shrink: 0;
-    position: relative;
-    z-index: 1;
+    padding: 0 10px 16px; flex-shrink: 0; position: relative; z-index: 1;
   }
   .ow-user {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    padding: 10px 12px;
-    border-radius: 9px;
+    display: flex; align-items: center; gap: 9px;
+    padding: 10px 12px; border-radius: 9px;
     background: rgba(200,169,106,0.06);
     border: 1px solid rgba(200,169,106,0.12);
   }
   .ow-user-av {
-    width: 32px; height: 32px;
-    border-radius: 8px;
-    flex-shrink: 0;
+    width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0;
     background: linear-gradient(135deg, var(--gold2), var(--gold));
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 13px;
-    font-weight: 900;
-    color: var(--black);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 900; color: var(--black);
   }
   .ow-user-info { flex: 1; display: flex; flex-direction: column; gap: 1px; min-width: 0; }
   .ow-user-name {
-    font-size: 12.5px;
-    font-weight: 700;
-    color: rgba(255,255,255,0.9);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    font-size: 12.5px; font-weight: 700; color: rgba(255,255,255,0.9);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   .ow-user-role {
-    font-size: 9px;
-    color: rgba(200,169,106,0.4);
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1px;
+    font-size: 9px; color: rgba(200,169,106,0.4);
+    font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
   }
   .ow-logout-btn {
-    background: none;
-    border: none;
-    color: rgba(200,169,106,0.28);
-    cursor: pointer;
-    padding: 5px;
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.15s;
-    flex-shrink: 0;
+    background: none; border: none; color: rgba(200,169,106,0.28);
+    cursor: pointer; padding: 5px; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s; flex-shrink: 0;
   }
-  .ow-logout-btn:hover {
-    color: rgba(200,169,106,0.75);
-    background: rgba(200,169,106,0.08);
-  }
+  .ow-logout-btn:hover { color: rgba(200,169,106,0.75); background: rgba(200,169,106,0.08); }
 
-  /* ── Main area ── */
+  /* ── Main ── */
   .ow-main {
-    flex: 1;
-    margin-right: var(--sidebar-w);
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    position: relative;
+    flex: 1; margin-right: var(--sidebar-w);
+    display: flex; flex-direction: column; min-height: 100vh; position: relative;
   }
-
-  /* Top bar */
   .ow-topbar {
-    height: var(--topbar-h);
-    background: var(--surface);
+    height: var(--topbar-h); background: var(--surface);
     border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    padding: 0 36px;
-    gap: 16px;
-    position: sticky;
-    top: 0;
-    z-index: 40;
+    display: flex; align-items: center; padding: 0 36px; gap: 16px;
+    position: sticky; top: 0; z-index: 40;
     box-shadow: 0 1px 0 var(--border), 0 2px 12px rgba(11,11,12,0.04);
   }
-  /* Gold top rule on topbar */
   .ow-topbar::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 2px;
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
     background: linear-gradient(90deg, transparent, rgba(200,169,106,0.4) 20%, rgba(229,185,60,0.5) 50%, rgba(200,169,106,0.4) 80%, transparent);
   }
-
   .ow-hamburger {
-    display: none;
-    background: none;
-    border: none;
-    color: var(--text2);
-    cursor: pointer;
-    padding: 4px;
-    border-radius: 6px;
+    display: none; background: none; border: none;
+    color: var(--text2); cursor: pointer; padding: 4px; border-radius: 6px;
   }
-  .ow-breadcrumb {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 13px;
-  }
+  .ow-breadcrumb { display: flex; align-items: center; gap: 8px; font-size: 13px; }
   .ow-bc-home { color: var(--text3); font-weight: 500; }
-  .ow-bc-sep { color: var(--text3); opacity: 0.4; display: flex; align-items: center; }
-  .ow-bc-cur { color: var(--text); font-weight: 700; }
+  .ow-bc-sep  { color: var(--text3); opacity: 0.4; display: flex; align-items: center; }
+  .ow-bc-cur  { color: var(--text); font-weight: 700; }
   .ow-topbar-spacer { flex: 1; }
-  .ow-topbar-right {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-  }
-  .ow-clock {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text3);
-    letter-spacing: 1px;
-    padding: 4px 10px;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    background: var(--surface2);
-  }
-  .ow-live-badge {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 12px;
-    border: 1px solid rgba(26,107,60,0.2);
-    border-radius: 20px;
-    background: var(--success-bg);
-  }
-  .ow-live-dot {
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: var(--success);
-    animation: pulse 2.5s infinite;
-  }
-  .ow-live-text {
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--success);
-    letter-spacing: 0.5px;
-  }
 
-  /* Content */
   .ow-content {
-    padding: 36px 40px;
-    flex: 1;
+    padding: 36px 40px; flex: 1;
     background:
       radial-gradient(ellipse at 0% 0%, rgba(200,169,106,0.035) 0%, transparent 55%),
       radial-gradient(ellipse at 100% 100%, rgba(229,185,60,0.025) 0%, transparent 55%),
@@ -793,26 +719,16 @@ const styles = `
     animation: fadeIn 0.3s ease;
   }
 
-  /* Bottom decorative band */
   .ow-bottom-band {
-    width: 100%;
-    height: 120px;
-    pointer-events: none;
-    flex-shrink: 0;
-    opacity: 0.7;
+    width: 100%; height: 120px; pointer-events: none; flex-shrink: 0; opacity: 0.7;
     -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 40%);
     mask-image: linear-gradient(to bottom, transparent 0%, black 40%);
   }
   .ow-bottom-band svg { width: 100%; height: 100%; display: block; }
 
-  /* Overlay */
   .ow-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(10,10,11,0.6);
-    z-index: 49;
-    backdrop-filter: blur(3px);
-    animation: fadeIn 0.2s ease;
+    position: fixed; inset: 0; background: rgba(10,10,11,0.6);
+    z-index: 49; backdrop-filter: blur(3px); animation: fadeIn 0.2s ease;
   }
 
   @media (max-width: 768px) {

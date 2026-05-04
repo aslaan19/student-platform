@@ -209,6 +209,7 @@ export default function OwnerSchoolsPage() {
               >
                 <option value="ar">🇸🇦 العربية</option>
                 <option value="sq">🇦🇱 Shqip</option>
+                <option value="en">🇬🇧 English</option>
               </select>
             </div>
             <div className="cf cf-full">

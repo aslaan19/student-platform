@@ -1,10 +1,12 @@
-﻿"use client";
+﻿/* eslint-disable react-hooks/set-state-in-effect */
+"use client";
 export const dynamic = "force-dynamic";
 
 import { useEffect, useState } from "react";
 import { useLang } from "@/lib/language-context";
 import { t } from "@/lib/translations";
 import MandalaLoader from "@/components/MandalaLoader";
+
 interface ClassItem {
   id: string;
   name: string;
@@ -40,7 +42,6 @@ export default function SchoolAdminClassesPage() {
   }
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     load();
   }, []);
 
@@ -81,15 +82,16 @@ export default function SchoolAdminClassesPage() {
     load();
   }
 
-  if (loading)
-    return (
-      <MandalaLoader label={tr.loading} />
-    );
+  if (loading) return <MandalaLoader label={tr.loading} />;
+
+  const dir = lang === "ar" ? "rtl" : "ltr";
 
   return (
-    <div className="cl-page" dir={lang === "ar" ? "rtl" : "ltr"}>
+    <div className="cl-page" dir={dir}>
+      {/* Header */}
       <div className="cl-header">
         <div>
+          <p className="cl-eyebrow">{lang === "ar" ? "إدارة" : "Menaxhimi"}</p>
           <h1 className="cl-title">{tr.classes}</h1>
           <p className="cl-sub">
             {classes.length} {tr.classesInYourSchool}
@@ -97,53 +99,148 @@ export default function SchoolAdminClassesPage() {
         </div>
       </div>
 
-      <div className="create-row">
-        <input
-          className="cl-input"
-          placeholder={tr.newClassName}
-          value={newName}
-          onChange={(e) => setNewName(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleCreate()}
-          dir={lang === "ar" ? "rtl" : "ltr"}
-        />
-        <button className="cl-btn" onClick={handleCreate} disabled={creating}>
-          {creating ? tr.creating : tr.createClass}
-        </button>
+      {/* Ornamental rule */}
+      <div className="cl-rule">
+        <div className="cl-rule-line" />
+        <div className="cl-rule-diamond" />
+        <div className="cl-rule-line" />
       </div>
-      {error && <div className="cl-error">{error}</div>}
 
+      {/* Create row */}
+      <div className="create-section">
+        <p className="create-label">
+          {lang === "ar" ? "إضافة فصل جديد" : "Shto klasë të re"}
+        </p>
+        <div className="create-row">
+          <input
+            className="cl-input"
+            placeholder={tr.newClassName}
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleCreate()}
+            dir={dir}
+          />
+          <button className="cl-btn" onClick={handleCreate} disabled={creating}>
+            {creating ? (
+              <>
+                <div className="btn-spin" /> {tr.creating}
+              </>
+            ) : (
+              <>
+                <svg
+                  width="13"
+                  height="13"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2.5}
+                >
+                  <path d="M12 5v14M5 12h14" />
+                </svg>
+                {tr.createClass}
+              </>
+            )}
+          </button>
+        </div>
+        {error && (
+          <div className="cl-error">
+            <svg
+              width="12"
+              height="12"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 8v4m0 4h.01" />
+            </svg>
+            {error}
+          </div>
+        )}
+      </div>
+
+      {/* Classes */}
       {classes.length === 0 ? (
-        <div className="cl-empty">{tr.noClassesYet}</div>
+        <div className="cl-empty">
+          <div className="cl-empty-icon">
+            <svg
+              width="32"
+              height="32"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={1}
+            >
+              <path d="M4 19.5A2.5 2.5 0 016.5 17H20" />
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" />
+            </svg>
+          </div>
+          <p>{tr.noClassesYet}</p>
+        </div>
       ) : (
         <div className="cl-grid">
-          {classes.map((cls) => (
-            <div key={cls.id} className="cl-card">
-              <div className="cl-card-header">
-                <div className="cl-icon">📚</div>
+          {classes.map((cls, i) => (
+            <div
+              key={cls.id}
+              className="cl-card"
+              style={{ animationDelay: `${i * 40}ms` }}
+            >
+              {/* Card top accent */}
+              <div className="cl-card-accent" />
+
+              <div className="cl-card-head">
+                <div className="cl-card-icon">
+                  <svg
+                    width="16"
+                    height="16"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={1.5}
+                  >
+                    <path d="M4 19.5A2.5 2.5 0 016.5 17H20" />
+                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" />
+                  </svg>
+                </div>
                 <div className="cl-card-body">
                   <div className="cl-name">{cls.name}</div>
                   <div className="cl-count">
+                    <svg
+                      width="10"
+                      height="10"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                    >
+                      <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                      <circle cx="9" cy="7" r="4" />
+                    </svg>
                     {cls._count.students} {tr.studentCount}
                   </div>
                 </div>
                 <button
                   className="delete-btn"
                   onClick={() => handleDelete(cls.id)}
+                  title={tr.deleteClassConfirm}
                 >
                   <svg
-                    width="13"
-                    height="13"
+                    width="12"
+                    height="12"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
                     strokeWidth={2}
                   >
                     <polyline points="3 6 5 6 21 6" />
-                    <path d="M19 6l-1 14H6L5 6" />
-                    <path d="M10 11v6M14 11v6M9 6V4h6v2" />
+                    <path d="M19 6l-1 14H6L5 6M10 11v6M14 11v6M9 6V4h6v2" />
                   </svg>
                 </button>
               </div>
+
+              <div className="cl-divider" />
+
               <div className="cl-teacher-row">
                 <span className="cl-teacher-label">{tr.teacherLabel}</span>
                 <select
@@ -158,7 +255,7 @@ export default function SchoolAdminClassesPage() {
                       : ""
                   }
                   onChange={(e) => handleAssignTeacher(cls.id, e.target.value)}
-                  dir={lang === "ar" ? "rtl" : "ltr"}
+                  dir={dir}
                 >
                   <option value="">{tr.withoutTeacher}</option>
                   {teachers.map((t) => (
@@ -174,30 +271,218 @@ export default function SchoolAdminClassesPage() {
       )}
 
       <style>{`
-        .cl-page{display:flex;flex-direction:column;gap:18px;font-family:Tajawal,sans-serif}
-        .cl-header{display:flex;align-items:flex-start;justify-content:space-between}
-        .cl-title{font-size:21px;font-weight:800;color:#111827}
-        .cl-sub{font-size:13px;color:#6b7280;margin-top:2px}
-        .create-row{display:flex;gap:8px}
-        .cl-input{flex:1;padding:9px 13px;background:#fff;border:1.5px solid #e5e7eb;border-radius:9px;font-size:13px;font-family:Tajawal,sans-serif;color:#111827;outline:none}
-        .cl-input:focus{border-color:#2563eb}
-        .cl-btn{background:#2563eb;color:white;padding:9px 18px;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:Tajawal,sans-serif;white-space:nowrap}
-        .cl-btn:disabled{opacity:0.5;cursor:not-allowed}
-        .cl-error{font-size:12.5px;color:#ef4444}
-        .cl-empty{text-align:center;color:#9ca3af;padding:50px;font-size:13px}
-        .cl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
-        .cl-card{background:#fff;border:1px solid #e5e7eb;border-radius:13px;padding:16px;display:flex;flex-direction:column;gap:12px}
-        .cl-card-header{display:flex;align-items:center;gap:10px}
-        .cl-icon{font-size:24px}
-        .cl-card-body{flex:1}
-        .cl-name{font-size:15px;font-weight:800;color:#111827}
-        .cl-count{font-size:12px;color:#6b7280;margin-top:1px}
-        .delete-btn{background:none;border:1px solid #e5e7eb;color:#9ca3af;width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.15s;flex-shrink:0}
-        .delete-btn:hover{border-color:#ef4444;color:#ef4444}
-        .cl-teacher-row{display:flex;align-items:center;gap:8px}
-        .cl-teacher-label{font-size:12px;color:#6b7280;font-weight:600;white-space:nowrap}
-        .cl-select{flex:1;background:#f7f8fa;border:1.5px solid #e5e7eb;color:#111827;border-radius:7px;padding:6px 10px;font-size:12.5px;font-family:Tajawal,sans-serif;outline:none;cursor:pointer}
-        .cl-select:focus{border-color:#2563eb}
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap');
+        @keyframes fadeUp { from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)} }
+        @keyframes sp { to{transform:rotate(360deg)} }
+
+        :root {
+          --gold: #C8A96A;
+          --gold-pale: rgba(200,169,106,0.07);
+          --gold-border: rgba(200,169,106,0.18);
+          --black: #0B0B0C;
+          --off-white: #F5F3EE;
+          --text: #0B0B0C;
+          --text2: #3D3526;
+          --text3: #8A7B60;
+          --surface: #FFFFFF;
+          --border: #E4DDD0;
+          --border2: #D4CAB8;
+          --font: 'Cairo', sans-serif;
+        }
+
+        .cl-page {
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+          font-family: var(--font);
+          animation: fadeUp 0.3s ease;
+        }
+
+        .cl-header { display: flex; align-items: flex-start; justify-content: space-between; }
+        .cl-eyebrow {
+          font-size: 10px;
+          font-weight: 700;
+          letter-spacing: 2px;
+          text-transform: uppercase;
+          color: var(--gold);
+          margin-bottom: 4px;
+        }
+        .cl-title {
+          font-size: 24px;
+          font-weight: 900;
+          color: var(--black);
+          letter-spacing: -0.4px;
+        }
+        .cl-sub { font-size: 12.5px; color: var(--text3); margin-top: 3px; font-weight: 500; }
+
+        .cl-rule { display: flex; align-items: center; gap: 10px; }
+        .cl-rule-line { flex: 1; height: 1px; background: var(--border); }
+        .cl-rule-diamond { width: 5px; height: 5px; background: var(--gold); transform: rotate(45deg); opacity: 0.45; flex-shrink: 0; }
+
+        .create-section { display: flex; flex-direction: column; gap: 8px; }
+        .create-label { font-size: 11px; font-weight: 700; color: var(--text3); letter-spacing: 0.5px; text-transform: uppercase; }
+        .create-row { display: flex; gap: 10px; }
+        .cl-input {
+          flex: 1;
+          padding: 10px 14px;
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: 7px;
+          font-size: 13px;
+          font-family: var(--font);
+          color: var(--text);
+          outline: none;
+          transition: border-color 0.15s;
+        }
+        .cl-input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(200,169,106,0.1); }
+        .cl-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 7px;
+          background: var(--black);
+          color: var(--gold);
+          padding: 10px 20px;
+          border: none;
+          border-radius: 7px;
+          font-size: 12.5px;
+          font-weight: 700;
+          cursor: pointer;
+          font-family: var(--font);
+          white-space: nowrap;
+          transition: background 0.15s;
+          letter-spacing: 0.1px;
+        }
+        .cl-btn:hover:not(:disabled) { background: #1A1A1E; }
+        .cl-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-spin {
+          width: 12px; height: 12px;
+          border: 2px solid rgba(200,169,106,0.2);
+          border-top-color: var(--gold);
+          border-radius: 50%;
+          animation: sp 0.7s linear infinite;
+        }
+        .cl-error {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 12px;
+          color: #8B2020;
+          background: rgba(180,40,40,0.05);
+          border: 1px solid rgba(180,40,40,0.15);
+          padding: 8px 12px;
+          border-radius: 6px;
+        }
+
+        .cl-empty {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 12px;
+          padding: 64px 20px;
+          color: var(--text3);
+          font-size: 13px;
+          font-weight: 500;
+        }
+        .cl-empty-icon {
+          width: 64px; height: 64px;
+          border-radius: 14px;
+          background: var(--surface);
+          border: 1px solid var(--border);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: var(--gold);
+          opacity: 0.6;
+        }
+
+        .cl-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+          gap: 12px;
+        }
+        .cl-card {
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: 10px;
+          padding: 18px;
+          display: flex;
+          flex-direction: column;
+          gap: 13px;
+          position: relative;
+          overflow: hidden;
+          transition: border-color 0.15s, box-shadow 0.15s;
+          animation: fadeUp 0.4s ease both;
+        }
+        .cl-card:hover {
+          border-color: rgba(200,169,106,0.35);
+          box-shadow: 0 4px 16px rgba(200,169,106,0.08);
+        }
+        .cl-card-accent {
+          position: absolute;
+          top: 0; left: 0; right: 0;
+          height: 2px;
+          background: linear-gradient(90deg, transparent, rgba(200,169,106,0.3) 50%, transparent);
+        }
+        .cl-card-head { display: flex; align-items: center; gap: 11px; }
+        .cl-card-icon {
+          width: 38px; height: 38px;
+          border-radius: 8px;
+          background: var(--black);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: var(--gold);
+          flex-shrink: 0;
+        }
+        .cl-card-body { flex: 1; }
+        .cl-name { font-size: 14px; font-weight: 800; color: var(--text); }
+        .cl-count {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          font-size: 11.5px;
+          color: var(--text3);
+          margin-top: 2px;
+          font-weight: 500;
+        }
+        .delete-btn {
+          background: none;
+          border: 1px solid var(--border);
+          color: var(--text3);
+          width: 28px; height: 28px;
+          border-radius: 6px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all 0.15s;
+          flex-shrink: 0;
+        }
+        .delete-btn:hover { border-color: #C0392B; color: #C0392B; background: rgba(192,57,43,0.05); }
+
+        .cl-divider { height: 1px; background: var(--border); }
+
+        .cl-teacher-row { display: flex; align-items: center; gap: 10px; }
+        .cl-teacher-label { font-size: 11px; color: var(--text3); font-weight: 700; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.5px; }
+        .cl-select {
+          flex: 1;
+          background: var(--off-white);
+          border: 1px solid var(--border);
+          color: var(--text);
+          border-radius: 6px;
+          padding: 7px 10px;
+          font-size: 12px;
+          font-family: var(--font);
+          outline: none;
+          cursor: pointer;
+          transition: border-color 0.15s;
+        }
+        .cl-select:focus { border-color: var(--gold); }
+
+        @media (max-width: 600px) {
+          .cl-grid { grid-template-columns: 1fr; }
+          .create-row { flex-direction: column; }
+        }
       `}</style>
     </div>
   );

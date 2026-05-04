@@ -545,6 +545,7 @@ export default function OwnerSchoolDetailPage() {
               >
                 <option value="ar">🇸🇦 العربية (الافتراضي)</option>
                 <option value="sq">🇦🇱 Shqip — الألبانية</option>
+                <option value="en">🇬🇧 English</option>
               </select>
             </div>
 
