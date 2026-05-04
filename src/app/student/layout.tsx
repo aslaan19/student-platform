@@ -54,8 +54,17 @@ const ALLOWED_PAGES: Record<string, string[]> = {
 
 // Only show full nav when student is assigned to a class
 const SHOW_NAV_STATUSES = ["CLASS_ASSIGNED"];
+type NavItem = {
+  key: "dashboard" | "myClass" | "quizzes" | "roadmap";
+  href: string;
+  exact: boolean;
+  labelAr?: string;
+  labelSq?: string;
+  labelEn?: string;
+  icon: React.ReactNode;
+};
 
-const navItems = [
+const navItems: NavItem[] = [
   {
     key: "dashboard" as const,
     href: "/student",
@@ -244,7 +253,7 @@ export default function StudentLayout({
     if (item.labelAr) {
       if (lang === "ar") return item.labelAr;
       if (lang === "sq") return item.labelSq!;
-      return item.labelEn ?? item.labelAr;
+      return item.labelEn ?? item.labelAr!;
     }
     return tr[item.key as keyof typeof tr] as string;
   };
@@ -826,9 +835,9 @@ const styles = `
   .sl-mobile-title{font-size:13.5px;font-weight:800;color:var(--gold);letter-spacing:-0.1px}
   .sl-mobile-avatar{width:30px;height:30px;border-radius:6px;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:var(--black)}
 
-  .sl-backdrop{position:fixed;inset:0;background:rgba(11,11,12,0.55);z-index:29;backdrop-filter:blur(2px);animation:fadeIn 0.2s ease}
-
+.sl-backdrop{position:fixed;inset:0;background:rgba(11,11,12,0.55);z-index:29;backdrop-filter:blur(2px);animation:fadeIn 0.2s ease;cursor:pointer}
   @media(max-width:768px){
+    .sl-backdrop{display:none!important}
     .sl-mobile-bar{display:flex}
     .sl-sidebar{position:fixed;right:0;top:0;bottom:0;transform:translateX(100%);transition:transform 0.26s cubic-bezier(0.4,0,0.2,1);height:100%}
     .sl-sidebar.open{transform:translateX(0);box-shadow:-12px 0 50px rgba(11,11,12,0.45)}
