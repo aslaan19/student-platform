@@ -1,34 +1,63 @@
-// api/school-admin/classes/route.ts
+// api/school-admin/classes/[id]/route.ts
 import { NextResponse } from "next/server";
 import { requireSchoolAdmin } from "@/lib/school-admin-auth";
 import { prisma } from "@/lib/prisma";
 
-export async function GET() {
+export async function PATCH(
+  req: Request,
+  context: { params: Promise<{ id: string }> }
+) {
   const auth = await requireSchoolAdmin();
   if (!auth) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const classes = await prisma.class.findMany({
-    where: { school_id: auth.school.id },
-    include: {
-      teacher: { include: { profile: { select: { full_name: true } } } },
+  const [{ id }, body] = await Promise.all([
+    context.params,
+    req.json(),
+  ]);
+
+  const { teacher_id } = body;
+
+  // Verify class belongs to this school
+  const existing = await prisma.class.findFirst({
+    where: { id, school_id: auth.school.id },
+    select: { id: true },
+  });
+  if (!existing)
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  const cls = await prisma.class.update({
+    where: { id },
+    data: {
+      teacher_id: teacher_id || null,
+    },
+    select: {
+      id: true, name: true,
+      teacher: { select: { id: true, profile: { select: { full_name: true } } } },
       _count: { select: { students: true } },
     },
-    orderBy: { created_at: "asc" },
   });
 
-  return NextResponse.json({ classes });
+  return NextResponse.json({ class: cls });
 }
 
-export async function POST(req: Request) {
+export async function DELETE(
+  _req: Request,
+  context: { params: Promise<{ id: string }> }
+) {
   const auth = await requireSchoolAdmin();
   if (!auth) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const { name } = await req.json();
-  if (!name) return NextResponse.json({ error: "Name required" }, { status: 400 });
+  const { id } = await context.params;
 
-  const cls = await prisma.class.create({
-    data: { name, school_id: auth.school.id },
+  // Verify class belongs to this school before deleting
+  const existing = await prisma.class.findFirst({
+    where: { id, school_id: auth.school.id },
+    select: { id: true },
   });
+  if (!existing)
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  return NextResponse.json({ class: cls }, { status: 201 });
+  await prisma.class.delete({ where: { id } });
+
+  return NextResponse.json({ success: true });
 }

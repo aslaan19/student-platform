@@ -1,11 +1,12 @@
 ﻿/* eslint-disable react-hooks/set-state-in-effect */
-"use client"
+"use client";
 export const dynamic = "force-dynamic";
 
 import { useEffect, useState } from "react";
 import { useLang } from "@/lib/language-context";
 import { t } from "@/lib/translations";
 import MandalaLoader from "@/components/MandalaLoader";
+import { cachedFetch, invalidateCache } from "@/lib/api-cache";
 
 interface Student {
   id: string;
@@ -68,12 +69,16 @@ export function SchoolAdminStudentsPage() {
   const [search, setSearch] = useState("");
 
   async function load() {
-    const [sRes, cRes] = await Promise.all([
-      fetch("/api/school-admin/students"),
-      fetch("/api/school-admin/classes"),
+    const [sData, cData] = await Promise.all([
+      cachedFetch<{ students: Student[] }>(
+        "/api/school-admin/students",
+        30_000,
+      ),
+      cachedFetch<{ classes: ClassItem[] }>(
+        "/api/school-admin/classes",
+        60_000,
+      ),
     ]);
-    const sData = await sRes.json();
-    const cData = await cRes.json();
     setStudents(sData.students ?? []);
     setClasses(cData.classes ?? []);
     setLoading(false);
@@ -89,6 +94,7 @@ export function SchoolAdminStudentsPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ class_id: classId || null }),
     });
+    invalidateCache("/api/school-admin/students");
     load();
   }
 

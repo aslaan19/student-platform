@@ -5,37 +5,23 @@ import MandalaLoader from "@/components/MandalaLoader";
 import { useEffect, useState } from "react";
 import { useLang } from "@/lib/language-context";
 import { t } from "@/lib/translations";
+import { cachedFetch, invalidateCache } from "@/lib/api-cache";
 
 type QuestionType = "MCQ" | "TF" | "WRITTEN";
-interface Option {
-  id: string;
-  text: string;
-  order: number;
-}
+interface Option { id: string; text: string; order: number; }
 interface Question {
-  id: string;
-  type: QuestionType;
-  text: string;
-  correct_answer: string | null;
-  order: number;
-  options: Option[];
+  id: string; type: QuestionType; text: string;
+  correct_answer: string | null; order: number; options: Option[];
 }
 interface Assessment {
-  id: string;
-  title: string;
-  is_active: boolean;
-  questions: Question[];
+  id: string; title: string; is_active: boolean; questions: Question[];
 }
 
 const TYPE_COLORS: Record<QuestionType, string> = {
-  MCQ: "#2563eb",
-  TF: "#10b981",
-  WRITTEN: "#f59e0b",
+  MCQ: "#2563eb", TF: "#10b981", WRITTEN: "#f59e0b",
 };
 const EMPTY_FORM = {
-  type: "MCQ" as QuestionType,
-  text: "",
-  correct_answer: "",
+  type: "MCQ" as QuestionType, text: "", correct_answer: "",
   options: [{ text: "" }, { text: "" }],
 };
 
@@ -44,9 +30,7 @@ export default function PlacementAssessmentPage() {
   const tr = t[lang];
 
   const TYPE_LABELS: Record<QuestionType, string> = {
-    MCQ: tr.mcq,
-    TF: tr.tf,
-    WRITTEN: tr.written,
+    MCQ: tr.mcq, TF: tr.tf, WRITTEN: tr.written,
   };
 
   const [assessment, setAssessment] = useState<Assessment | null>(null);
@@ -63,15 +47,14 @@ export default function PlacementAssessmentPage() {
   const [deleting, setDeleting] = useState<string | null>(null);
 
   async function load() {
-    const r = await fetch("/api/school-admin/placement-assessment");
-    const d = await r.json();
+    const d = await cachedFetch<{ assessment: Assessment | null }>(
+      "/api/school-admin/placement-assessment", 120_000,
+    );
     setAssessment(d.assessment ?? null);
     setLoading(false);
   }
 
-  useEffect(() => {
-    load();
-  }, []);
+  useEffect(() => { load(); }, []);
 
   async function handleCreate() {
     setCreating(true);
@@ -81,7 +64,10 @@ export default function PlacementAssessmentPage() {
       body: JSON.stringify({ title: newTitle }),
     });
     const d = await r.json();
-    if (d.assessment) setAssessment({ ...d.assessment, questions: [] });
+    if (d.assessment) {
+      invalidateCache("/api/school-admin/placement-assessment");
+      setAssessment({ ...d.assessment, questions: [] });
+    }
     setCreating(false);
   }
 
@@ -92,6 +78,7 @@ export default function PlacementAssessmentPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title: titleDraft }),
     });
+    invalidateCache("/api/school-admin/placement-assessment");
     setAssessment((a) => (a ? { ...a, title: titleDraft } : a));
     setEditingTitle(false);
   }
@@ -103,28 +90,19 @@ export default function PlacementAssessmentPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ is_active: !assessment.is_active }),
     });
+    invalidateCache("/api/school-admin/placement-assessment");
     setAssessment((a) => (a ? { ...a, is_active: !a.is_active } : a));
   }
 
   function openAdd() {
-    setForm(EMPTY_FORM);
-    setModalMode("add");
-    setEditingQId(null);
-    setModalOpen(true);
+    setForm(EMPTY_FORM); setModalMode("add"); setEditingQId(null); setModalOpen(true);
   }
   function openEdit(q: Question) {
     setForm({
-      type: q.type,
-      text: q.text,
-      correct_answer: q.correct_answer ?? "",
-      options:
-        q.options.length > 0
-          ? q.options.map((o) => ({ text: o.text }))
-          : [{ text: "" }, { text: "" }],
+      type: q.type, text: q.text, correct_answer: q.correct_answer ?? "",
+      options: q.options.length > 0 ? q.options.map((o) => ({ text: o.text })) : [{ text: "" }, { text: "" }],
     });
-    setModalMode("edit");
-    setEditingQId(q.id);
-    setModalOpen(true);
+    setModalMode("edit"); setEditingQId(q.id); setModalOpen(true);
   }
 
   async function handleSave() {
@@ -132,48 +110,29 @@ export default function PlacementAssessmentPage() {
     setSaving(true);
     try {
       const body: any = {
-        type: form.type,
-        text: form.text,
-        correct_answer: form.correct_answer || null,
-        options: [],
+        type: form.type, text: form.text,
+        correct_answer: form.correct_answer || null, options: [],
       };
-      if (form.type === "MCQ")
-        body.options = form.options.filter((o) => o.text.trim());
+      if (form.type === "MCQ") body.options = form.options.filter((o) => o.text.trim());
       if (modalMode === "add") {
         const r = await fetch(
           `/api/school-admin/placement-assessment/${assessment.id}/questions`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body),
-          },
+          { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) },
         );
         const d = await r.json();
-        if (d.question)
-          setAssessment((a) =>
-            a ? { ...a, questions: [...a.questions, d.question] } : a,
-          );
+        if (d.question) setAssessment((a) => a ? { ...a, questions: [...a.questions, d.question] } : a);
+        invalidateCache("/api/school-admin/placement-assessment");
       } else if (editingQId) {
         const r = await fetch(
           `/api/school-admin/placement-assessment/${assessment.id}/questions/${editingQId}`,
-          {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body),
-          },
+          { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) },
         );
         const d = await r.json();
         if (d.question)
-          setAssessment((a) =>
-            a
-              ? {
-                  ...a,
-                  questions: a.questions.map((q) =>
-                    q.id === editingQId ? d.question : q,
-                  ),
-                }
-              : a,
-          );
+          setAssessment((a) => a
+            ? { ...a, questions: a.questions.map((q) => q.id === editingQId ? d.question : q) }
+            : a);
+        invalidateCache("/api/school-admin/placement-assessment");
       }
       setModalOpen(false);
     } finally {
@@ -188,238 +147,122 @@ export default function PlacementAssessmentPage() {
       `/api/school-admin/placement-assessment/${assessment.id}/questions/${qid}`,
       { method: "DELETE" },
     );
-    setAssessment((a) =>
-      a ? { ...a, questions: a.questions.filter((q) => q.id !== qid) } : a,
-    );
+    setAssessment((a) => a ? { ...a, questions: a.questions.filter((q) => q.id !== qid) } : a);
+    invalidateCache("/api/school-admin/placement-assessment");
     setDeleting(null);
   }
 
-  const addOption = () =>
-    setForm((f) => ({ ...f, options: [...f.options, { text: "" }] }));
-  const removeOption = (i: number) =>
-    setForm((f) => ({
-      ...f,
-      options: f.options.filter((_, idx) => idx !== i),
-    }));
+  const addOption = () => setForm((f) => ({ ...f, options: [...f.options, { text: "" }] }));
+  const removeOption = (i: number) => setForm((f) => ({ ...f, options: f.options.filter((_, idx) => idx !== i) }));
   const updateOption = (i: number, text: string) =>
-    setForm((f) => ({
-      ...f,
-      options: f.options.map((o, idx) => (idx === i ? { text } : o)),
-    }));
+    setForm((f) => ({ ...f, options: f.options.map((o, idx) => (idx === i ? { text } : o)) }));
 
   const dir = lang === "ar" ? "rtl" : "ltr";
 
   if (loading) return <MandalaLoader label={tr.loading} />;
 
-  if (!assessment)
-    return (
-      <div className="pa-page" dir={dir}>
-        <h1 className="pa-title">{tr.placementAssessment}</h1>
-        <p className="pa-sub">{tr.notCreatedYet}</p>
-        <div className="create-card">
-          <div style={{ fontSize: 44 }}>📋</div>
-          <h2 style={{ fontSize: 17, fontWeight: 800, color: "#111827" }}>
-            {tr.createAssessment}
-          </h2>
-          <p style={{ fontSize: 13, color: "#6b7280" }}>
-            {tr.createPlacementDesc}
-          </p>
-          <input
-            className="pa-input"
-            value={newTitle}
-            onChange={(e) => setNewTitle(e.target.value)}
-            placeholder={tr.assessmentTitle}
-            dir={dir}
-          />
-          <button
-            className="pa-btn primary"
-            onClick={handleCreate}
-            disabled={creating || !newTitle.trim()}
-          >
-            {creating ? tr.creatingAssessment : tr.createAssessment}
-          </button>
-        </div>
-        <style>{sharedStyles}</style>
+  if (!assessment) return (
+    <div className="pa-page" dir={dir}>
+      <h1 className="pa-title">{tr.placementAssessment}</h1>
+      <p className="pa-sub">{tr.notCreatedYet}</p>
+      <div className="create-card">
+        <div style={{ fontSize: 44 }}>📋</div>
+        <h2 style={{ fontSize: 17, fontWeight: 800, color: "#111827" }}>{tr.createAssessment}</h2>
+        <p style={{ fontSize: 13, color: "#6b7280" }}>{tr.createPlacementDesc}</p>
+        <input className="pa-input" value={newTitle} onChange={(e) => setNewTitle(e.target.value)}
+          placeholder={tr.assessmentTitle} dir={dir} />
+        <button className="pa-btn primary" onClick={handleCreate} disabled={creating || !newTitle.trim()}>
+          {creating ? tr.creatingAssessment : tr.createAssessment}
+        </button>
       </div>
-    );
+      <style>{sharedStyles}</style>
+    </div>
+  );
 
   return (
     <div className="pa-page" dir={dir}>
       <div className="pa-header">
         <div className="pa-title-row">
           {editingTitle ? (
-            <div
-              style={{ display: "flex", alignItems: "center", gap: 8, flex: 1 }}
-            >
-              <input
-                className="pa-input title-inp"
-                value={titleDraft}
-                onChange={(e) => setTitleDraft(e.target.value)}
-                autoFocus
-                dir={dir}
-              />
-              <button className="pa-btn primary sm" onClick={handleTitleSave}>
-                {tr.save}
-              </button>
-              <button
-                className="pa-btn ghost sm"
-                onClick={() => setEditingTitle(false)}
-              >
-                {tr.cancel}
-              </button>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1 }}>
+              <input className="pa-input title-inp" value={titleDraft}
+                onChange={(e) => setTitleDraft(e.target.value)} autoFocus dir={dir} />
+              <button className="pa-btn primary sm" onClick={handleTitleSave}>{tr.save}</button>
+              <button className="pa-btn ghost sm" onClick={() => setEditingTitle(false)}>{tr.cancel}</button>
             </div>
           ) : (
             <>
               <h1 className="pa-title">{assessment.title}</h1>
-              <button
-                className="icon-btn"
-                onClick={() => {
-                  setTitleDraft(assessment.title);
-                  setEditingTitle(true);
-                }}
-              >
-                ✏️
-              </button>
+              <button className="icon-btn" onClick={() => { setTitleDraft(assessment.title); setEditingTitle(true); }}>✏️</button>
             </>
           )}
         </div>
         <div className="pa-meta">
-          <div
-            className={`active-badge ${assessment.is_active ? "on" : "off"}`}
-          >
+          <div className={`active-badge ${assessment.is_active ? "on" : "off"}`}>
             <div className="active-dot" />
             {assessment.is_active ? tr.enabled : tr.disabled}
           </div>
           <button className="pa-btn ghost sm" onClick={handleToggleActive}>
             {assessment.is_active ? tr.disable : tr.enable}
           </button>
-          <span
-            style={{
-              fontSize: 12,
-              color: "#9ca3af",
-              marginInlineStart: "auto",
-            }}
-          >
+          <span style={{ fontSize: 12, color: "#9ca3af", marginInlineStart: "auto" }}>
             {assessment.questions.length} {tr.questionCount}
           </span>
         </div>
       </div>
 
       <div className="q-list">
-        {assessment.questions.length === 0 && (
-          <div className="q-empty">{tr.noQuestionsYet}</div>
-        )}
+        {assessment.questions.length === 0 && <div className="q-empty">{tr.noQuestionsYet}</div>}
         {assessment.questions.map((q, idx) => (
           <div key={q.id} className="q-card">
             <div className="q-card-top">
-              <span className="q-num">
-                {tr.question[0]}
-                {idx + 1}
-              </span>
-              <span
-                className="q-type"
-                style={{
-                  color: TYPE_COLORS[q.type],
-                  background: `${TYPE_COLORS[q.type]}15`,
-                }}
-              >
+              <span className="q-num">{tr.question[0]}{idx + 1}</span>
+              <span className="q-type" style={{ color: TYPE_COLORS[q.type], background: `${TYPE_COLORS[q.type]}15` }}>
                 {TYPE_LABELS[q.type]}
               </span>
-              <div
-                style={{ marginInlineStart: "auto", display: "flex", gap: 5 }}
-              >
-                <button className="icon-btn" onClick={() => openEdit(q)}>
-                  ✏️
-                </button>
-                <button
-                  className="icon-btn danger"
-                  onClick={() => handleDelete(q.id)}
-                  disabled={deleting === q.id}
-                >
-                  🗑️
-                </button>
+              <div style={{ marginInlineStart: "auto", display: "flex", gap: 5 }}>
+                <button className="icon-btn" onClick={() => openEdit(q)}>✏️</button>
+                <button className="icon-btn danger" onClick={() => handleDelete(q.id)} disabled={deleting === q.id}>🗑️</button>
               </div>
             </div>
             <div className="q-text">{q.text}</div>
             {q.type === "MCQ" && (
               <div className="q-opts">
                 {q.options.map((o) => (
-                  <div
-                    key={o.id}
-                    className={`q-opt ${o.text === q.correct_answer ? "correct" : ""}`}
-                  >
-                    {o.text}
-                  </div>
+                  <div key={o.id} className={`q-opt ${o.text === q.correct_answer ? "correct" : ""}`}>{o.text}</div>
                 ))}
               </div>
             )}
             {q.type === "TF" && (
               <div style={{ fontSize: 12, color: "#6b7280" }}>
-                {tr.correctAnswer}:{" "}
-                <strong>
-                  {q.correct_answer === "true" ? tr.trueAnswer : tr.falseAnswer}
-                </strong>
+                {tr.correctAnswer}: <strong>{q.correct_answer === "true" ? tr.trueAnswer : tr.falseAnswer}</strong>
               </div>
             )}
             {q.type === "WRITTEN" && (
-              <div
-                style={{
-                  fontSize: 11.5,
-                  color: "#f59e0b",
-                  fontStyle: "italic",
-                }}
-              >
-                {tr.manualGrade}
-              </div>
+              <div style={{ fontSize: 11.5, color: "#f59e0b", fontStyle: "italic" }}>{tr.manualGrade}</div>
             )}
           </div>
         ))}
       </div>
 
-      <button className="add-q-btn" onClick={openAdd}>
-        + {tr.addQuestion}
-      </button>
+      <button className="add-q-btn" onClick={openAdd}>+ {tr.addQuestion}</button>
 
       {modalOpen && (
-        <div
-          className="modal-overlay"
-          onClick={(e) => e.target === e.currentTarget && setModalOpen(false)}
-        >
+        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setModalOpen(false)}>
           <div className="modal" dir={dir}>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-              }}
-            >
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <h2 style={{ fontSize: 15, fontWeight: 800 }}>
-                {modalMode === "add"
-                  ? tr.addQuestionTitle
-                  : tr.editQuestionTitle}
+                {modalMode === "add" ? tr.addQuestionTitle : tr.editQuestionTitle}
               </h2>
-              <button className="icon-btn" onClick={() => setModalOpen(false)}>
-                ✕
-              </button>
+              <button className="icon-btn" onClick={() => setModalOpen(false)}>✕</button>
             </div>
             <div className="modal-field">
               <label className="field-label">{tr.questionType}</label>
               <div style={{ display: "flex", gap: 7 }}>
                 {(["MCQ", "TF", "WRITTEN"] as QuestionType[]).map((type) => (
-                  <button
-                    key={type}
-                    className={`type-btn ${form.type === type ? "sel" : ""}`}
+                  <button key={type} className={`type-btn ${form.type === type ? "sel" : ""}`}
                     style={{ "--tc": TYPE_COLORS[type] } as never}
-                    onClick={() =>
-                      setForm((f) => ({
-                        ...f,
-                        type,
-                        correct_answer: "",
-                        options:
-                          type === "MCQ" ? [{ text: "" }, { text: "" }] : [],
-                      }))
-                    }
-                  >
+                    onClick={() => setForm((f) => ({ ...f, type, correct_answer: "", options: type === "MCQ" ? [{ text: "" }, { text: "" }] : [] }))}>
                     {TYPE_LABELS[type]}
                   </button>
                 ))}
@@ -427,71 +270,30 @@ export default function PlacementAssessmentPage() {
             </div>
             <div className="modal-field">
               <label className="field-label">{tr.questionText}</label>
-              <textarea
-                className="pa-textarea"
-                placeholder={tr.questionPlaceholder}
-                value={form.text}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, text: e.target.value }))
-                }
-                rows={3}
-                dir={dir}
-              />
+              <textarea className="pa-textarea" placeholder={tr.questionPlaceholder} value={form.text}
+                onChange={(e) => setForm((f) => ({ ...f, text: e.target.value }))} rows={3} dir={dir} />
             </div>
             {form.type === "MCQ" && (
               <div className="modal-field">
                 <label className="field-label">
-                  {tr.options}{" "}
-                  <span
-                    style={{
-                      fontSize: 10.5,
-                      color: "#9ca3af",
-                      fontWeight: 400,
-                    }}
-                  >
-                    ({tr.chooseCorrect})
-                  </span>
+                  {tr.options} <span style={{ fontSize: 10.5, color: "#9ca3af", fontWeight: 400 }}>({tr.chooseCorrect})</span>
                 </label>
-                <div
-                  style={{ display: "flex", flexDirection: "column", gap: 6 }}
-                >
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                   {form.options.map((o, i) => (
-                    <div
-                      key={i}
-                      style={{ display: "flex", alignItems: "center", gap: 7 }}
-                    >
-                      <button
-                        className={`correct-radio ${form.correct_answer === o.text && o.text ? "sel" : ""}`}
-                        type="button"
-                        onClick={() =>
-                          o.text &&
-                          setForm((f) => ({ ...f, correct_answer: o.text }))
-                        }
-                      >
+                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                      <button className={`correct-radio ${form.correct_answer === o.text && o.text ? "sel" : ""}`}
+                        type="button" onClick={() => o.text && setForm((f) => ({ ...f, correct_answer: o.text }))}>
                         {form.correct_answer === o.text && o.text && "✓"}
                       </button>
-                      <input
-                        className="pa-input"
-                        style={{ flex: 1 }}
-                        placeholder={`${tr.options} ${i + 1}`}
-                        value={o.text}
-                        onChange={(e) => updateOption(i, e.target.value)}
-                        dir={dir}
-                      />
+                      <input className="pa-input" style={{ flex: 1 }} placeholder={`${tr.options} ${i + 1}`}
+                        value={o.text} onChange={(e) => updateOption(i, e.target.value)} dir={dir} />
                       {form.options.length > 2 && (
-                        <button
-                          className="icon-btn danger"
-                          onClick={() => removeOption(i)}
-                        >
-                          ✕
-                        </button>
+                        <button className="icon-btn danger" onClick={() => removeOption(i)}>✕</button>
                       )}
                     </div>
                   ))}
                   {form.options.length < 6 && (
-                    <button className="add-opt-btn" onClick={addOption}>
-                      {tr.addOption}
-                    </button>
+                    <button className="add-opt-btn" onClick={addOption}>{tr.addOption}</button>
                   )}
                 </div>
               </div>
@@ -500,50 +302,20 @@ export default function PlacementAssessmentPage() {
               <div className="modal-field">
                 <label className="field-label">{tr.correctAnswer}</label>
                 <div style={{ display: "flex", gap: 10 }}>
-                  {[
-                    { val: "true", label: tr.correctTrue },
-                    { val: "false", label: tr.correctFalse },
-                  ].map((opt) => (
-                    <button
-                      key={opt.val}
-                      className={`tf-btn ${form.correct_answer === opt.val ? "sel" : ""} ${opt.val}`}
-                      onClick={() =>
-                        setForm((f) => ({ ...f, correct_answer: opt.val }))
-                      }
-                    >
+                  {[{ val: "true", label: tr.correctTrue }, { val: "false", label: tr.correctFalse }].map((opt) => (
+                    <button key={opt.val} className={`tf-btn ${form.correct_answer === opt.val ? "sel" : ""} ${opt.val}`}
+                      onClick={() => setForm((f) => ({ ...f, correct_answer: opt.val }))}>
                       {opt.label}
                     </button>
                   ))}
                 </div>
               </div>
             )}
-            {form.type === "WRITTEN" && (
-              <div className="written-note">{tr.manualGradeNote}</div>
-            )}
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "flex-end",
-                gap: 8,
-                paddingTop: 4,
-              }}
-            >
-              <button
-                className="pa-btn ghost"
-                onClick={() => setModalOpen(false)}
-              >
-                {tr.cancel}
-              </button>
-              <button
-                className="pa-btn primary"
-                onClick={handleSave}
-                disabled={saving || !form.text.trim()}
-              >
-                {saving
-                  ? tr.saving
-                  : modalMode === "add"
-                    ? tr.add
-                    : tr.saveEdits}
+            {form.type === "WRITTEN" && <div className="written-note">{tr.manualGradeNote}</div>}
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, paddingTop: 4 }}>
+              <button className="pa-btn ghost" onClick={() => setModalOpen(false)}>{tr.cancel}</button>
+              <button className="pa-btn primary" onClick={handleSave} disabled={saving || !form.text.trim()}>
+                {saving ? tr.saving : modalMode === "add" ? tr.add : tr.saveEdits}
               </button>
             </div>
           </div>
@@ -589,7 +361,7 @@ const sharedStyles = `
   .q-type{font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:5px}
   .q-text{font-size:14px;color:#111827;line-height:1.55}
   .q-opts{display:flex;flex-wrap:wrap;gap:6px}
-  .q-opt{font-size:12px;padding:3px 10px;border-radius:6px;background:#f1f3f6;border:1px solid #e5e7eb;color:#6b7280;display:flex;align-items:center;gap:4px}
+  .q-opt{font-size:12px;padding:3px 10px;border-radius:6px;background:#f1f3f6;border:1px solid #e5e7eb;color:#6b7280}
   .q-opt.correct{background:rgba(16,185,129,0.08);border-color:rgba(16,185,129,0.3);color:#10b981}
   .add-q-btn{display:flex;align-items:center;justify-content:center;gap:7px;background:none;border:1.5px dashed #d1d5db;color:#6b7280;padding:12px;border-radius:10px;cursor:pointer;font-size:13px;font-weight:700;transition:all 0.15s;font-family:Tajawal,sans-serif;width:100%}
   .add-q-btn:hover{border-color:#2563eb;color:#2563eb}

@@ -1,27 +1,28 @@
+// api/school-admin/students/[id]/route.ts
 import { NextResponse } from "next/server";
-import { prisma } from "../../../../../lib/prisma";
-import { createAdminClient } from "../../../../../lib/supabase/admin";
+import { requireSchoolAdmin } from "@/lib/school-admin-auth";
+import { prisma } from "@/lib/prisma";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function DELETE(
-  _: Request,
-  { params }: { params: Promise<{ id: string }> }
+  _req: Request,
+  context: { params: Promise<{ id: string }> }
 ) {
-  try {
-    const supabase = createAdminClient();
-    const { id } = await params;
-    const student = await prisma.student.findUnique({
-      where: { id },
-    });
+  const auth = await requireSchoolAdmin();
+  if (!auth) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-    if (!student) {
-      return NextResponse.json({ error: "Student not found" }, { status: 404 });
-    }
+  const { id } = await context.params;
 
-    await supabase.auth.admin.deleteUser(student.profile_id);
+  // Verify student belongs to this school
+  const student = await prisma.student.findFirst({
+    where: { id, school_id: auth.school.id },
+    select: { id: true, profile_id: true },
+  });
+  if (!student)
+    return NextResponse.json({ error: "Student not found" }, { status: 404 });
 
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: "Failed to delete student" }, { status: 500 });
-  }
+  const supabase = createAdminClient();
+  await supabase.auth.admin.deleteUser(student.profile_id);
+
+  return NextResponse.json({ success: true });
 }

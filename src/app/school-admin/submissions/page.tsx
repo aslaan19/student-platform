@@ -1,6 +1,7 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 export const dynamic = "force-dynamic";
+import { cachedFetch } from "@/lib/api-cache";
 
 import { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
@@ -36,12 +37,10 @@ function SubmissionsContent() {
     const url = statusFilter
       ? `/api/school-admin/submissions?status=${statusFilter}`
       : "/api/school-admin/submissions";
-    fetch(url)
-      .then((r) => r.json())
+    cachedFetch<{ submissions: Submission[] }>(url, 15_000)
       .then((d) => setSubmissions(d.submissions ?? []))
       .finally(() => setLoading(false));
   }, [statusFilter]);
-
   const setFilter = (f: string) => {
     const params = new URLSearchParams();
     if (f) params.set("status", f);

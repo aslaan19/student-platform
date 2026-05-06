@@ -3,7 +3,7 @@
 // ============================================================
 "use client";
 export const dynamic = "force-dynamic";
-
+import { cachedFetch } from "@/lib/api-cache";
 import { useEffect, useState } from "react";
 import { useLang } from "@/lib/language-context";
 import { t } from "@/lib/translations";
@@ -24,12 +24,10 @@ export function SchoolAdminTeachersPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/school-admin/teachers")
-      .then((r) => r.json())
+    cachedFetch<{ teachers: Teacher[] }>("/api/school-admin/teachers", 60_000)
       .then((d) => setTeachers(d.teachers ?? []))
       .finally(() => setLoading(false));
   }, []);
-
   return (
     <div className="te-page" dir={dir}>
       {/* Header */}

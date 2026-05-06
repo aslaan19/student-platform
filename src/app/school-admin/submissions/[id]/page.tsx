@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useLang } from "@/lib/language-context";
 import { t } from "@/lib/translations";
+import { cachedFetch, invalidateCache } from "@/lib/api-cache";
 
 interface Option {
   id: string;
@@ -68,8 +69,14 @@ export default function SchoolAdminSubmissionDetailPage() {
 
   useEffect(() => {
     Promise.all([
-      fetch(`/api/school-admin/submissions/${id}`).then((r) => r.json()),
-      fetch("/api/school-admin/classes").then((r) => r.json()),
+      cachedFetch<{ attempt: Attempt }>(
+        `/api/school-admin/submissions/${id}`,
+        15_000,
+      ),
+      cachedFetch<{ classes: ClassItem[] }>(
+        "/api/school-admin/classes",
+        60_000,
+      ),
     ])
       .then(([attemptData, classData]) => {
         const a: Attempt = attemptData.attempt;
@@ -111,6 +118,8 @@ export default function SchoolAdminSubmissionDetailPage() {
         setError(d.error ?? tr.failedSubmit);
         return;
       }
+      invalidateCache(`/api/school-admin/submissions/${id}`);
+      invalidateCache("/api/school-admin/submissions");
       router.push("/school-admin/submissions");
     } finally {
       setSubmitting(false);

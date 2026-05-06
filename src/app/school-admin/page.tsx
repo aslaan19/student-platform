@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useLang } from "@/lib/language-context";
 import { t } from "@/lib/translations";
 import MandalaLoader from "@/components/MandalaLoader";
-
+import { cachedFetch } from "@/lib/api-cache";
 interface Stats {
   school: { name: string };
   teacherCount: number;
@@ -43,10 +43,9 @@ export default function SchoolAdminDashboard() {
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    fetch("/api/school-admin/stats")
-      .then((r) => r.json())
+    cachedFetch<Stats>("/api/school-admin/stats", 60_000)
       .then((d) => {
-        if (d?.school) setStats(d as Stats);
+        if (d?.school) setStats(d);
         else setError(true);
       })
       .catch(() => setError(true))
@@ -320,7 +319,6 @@ export default function SchoolAdminDashboard() {
       )}
 
       <style>{css}</style>
-      
     </div>
   );
 }

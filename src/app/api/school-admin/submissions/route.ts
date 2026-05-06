@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import { requireSchoolAdmin } from "@/lib/school-admin-auth";
 import { prisma } from "@/lib/prisma";
 
+export const revalidate = 15;
+
 export async function GET(req: Request) {
   const auth = await requireSchoolAdmin();
   if (!auth) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -15,13 +17,21 @@ export async function GET(req: Request) {
       assessment: { type: "SCHOOL_PLACEMENT", school_id: auth.school.id },
       ...(statusFilter ? { review_status: statusFilter as never } : {}),
     },
-    include: {
+    select: {
+      id: true,
+      review_status: true,
+      score: true,
+      total: true,
+      submitted_at: true,
       student: {
-        include: { profile: { select: { id: true, full_name: true } }, class: { select: { id: true, name: true } } },
+        select: {
+          profile: { select: { full_name: true } },
+          class: { select: { id: true, name: true } },
+        },
       },
-      assessment: { select: { id: true, title: true } },
+      assessment: { select: { title: true } },
       assigned_class: { select: { id: true, name: true } },
-      reviewer: { select: { id: true, full_name: true } },
+      reviewer: { select: { full_name: true } },
     },
     orderBy: { submitted_at: "desc" },
   });

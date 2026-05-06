@@ -3,53 +3,75 @@ import { NextResponse } from "next/server";
 import { requireSchoolAdmin } from "@/lib/school-admin-auth";
 import { prisma } from "@/lib/prisma";
 
-export async function POST(req: Request, context: { params: Promise<{ id: string }> }) {
+export async function POST(
+  req: Request,
+  context: { params: Promise<{ id: string }> }
+) {
   const auth = await requireSchoolAdmin();
   if (!auth) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const { id } = await context.params;
-  const { written_grades, reviewer_notes, assigned_class_id } = await req.json();
+  const [{ id }, { written_grades, reviewer_notes, assigned_class_id }] =
+    await Promise.all([context.params, req.json()]);
 
-  if (!assigned_class_id) return NextResponse.json({ error: "assigned_class_id is required" }, { status: 400 });
+  if (!assigned_class_id)
+    return NextResponse.json({ error: "assigned_class_id is required" }, { status: 400 });
 
-  const attempt = await prisma.assessmentAttempt.findUnique({
-    where: { id },
-    include: { answers: { include: { question: true } }, student: true },
+  // Verify attempt exists + belongs to this school, get student_id only
+  const attempt = await prisma.assessmentAttempt.findFirst({
+    where: { id, assessment: { school_id: auth.school.id } },
+    select: { id: true, student_id: true },
   });
   if (!attempt) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  // Apply written grades
-  if (written_grades && typeof written_grades === "object") {
-    for (const [answerId, isCorrect] of Object.entries(written_grades)) {
-      await prisma.assessmentAnswer.update({
-        where: { id: answerId },
-        data: { is_correct: isCorrect as boolean },
-      });
-    }
-  }
+  // Update all written grades in parallel
+  const gradeUpdates =
+    written_grades && typeof written_grades === "object"
+      ? Object.entries(written_grades as Record<string, boolean>).map(
+          ([answerId, isCorrect]) =>
+            prisma.assessmentAnswer.update({
+              where: { id: answerId },
+              data: { is_correct: isCorrect },
+              select: { id: true },
+            })
+        )
+      : [];
 
-  const allAnswers = await prisma.assessmentAnswer.findMany({ where: { attempt_id: id } });
-  const score = allAnswers.filter((a) => a.is_correct === true).length;
-  const total = allAnswers.length;
+  await Promise.all(gradeUpdates);
 
-  await prisma.assessmentAttempt.update({
-    where: { id },
-    data: {
-      review_status: "REVIEWED",
-      reviewer_id: auth.profile.id,
-      reviewer_notes: reviewer_notes || null,
-      assigned_class_id,
-      score,
-      total,
-      reviewed_at: new Date(),
-    },
-  });
+  // Count score using DB aggregation (faster than fetching all rows)
+  const [correctCount, totalCount] = await Promise.all([
+    prisma.assessmentAnswer.count({
+      where: { attempt_id: id, is_correct: true },
+    }),
+    prisma.assessmentAnswer.count({
+      where: { attempt_id: id },
+    }),
+  ]);
 
-  // Update student: CLASS_ASSIGNED + link class
-  await prisma.student.update({
-    where: { id: attempt.student_id },
-    data: { onboarding_status: "CLASS_ASSIGNED", class_id: assigned_class_id },
-  });
+  // Update attempt + student in parallel
+  await Promise.all([
+    prisma.assessmentAttempt.update({
+      where: { id },
+      data: {
+        review_status: "REVIEWED",
+        reviewer_id: auth.profile.id,
+        reviewer_notes: reviewer_notes || null,
+        assigned_class_id,
+        score: correctCount,
+        total: totalCount,
+        reviewed_at: new Date(),
+      },
+      select: { id: true },
+    }),
+    prisma.student.update({
+      where: { id: attempt.student_id },
+      data: {
+        onboarding_status: "CLASS_ASSIGNED",
+        class_id: assigned_class_id,
+      },
+      select: { id: true },
+    }),
+  ]);
 
-  return NextResponse.json({ success: true, score, total });
+  return NextResponse.json({ success: true, score: correctCount, total: totalCount });
 }
