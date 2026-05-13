@@ -225,7 +225,7 @@ export default function SchoolAdminLayout({
                 {name || (lang === "ar" ? "المدير" : "Drejtori")}
               </div>
               <div className="sa-profile-role">
-                {lang === "ar" ? "مدير المدرسة" : "Drejtori i Shkollës"}
+                {lang === "ar" ? "مدير الجهة" : "Drejtori"}
               </div>
             </div>
           </div>

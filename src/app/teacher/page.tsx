@@ -179,7 +179,7 @@ export default function TeacherPage() {
             </h2>
             <p>
               {lang === "ar"
-                ? "تواصل مع مدير المدرسة"
+                ? "تواصل مع مدير جهة"
                 : "Kontaktoni drejtorin e shkollës"}
             </p>
           </div>
@@ -239,7 +239,7 @@ export default function TeacherPage() {
                     {selectedClass.students.length === 0 ? (
                       <p className="td-no-students">
                         {lang === "ar"
-                          ? "لا يوجد طلاب مسجلون"
+                          ? "لا يوجد مسفيدين مسجلون"
                           : "Nuk ka nxënës"}
                       </p>
                     ) : (

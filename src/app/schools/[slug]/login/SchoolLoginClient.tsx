@@ -12,45 +12,321 @@ interface School {
   description: string | null;
 }
 
+/* ─── Mandala ─── */
+const r2 = (n: number) => Math.round(n * 1000) / 1000;
+const STAR_LINES = Array.from({ length: 12 }, (_, i) => {
+  const a1 = (i * 30 * Math.PI) / 180;
+  const a2 = ((i * 30 + 15) * Math.PI) / 180;
+  return {
+    x1: r2(100 + 80 * Math.sin(a1)),
+    y1: r2(100 - 80 * Math.cos(a1)),
+    x2: r2(100 + 40 * Math.sin(a2)),
+    y2: r2(100 - 40 * Math.cos(a2)),
+  };
+});
+const PETAL_CIRCLES = Array.from({ length: 8 }, (_, i) => {
+  const a = (i * 45 * Math.PI) / 180;
+  return { cx: r2(100 + 52 * Math.sin(a)), cy: r2(100 - 52 * Math.cos(a)) };
+});
+const INNER_PETALS = Array.from({ length: 4 }, (_, i) => {
+  const a = (i * 90 * Math.PI) / 180;
+  return { cx: r2(100 + 24 * Math.sin(a)), cy: r2(100 - 24 * Math.cos(a)) };
+});
+
+function Mandala({
+  size = 200,
+  className = "",
+}: {
+  size?: number;
+  className?: string;
+}) {
+  return (
+    <div
+      className={className}
+      style={{ width: size, height: size, flexShrink: 0 }}
+    >
+      <svg viewBox="0 0 200 200" fill="none" width="100%" height="100%">
+        <circle
+          cx="100"
+          cy="100"
+          r="92"
+          stroke="#C8A96A"
+          strokeWidth="0.3"
+          opacity="0.08"
+        />
+        <circle
+          cx="100"
+          cy="100"
+          r="86"
+          stroke="#C8A96A"
+          strokeWidth="0.3"
+          opacity="0.06"
+        />
+        {PETAL_CIRCLES.map((p, i) => (
+          <circle
+            key={i}
+            cx={p.cx}
+            cy={p.cy}
+            r="52"
+            stroke="#C8A96A"
+            strokeWidth="0.5"
+            opacity="0.13"
+            fill="none"
+          />
+        ))}
+        <circle
+          cx="100"
+          cy="100"
+          r="74"
+          stroke="#C8A96A"
+          strokeWidth="0.4"
+          opacity="0.16"
+          strokeDasharray="3 8"
+        />
+        <circle
+          cx="100"
+          cy="100"
+          r="62"
+          stroke="#E5B93C"
+          strokeWidth="0.35"
+          opacity="0.13"
+        />
+        <circle
+          cx="100"
+          cy="100"
+          r="50"
+          stroke="#C8A96A"
+          strokeWidth="0.5"
+          opacity="0.18"
+          strokeDasharray="5 5"
+        />
+        <circle
+          cx="100"
+          cy="100"
+          r="38"
+          stroke="#C8A96A"
+          strokeWidth="0.35"
+          opacity="0.15"
+        />
+        <circle
+          cx="100"
+          cy="100"
+          r="28"
+          stroke="#E5B93C"
+          strokeWidth="0.45"
+          opacity="0.22"
+          strokeDasharray="3 4"
+        />
+        <circle
+          cx="100"
+          cy="100"
+          r="18"
+          stroke="#C8A96A"
+          strokeWidth="0.35"
+          opacity="0.24"
+        />
+        <circle
+          cx="100"
+          cy="100"
+          r="9"
+          stroke="#E5B93C"
+          strokeWidth="0.55"
+          opacity="0.30"
+        />
+        {STAR_LINES.map((l, i) => (
+          <line
+            key={i}
+            x1={l.x1}
+            y1={l.y1}
+            x2={l.x2}
+            y2={l.y2}
+            stroke="#C8A96A"
+            strokeWidth="0.35"
+            opacity="0.16"
+          />
+        ))}
+        {INNER_PETALS.map((p, i) => (
+          <circle
+            key={i}
+            cx={p.cx}
+            cy={p.cy}
+            r="24"
+            stroke="#C8A96A"
+            strokeWidth="0.45"
+            opacity="0.20"
+            fill="none"
+          />
+        ))}
+        <line
+          x1="100"
+          y1="73"
+          x2="100"
+          y2="127"
+          stroke="#E5B93C"
+          strokeWidth="0.6"
+          opacity="0.24"
+        />
+        <line
+          x1="76"
+          y1="87"
+          x2="124"
+          y2="113"
+          stroke="#E5B93C"
+          strokeWidth="0.6"
+          opacity="0.24"
+        />
+        <line
+          x1="124"
+          y1="87"
+          x2="76"
+          y2="113"
+          stroke="#E5B93C"
+          strokeWidth="0.6"
+          opacity="0.24"
+        />
+        <circle
+          cx="100"
+          cy="100"
+          r="7"
+          fill="none"
+          stroke="#E5B93C"
+          strokeWidth="0.7"
+          opacity="0.45"
+        />
+        <circle
+          cx="100"
+          cy="100"
+          r="4"
+          fill="none"
+          stroke="#C8A96A"
+          strokeWidth="0.45"
+          opacity="0.55"
+        />
+        <circle cx="100" cy="100" r="2" fill="#E5B93C" opacity="0.7" />
+      </svg>
+    </div>
+  );
+}
+
+/* ─── Rule ornament ─── */
+function Rule({ dim = false }: { dim?: boolean }) {
+  const c = dim ? "rgba(200,169,106,0.35)" : "rgba(200,169,106,0.5)";
+  return (
+    <div className="lp-rule">
+      <div
+        className="lp-rule-line"
+        style={{
+          background: `linear-gradient(90deg, transparent, ${c}, transparent)`,
+        }}
+      />
+      <div className="lp-rule-diamond" style={{ background: c }} />
+      <div
+        className="lp-rule-line"
+        style={{
+          background: `linear-gradient(90deg, transparent, ${c}, transparent)`,
+        }}
+      />
+    </div>
+  );
+}
+
+/* ─── i18n strings ─── */
+const STRINGS = {
+  sq: {
+    loginTitle: "Hyrje",
+    sub: "Hyni në llogarinë tuaj",
+    emailLabel: "Email",
+    passLabel: "Fjalëkalimi",
+    btn: "Hyni",
+    loadingBtn: "Duke hyrë...",
+    errEmpty: "Ju lutemi plotësoni të gjitha fushat",
+    errWrong: "Email ose fjalëkalim i gabuar",
+    errProfile: "Nuk mund të ngarkohen të dhënat e llogarisë",
+    errServer: "Gabim lidhje, provoni përsëri",
+    haveAccount: "Nuk keni llogari?",
+    signup: "Regjistrohu",
+    poweredBy: "E mundësuar nga",
+    backTo: "Kthehu te faqja kryesore",
+    or: "ose",
+  },
+  ar: {
+    loginTitle: "تسجيل الدخول",
+    sub: "أدخل بياناتك للوصول إلى لوحتك",
+    emailLabel: "البريد الإلكتروني",
+    passLabel: "كلمة المرور",
+    btn: "دخول",
+    loadingBtn: "جارٍ تسجيل الدخول...",
+    errEmpty: "من فضلك أدخل البريد الإلكتروني وكلمة المرور",
+    errWrong: "البريد الإلكتروني أو كلمة المرور غير صحيحة",
+    errProfile: "تعذر جلب بيانات الحساب",
+    errServer: "تعذر الاتصال بالخادم، حاول مرة أخرى",
+    haveAccount: "لا تملك حسابًا؟",
+    signup: "إنشاء حساب",
+    poweredBy: "مدعومة من",
+    backTo: "العودة إلى الصفحة الرئيسية",
+    or: "أو",
+  },
+} as const;
+
+type Lang = "sq" | "ar";
+
+/* ─── Language toggle pill ─── */
+function LangToggle({
+  lang,
+  onChange,
+}: {
+  lang: Lang;
+  onChange: (l: Lang) => void;
+}) {
+  return (
+    <div className="lp-lang-toggle" dir="ltr">
+      <button
+        type="button"
+        className={`lp-lang-btn${lang === "sq" ? " lp-lang-btn--active" : ""}`}
+        onClick={() => onChange("sq")}
+        aria-label="Switch to Albanian"
+      >
+        <span className="lp-lang-flag">🇦🇱</span>
+        <span className="lp-lang-name">Shqip</span>
+      </button>
+
+      <div className="lp-lang-sep" />
+
+      <button
+        type="button"
+        className={`lp-lang-btn${lang === "ar" ? " lp-lang-btn--active" : ""}`}
+        onClick={() => onChange("ar")}
+        aria-label="Switch to Arabic"
+      >
+        <span className="lp-lang-flag">🇸🇦</span>
+        <span className="lp-lang-name">العربية</span>
+      </button>
+    </div>
+  );
+}
+
+/* ─── Main component ─── */
 export default function SchoolLoginClient({ school }: { school: School }) {
+  const [lang, setLang] = useState<Lang>(
+    school.language === "sq" ? "sq" : "ar",
+  );
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const isAlbanian = school.language === "sq";
-  const dir = isAlbanian ? "ltr" : "rtl";
+  const L = STRINGS[lang];
+  const dir = lang === "sq" ? "ltr" : "rtl";
 
-  const L = isAlbanian
-    ? {
-        title: "Hyrje",
-        sub: `Hyni në ${school.name}`,
-        emailLabel: "Email",
-        passLabel: "Fjalëkalimi",
-        btn: "Hyni",
-        loading: "Duke hyrë...",
-        error: "Email ose fjalëkalim i gabuar",
-        backTo: "Kthehu te",
-        signup: "Regjistrohu",
-        haveAccount: "Nuk keni llogari?",
-      }
-    : {
-        title: "تسجيل الدخول",
-        sub: `سجّل دخولك في ${school.name}`,
-        emailLabel: "البريد الإلكتروني",
-        passLabel: "كلمة المرور",
-        btn: "دخول",
-        loading: "جارٍ تسجيل الدخول...",
-        error: "البريد أو كلمة المرور غير صحيحة",
-        backTo: "العودة إلى",
-        signup: "إنشاء حساب",
-        haveAccount: "لا تملك حسابًا؟",
-      };
+  const handleLangChange = (l: Lang) => {
+    setLang(l);
+    setError("");
+  };
 
   const handleLogin = async () => {
     setError("");
     if (!email.trim() || !password) {
-      setError(L.error);
+      setError(L.errEmpty);
       return;
     }
     setLoading(true);
@@ -60,17 +336,18 @@ export default function SchoolLoginClient({ school }: { school: School }) {
         { email: email.trim(), password },
       );
       if (authError || !data.user) {
-        setError(L.error);
+        setError(L.errWrong);
         return;
       }
 
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("role")
         .eq("id", data.user.id)
         .maybeSingle();
-      if (!profile) {
-        setError(L.error);
+
+      if (profileError || !profile) {
+        setError(L.errProfile);
         return;
       }
 
@@ -82,9 +359,9 @@ export default function SchoolLoginClient({ school }: { school: School }) {
       };
       const dest = roleRoutes[profile.role];
       if (dest) window.location.href = dest;
-      else setError("نوع الحساب غير معروف");
+      else setError("نوع الحساب غير معروف: " + profile.role);
     } catch {
-      setError(L.error);
+      setError(L.errServer);
     } finally {
       setLoading(false);
     }
@@ -92,328 +369,121 @@ export default function SchoolLoginClient({ school }: { school: School }) {
 
   return (
     <>
-      <main
-        dir={dir}
-        style={{
-          minHeight: "100vh",
-          background: "#0B0B0C",
-          fontFamily: "'Cairo', sans-serif",
-          display: "flex",
-          flexDirection: "column",
-          position: "relative",
-          overflow: "hidden",
-        }}
-      >
-        {/* Glows */}
-        <div
-          style={{
-            position: "absolute",
-            top: -150,
-            right: -150,
-            width: 500,
-            height: 500,
-            borderRadius: "50%",
-            background:
-              "radial-gradient(circle, rgba(200,169,106,0.08) 0%, transparent 70%)",
-            pointerEvents: "none",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            bottom: -200,
-            left: -150,
-            width: 500,
-            height: 500,
-            borderRadius: "50%",
-            background:
-              "radial-gradient(circle, rgba(229,185,60,0.05) 0%, transparent 70%)",
-            pointerEvents: "none",
-          }}
-        />
+      <main className="lp-shell" dir={dir}>
+        {/* ── Brand panel ── */}
+        <div className="lp-panel">
+          <div className="lp-corner lp-corner-tl" />
+          <div className="lp-corner lp-corner-br" />
 
-        {/* Header */}
-        <header
-          style={{
-            padding: "16px 28px",
-            borderBottom: "1px solid rgba(200,169,106,0.1)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            position: "relative",
-            zIndex: 5,
-          }}
-        >
-          <Link
-            href={`/schools/${school.slug}`}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              textDecoration: "none",
-            }}
-          >
-            <div
-              style={{
-                width: 32,
-                height: 32,
-                borderRadius: 8,
-                background: "#C8A96A",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M12 2L2 7l10 5 10-5-10-5z"
-                  fill="#0B0B0C"
-                  opacity="0.9"
-                />
-                <path
-                  d="M2 17l10 5 10-5"
-                  stroke="#0B0B0C"
-                  strokeWidth="1.8"
-                  fill="none"
-                  opacity="0.7"
-                />
-                <path
-                  d="M2 12l10 5 10-5"
-                  stroke="#0B0B0C"
-                  strokeWidth="1.8"
-                  fill="none"
-                  opacity="0.85"
-                />
-              </svg>
+          <div className="lp-panel-inner">
+            <Mandala size={220} className="lp-mandala" />
+
+            <div className="lp-brand-text">
+              <Rule />
+              <div className="lp-school-badge">{school.name.charAt(0)}</div>
+              <h2 className="lp-brand-name">{school.name}</h2>
+              {school.description && (
+                <p className="lp-brand-desc">{school.description}</p>
+              )}
+              <Rule />
             </div>
-            <span style={{ fontSize: 13, fontWeight: 800, color: "#C8A96A" }}>
-              {school.name}
-            </span>
-          </Link>
-          <span
-            style={{
-              fontSize: 11,
-              color: "rgba(200,169,106,0.3)",
-              fontWeight: 500,
-            }}
-          >
-            {isAlbanian ? "🇦🇱 Shqip" : "🇸🇦 العربية"}
-          </span>
-        </header>
 
-        {/* Card */}
-        <div
-          style={{
-            flex: 1,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "32px 16px",
-            position: "relative",
-            zIndex: 5,
-          }}
-        >
-          <div
-            style={{
-              width: "100%",
-              maxWidth: 400,
-              background: "rgba(255,255,255,0.02)",
-              border: "1px solid rgba(200,169,106,0.16)",
-              borderRadius: 20,
-              padding: "40px 36px",
-              display: "flex",
-              flexDirection: "column",
-              gap: 26,
-            }}
-          >
-            {/* Brand */}
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                gap: 10,
-                textAlign: "center",
-              }}
-            >
-              <div style={{ position: "relative" }}>
-                <svg
-                  width="72"
-                  height="72"
-                  viewBox="0 0 72 72"
-                  fill="none"
-                  style={{ opacity: 0.65 }}
+            {/* Toggle lives in the dark panel on desktop */}
+            <LangToggle lang={lang} onChange={handleLangChange} />
+
+            <div className="lp-panel-footer">
+              <p className="lp-panel-quote">
+                {L.poweredBy}{" "}
+                <span
+                  style={{ color: "rgba(200,169,106,0.5)", fontWeight: 700 }}
                 >
-                  <circle
-                    cx="36"
-                    cy="36"
-                    r="33"
-                    stroke="#C8A96A"
-                    strokeWidth="0.5"
-                    strokeDasharray="3 3"
-                  />
-                  <circle
-                    cx="36"
-                    cy="36"
-                    r="25"
-                    stroke="#C8A96A"
-                    strokeWidth="0.5"
-                  />
-                  <circle
-                    cx="36"
-                    cy="36"
-                    r="16"
-                    stroke="#E5B93C"
-                    strokeWidth="0.8"
-                  />
-                  <circle
-                    cx="36"
-                    cy="36"
-                    r="8"
-                    stroke="#C8A96A"
-                    strokeWidth="1"
-                  />
-                  {[0, 60, 120, 180, 240, 300].map((a) => {
-                    const r2 = (a * Math.PI) / 180;
-                    return (
-                      <line
-                        key={a}
-                        x1={36 + 10 * Math.cos(r2)}
-                        y1={36 + 10 * Math.sin(r2)}
-                        x2={36 + 24 * Math.cos(r2)}
-                        y2={36 + 24 * Math.sin(r2)}
-                        stroke="#C8A96A"
-                        strokeWidth="0.5"
-                        opacity="0.5"
-                      />
-                    );
-                  })}
-                </svg>
-                <div
-                  style={{
-                    position: "absolute",
-                    top: "50%",
-                    left: "50%",
-                    transform: "translate(-50%,-50%)",
-                    width: 24,
-                    height: 24,
-                    background: "#C8A96A",
-                    borderRadius: "50%",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: 11,
-                    fontWeight: 900,
-                    color: "#0B0B0C",
-                  }}
-                >
-                  {school.name.charAt(0)}
-                </div>
-              </div>
-              <h1
-                style={{
-                  fontSize: 20,
-                  fontWeight: 900,
-                  color: "#C8A96A",
-                  letterSpacing: "-0.3px",
-                }}
-              >
-                {L.title}
-              </h1>
-              <p
-                style={{
-                  fontSize: 12.5,
-                  color: "rgba(200,169,106,0.4)",
-                  fontWeight: 500,
-                }}
-              >
-                {L.sub}
+                  بناء الأهلية
+                </span>
               </p>
             </div>
+          </div>
+        </div>
 
-            {/* Fields */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                <label
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 700,
-                    color: "rgba(200,169,106,0.55)",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.5px",
-                  }}
-                >
+        {/* ── Form panel ── */}
+        <div className="lp-form-side">
+          <div className="lp-form-wrap">
+            {/* Mobile-only toggle — shown above the form on small screens */}
+            <div className="lp-lang-toggle-mobile">
+              <LangToggle lang={lang} onChange={handleLangChange} />
+            </div>
+
+            <div className="lp-form-ornament">
+              <Rule dim />
+            </div>
+
+            <div className="lp-form-header">
+              <h1 className="lp-form-title">{L.loginTitle}</h1>
+              <p className="lp-form-sub">{L.sub}</p>
+            </div>
+
+            <div className="lp-fields">
+              <div className="lp-field">
+                <label className="lp-label">
+                  <span className="lp-label-icon">
+                    <svg
+                      width="12"
+                      height="12"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                    >
+                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                      <polyline points="22,6 12,13 2,6" />
+                    </svg>
+                  </span>
                   {L.emailLabel}
                 </label>
                 <input
                   type="email"
-                  dir="ltr"
+                  className="lp-input"
                   placeholder="example@mail.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={loading}
+                  dir="ltr"
                   onKeyDown={(e) => e.key === "Enter" && handleLogin()}
-                  style={{
-                    width: "100%",
-                    padding: "11px 14px",
-                    background: "rgba(255,255,255,0.03)",
-                    border: "1px solid rgba(200,169,106,0.16)",
-                    borderRadius: 9,
-                    color: "white",
-                    fontSize: 14,
-                    fontFamily: "'Cairo', sans-serif",
-                    outline: "none",
-                  }}
+                  suppressHydrationWarning
                 />
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                <label
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 700,
-                    color: "rgba(200,169,106,0.55)",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.5px",
-                  }}
-                >
+
+              <div className="lp-field">
+                <label className="lp-label">
+                  <span className="lp-label-icon">
+                    <svg
+                      width="12"
+                      height="12"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                    >
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                      <path d="M7 11V7a5 5 0 0110 0v4" />
+                    </svg>
+                  </span>
                   {L.passLabel}
                 </label>
                 <input
                   type="password"
-                  dir="ltr"
+                  className="lp-input"
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={loading}
+                  dir="ltr"
                   onKeyDown={(e) => e.key === "Enter" && handleLogin()}
-                  style={{
-                    width: "100%",
-                    padding: "11px 14px",
-                    background: "rgba(255,255,255,0.03)",
-                    border: "1px solid rgba(200,169,106,0.16)",
-                    borderRadius: 9,
-                    color: "white",
-                    fontSize: 14,
-                    fontFamily: "'Cairo', sans-serif",
-                    outline: "none",
-                  }}
+                  suppressHydrationWarning
                 />
               </div>
 
               {error && (
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8,
-                    background: "rgba(139,26,26,0.15)",
-                    border: "1px solid rgba(139,26,26,0.3)",
-                    color: "#f87171",
-                    fontSize: 12.5,
-                    padding: "10px 12px",
-                    borderRadius: 8,
-                  }}
-                >
+                <div className="lp-error">
                   <svg
                     width="13"
                     height="13"
@@ -430,41 +500,14 @@ export default function SchoolLoginClient({ school }: { school: School }) {
               )}
 
               <button
+                className="lp-btn"
                 onClick={handleLogin}
                 disabled={loading}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 9,
-                  width: "100%",
-                  padding: 13,
-                  background: "#C8A96A",
-                  color: "#0B0B0C",
-                  border: "none",
-                  borderRadius: 10,
-                  fontSize: 15,
-                  fontWeight: 800,
-                  cursor: "pointer",
-                  fontFamily: "'Cairo', sans-serif",
-                  marginTop: 2,
-                  opacity: loading ? 0.5 : 1,
-                }}
               >
                 {loading ? (
                   <>
-                    <span
-                      style={{
-                        display: "inline-block",
-                        width: 14,
-                        height: 14,
-                        border: "2px solid rgba(11,11,12,0.3)",
-                        borderTopColor: "#0B0B0C",
-                        borderRadius: "50%",
-                        animation: "spin 0.7s linear infinite",
-                      }}
-                    />
-                    {L.loading}
+                    <span className="lp-spin" />
+                    {L.loadingBtn}
                   </>
                 ) : (
                   L.btn
@@ -472,47 +515,415 @@ export default function SchoolLoginClient({ school }: { school: School }) {
               </button>
             </div>
 
-            <p
-              style={{
-                textAlign: "center",
-                fontSize: 12.5,
-                color: "rgba(200,169,106,0.35)",
-              }}
-            >
+            <div className="lp-divider">
+              <div className="lp-divider-line" />
+              <span className="lp-divider-text">{L.or}</span>
+              <div className="lp-divider-line" />
+            </div>
+
+            <p className="lp-footer-text">
               {L.haveAccount}{" "}
-              <Link
-                href="/signup"
-                style={{
-                  color: "#C8A96A",
-                  fontWeight: 700,
-                  textDecoration: "none",
-                }}
-              >
+              <Link href="/signup" className="lp-link">
                 {L.signup}
               </Link>
             </p>
+
+            <div className="lp-form-ornament" style={{ marginTop: 28 }}>
+              <Rule dim />
+            </div>
+
+            <div style={{ textAlign: "center", marginTop: 14 }}>
+              <Link href={`/schools/${school.slug}`} className="lp-back-link">
+                ← {L.backTo}
+              </Link>
+            </div>
           </div>
         </div>
-
-        {/* Footer */}
-        <footer
-          style={{
-            padding: "14px 28px",
-            borderTop: "1px solid rgba(200,169,106,0.08)",
-            textAlign: "center",
-            position: "relative",
-            zIndex: 5,
-          }}
-        >
-          <span style={{ fontSize: 11, color: "rgba(200,169,106,0.25)" }}>
-            {isAlbanian ? "E mundësuar nga" : "مدعومة من"}{" "}
-            <span style={{ color: "rgba(200,169,106,0.5)", fontWeight: 700 }}>
-              بناء الأهلية
-            </span>
-          </span>
-        </footer>
       </main>
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}} *{box-sizing:border-box;margin:0;padding:0} @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap');`}</style>
+
+      <style>{css}</style>
     </>
   );
 }
+
+const css = `
+  @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=Tajawal:wght@300;400;500;700;800&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  @keyframes spin    { to { transform: rotate(360deg); } }
+  @keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes scaleIn { from { opacity: 0; transform: scale(0.97); } to { opacity: 1; transform: scale(1); } }
+
+  :root {
+    --gold:      #C8A96A;
+    --gold2:     #E5B93C;
+    --black:     #0B0B0C;
+    --off-white: #F5F3EE;
+    --cream:     #EDE8DF;
+    --text:      #1a1610;
+    --text2:     #4a3f2e;
+    --text3:     #8a7a5a;
+    --border:    #DDD5C4;
+  }
+
+  html, body { height: 100%; }
+
+  .lp-shell {
+    height: 100vh;
+    display: flex;
+    font-family: 'Cairo', sans-serif;
+    background: var(--off-white);
+    overflow: hidden;
+  }
+
+  /* ── Brand panel ── */
+  .lp-panel {
+    width: 420px;
+    flex-shrink: 0;
+    background: var(--black);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+    animation: fadeIn 0.5s ease;
+    min-height: 100vh;
+  }
+  .lp-panel::before {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse at 50% 20%, rgba(200,169,106,0.10) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 80%, rgba(229,185,60,0.06) 0%, transparent 50%);
+    pointer-events: none;
+  }
+
+  .lp-corner { position: absolute; width: 80px; height: 80px; pointer-events: none; }
+  .lp-corner-tl { top: 0; right: 0; border-top: 1px solid rgba(200,169,106,0.25); border-right: 1px solid rgba(200,169,106,0.25); }
+  .lp-corner-br { bottom: 0; left: 0; border-bottom: 1px solid rgba(200,169,106,0.25); border-left: 1px solid rgba(200,169,106,0.25); }
+
+  .lp-panel-inner {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 40px;
+    position: relative;
+    z-index: 1;
+    gap: 22px;
+  }
+
+  .lp-mandala { opacity: 0.95; }
+
+  .lp-brand-text {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    text-align: center;
+    width: 100%;
+  }
+
+  .lp-school-badge {
+    width: 48px; height: 48px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #C8A96A 0%, #E5B93C 100%);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; font-weight: 900;
+    color: var(--black);
+    margin: 4px 0;
+    box-shadow: 0 4px 16px rgba(200,169,106,0.25);
+  }
+
+  .lp-brand-name {
+    font-size: 28px; font-weight: 900;
+    color: var(--gold);
+    letter-spacing: -0.5px;
+    font-family: 'Cairo', sans-serif;
+    line-height: 1.15;
+  }
+
+  .lp-brand-desc {
+    font-size: 12px;
+    color: rgba(200,169,106,0.45);
+    font-weight: 500;
+    max-width: 280px;
+    line-height: 1.6;
+  }
+
+  .lp-panel-footer {
+    position: absolute;
+    bottom: 32px; left: 0; right: 0;
+    text-align: center;
+  }
+  .lp-panel-quote {
+    font-size: 11px;
+    color: rgba(200,169,106,0.22);
+    font-weight: 400;
+  }
+
+  .lp-rule { display: flex; align-items: center; width: 100%; }
+  .lp-rule-line {
+    flex: 1; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(200,169,106,0.35), transparent);
+  }
+  .lp-rule-diamond {
+    width: 5px; height: 5px;
+    background: rgba(200,169,106,0.5);
+    transform: rotate(45deg);
+    margin: 0 10px; flex-shrink: 0;
+  }
+
+  /* ── Language toggle ── */
+  .lp-lang-toggle {
+    display: flex;
+    align-items: center;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(200,169,106,0.2);
+    border-radius: 10px;
+    padding: 3px;
+  }
+
+  .lp-lang-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 16px;
+    border-radius: 7px;
+    border: none;
+    background: transparent;
+    color: rgba(200,169,106,0.4);
+    font-size: 12px;
+    font-weight: 700;
+    font-family: 'Cairo', sans-serif;
+    cursor: pointer;
+    transition: background 0.18s, color 0.18s;
+    white-space: nowrap;
+    line-height: 1;
+  }
+  .lp-lang-btn:hover:not(.lp-lang-btn--active) {
+    color: rgba(200,169,106,0.7);
+    background: rgba(200,169,106,0.07);
+  }
+  .lp-lang-btn--active {
+    background: rgba(200,169,106,0.16);
+    color: var(--gold);
+    box-shadow: inset 0 1px 0 rgba(200,169,106,0.1);
+  }
+
+  .lp-lang-flag { font-size: 15px; line-height: 1; }
+  .lp-lang-name { font-size: 11.5px; }
+
+  .lp-lang-sep {
+    width: 1px; height: 18px;
+    background: rgba(200,169,106,0.15);
+    flex-shrink: 0;
+  }
+
+  /* Mobile: hide panel toggle, show above form */
+  .lp-lang-toggle-mobile {
+    display: none;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+  /* On mobile the toggle goes on the light side — restyle for light bg */
+  .lp-lang-toggle-mobile .lp-lang-toggle {
+    background: rgba(11,11,12,0.04);
+    border-color: rgba(200,169,106,0.3);
+  }
+  .lp-lang-toggle-mobile .lp-lang-btn { color: var(--text3); }
+  .lp-lang-toggle-mobile .lp-lang-btn--active {
+    background: var(--black);
+    color: var(--gold);
+  }
+  .lp-lang-toggle-mobile .lp-lang-btn:hover:not(.lp-lang-btn--active) {
+    color: var(--text2);
+    background: rgba(11,11,12,0.06);
+  }
+  .lp-lang-toggle-mobile .lp-lang-sep { background: var(--border); }
+
+  /* ── Form side ── */
+  .lp-form-side {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+    background: var(--off-white);
+    position: relative;
+    min-height: 100vh;
+    align-self: stretch;
+  }
+  .lp-form-side::before {
+    content: '';
+    position: absolute;
+    top: -100px; left: -100px;
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(200,169,106,0.04) 0%, transparent 65%);
+    pointer-events: none;
+  }
+  .lp-form-side::after {
+    content: '';
+    position: absolute;
+    bottom: -60px; right: -60px;
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(229,185,60,0.03) 0%, transparent 65%);
+    pointer-events: none;
+  }
+
+  .lp-form-wrap {
+    width: 100%;
+    max-width: 420px;
+    animation: scaleIn 0.45s cubic-bezier(0.4,0,0.2,1) both;
+    position: relative;
+    z-index: 1;
+  }
+
+  .lp-form-ornament { margin-bottom: 24px; }
+
+  .lp-form-header { margin-bottom: 32px; text-align: right; }
+  .lp-form-title {
+    font-size: 26px; font-weight: 900;
+    color: var(--text);
+    letter-spacing: -0.4px;
+    font-family: 'Cairo', sans-serif;
+  }
+  .lp-form-title::after {
+    content: '';
+    display: block;
+    width: 40px; height: 3px;
+    background: linear-gradient(90deg, var(--gold), var(--gold2));
+    border-radius: 2px;
+    margin-top: 8px;
+  }
+  .lp-form-sub { font-size: 13px; color: var(--text3); margin-top: 6px; font-weight: 500; }
+
+  .lp-fields { display: flex; flex-direction: column; gap: 16px; }
+  .lp-field  { display: flex; flex-direction: column; gap: 7px; }
+  .lp-label  {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 12px; font-weight: 700;
+    color: var(--text2);
+    text-transform: uppercase; letter-spacing: 0.8px;
+  }
+  .lp-label-icon {
+    display: flex; align-items: center; justify-content: center;
+    width: 20px; height: 20px;
+    background: rgba(200,169,106,0.12);
+    border-radius: 5px;
+    color: var(--gold);
+    flex-shrink: 0;
+  }
+
+  .lp-input {
+    width: 100%;
+    padding: 13px 16px;
+    background: #FFFFFF;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-size: 14px;
+    font-family: 'Cairo', sans-serif;
+    outline: none;
+    transition: border-color 0.18s, box-shadow 0.18s, background 0.18s;
+    box-shadow: 0 1px 3px rgba(11,11,12,0.04);
+  }
+  .lp-input:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(200,169,106,0.12), 0 1px 3px rgba(11,11,12,0.04);
+    background: #FFFDF9;
+  }
+  .lp-input::placeholder { color: #bbb0a0; }
+  .lp-input:disabled { opacity: 0.55; cursor: not-allowed; background: var(--cream); }
+
+  .lp-error {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(139,26,26,0.06);
+    border: 1px solid rgba(139,26,26,0.2);
+    color: #8b1a1a;
+    font-size: 12.5px;
+    padding: 11px 14px;
+    border-radius: 9px;
+    font-weight: 600;
+  }
+
+  .lp-btn {
+    display: flex; align-items: center; justify-content: center; gap: 9px;
+    width: 100%; padding: 14px;
+    background: var(--black);
+    color: var(--gold);
+    border: 1px solid rgba(200,169,106,0.25);
+    border-radius: 10px;
+    font-size: 15px; font-weight: 800;
+    cursor: pointer;
+    transition: all 0.18s;
+    font-family: 'Cairo', sans-serif;
+    margin-top: 4px;
+    position: relative;
+    overflow: hidden;
+  }
+  .lp-btn::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(200,169,106,0.08) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .lp-btn:hover:not(:disabled) {
+    background: #1a1a1e;
+    border-color: rgba(200,169,106,0.5);
+    box-shadow: 0 4px 20px rgba(11,11,12,0.15);
+    color: var(--gold2);
+  }
+  .lp-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  .lp-spin {
+    display: inline-block; width: 14px; height: 14px;
+    border: 2px solid rgba(200,169,106,0.25);
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+
+  .lp-divider {
+    display: flex; align-items: center; gap: 12px;
+    margin: 24px 0 16px;
+  }
+  .lp-divider-line { flex: 1; height: 1px; background: var(--border); }
+  .lp-divider-text { font-size: 12px; color: var(--text3); font-weight: 600; flex-shrink: 0; }
+
+  .lp-footer-text { text-align: center; font-size: 13px; color: var(--text3); font-weight: 500; }
+  .lp-link {
+    color: var(--black);
+    font-weight: 800;
+    text-decoration: none;
+    border-bottom: 1.5px solid var(--gold);
+    padding-bottom: 1px;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .lp-link:hover { color: #4a3012; border-color: var(--gold2); }
+
+  .lp-back-link {
+    font-size: 12px;
+    color: var(--text3);
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.15s;
+  }
+  .lp-back-link:hover { color: var(--text2); }
+
+  /* ── Responsive ── */
+  @media (max-width: 820px) {
+    .lp-shell { flex-direction: column-reverse; overflow-y: auto; height: auto; min-height: 100vh; }
+    .lp-panel { width: 100%; min-height: auto; }
+    .lp-panel-inner { padding: 32px 24px; gap: 14px; }
+    .lp-mandala { width: 110px !important; height: 110px !important; }
+    .lp-brand-name { font-size: 22px; }
+    .lp-school-badge { width: 40px; height: 40px; font-size: 18px; }
+    .lp-panel-footer { display: none; }
+    /* Hide panel toggle on mobile, show above form */
+    .lp-panel .lp-lang-toggle { display: none; }
+    .lp-lang-toggle-mobile { display: flex; }
+    .lp-form-side { padding: 32px 20px; min-height: auto; }
+    .lp-form-ornament { margin-bottom: 16px; }
+    .lp-form-header { margin-bottom: 24px; }
+  }
+`;

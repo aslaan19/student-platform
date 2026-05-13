@@ -251,10 +251,10 @@ export default function TeacherLayout({
             <div className="tl-profile-av">{initials}</div>
             <div className="tl-profile-info">
               <div className="tl-profile-name">
-                {name || (lang === "ar" ? "المعلم" : "Mësuesi")}
+                {name || (lang === "ar" ? "مشرف" : "Mësuesi")}
               </div>
               <div className="tl-profile-role">
-                {lang === "ar" ? "معلم" : lang === "sq" ? "Mësues" : "Teacher"}
+                {lang === "ar" ? "مشرف" : lang === "sq" ? "Mësues" : "Teacher"}
               </div>
             </div>
           </div>
@@ -491,95 +491,7 @@ export default function TeacherLayout({
 
         <main className="tl-main">
           {children}
-          <div className="tl-bottom-band" aria-hidden="true">
-            <svg
-              viewBox="0 0 1200 160"
-              fill="none"
-              preserveAspectRatio="xMidYMax meet"
-            >
-              <line
-                x1="0"
-                y1="80"
-                x2="1200"
-                y2="80"
-                stroke="#C8A96A"
-                strokeWidth="0.3"
-                opacity="0.12"
-              />
-              {Array.from({ length: 30 }).map((_, i) => {
-                const x = 20 + i * 40;
-                return (
-                  <polygon
-                    key={i}
-                    points={`${x},68 ${x + 8},80 ${x},92 ${x - 8},80`}
-                    stroke="#C8A96A"
-                    strokeWidth="0.4"
-                    fill="none"
-                    opacity={i % 3 === 0 ? 0.2 : 0.07}
-                  />
-                );
-              })}
-              <polygon
-                points="600,52 620,80 600,108 580,80"
-                stroke="#C8A96A"
-                strokeWidth="0.7"
-                fill="none"
-                opacity="0.28"
-              />
-              <polygon
-                points="600,64 612,80 600,96 588,80"
-                stroke="#C8A96A"
-                strokeWidth="0.5"
-                fill="rgba(200,169,106,0.04)"
-                opacity="0.3"
-              />
-              <line
-                x1="520"
-                y1="80"
-                x2="572"
-                y2="80"
-                stroke="#C8A96A"
-                strokeWidth="0.4"
-                opacity="0.2"
-              />
-              <line
-                x1="628"
-                y1="80"
-                x2="680"
-                y2="80"
-                stroke="#C8A96A"
-                strokeWidth="0.4"
-                opacity="0.2"
-              />
-              <circle cx="600" cy="80" r="3.5" fill="#C8A96A" opacity="0.35" />
-              <circle
-                cx="600"
-                cy="80"
-                r="7"
-                stroke="#C8A96A"
-                strokeWidth="0.4"
-                fill="none"
-                opacity="0.18"
-              />
-              <polygon
-                points="300,70 308,80 300,90 292,80"
-                stroke="#C8A96A"
-                strokeWidth="0.5"
-                fill="none"
-                opacity="0.2"
-              />
-              <circle cx="300" cy="80" r="2" fill="#C8A96A" opacity="0.25" />
-              <polygon
-                points="900,70 908,80 900,90 892,80"
-                stroke="#C8A96A"
-                strokeWidth="0.5"
-                fill="none"
-                opacity="0.2"
-              />
-              <circle cx="900" cy="80" r="2" fill="#C8A96A" opacity="0.25" />
-            </svg>
-          </div>
-        </main>
+        </main>           
       </div>
 
       <style>{styles}</style>
@@ -704,12 +616,9 @@ const styles = `
   .tl-spin{width:13px;height:13px;border:2px solid rgba(200,169,106,0.15);border-top-color:var(--gold);border-radius:50%;animation:sp 0.7s linear infinite;flex-shrink:0}
 
   /* Main */
-  .tl-main{flex:1;min-width:0;overflow-x:hidden;padding:32px 40px}
+  .tl-main{flex:1;min-width:0;overflow-x:hidden;padding:0}
 
-  /* Bottom band */
-  .tl-bottom-band{width:100%;height:160px;pointer-events:none;flex-shrink:0;opacity:0.8;-webkit-mask-image:linear-gradient(to bottom,transparent 0%,black 35%);mask-image:linear-gradient(to bottom,transparent 0%,black 35%)}
-  .tl-bottom-band svg{width:100%;height:100%;display:block}
-
+  
   /* Mobile topbar */
   .tl-mobile-bar{
     display:none;align-items:center;justify-content:space-between;
