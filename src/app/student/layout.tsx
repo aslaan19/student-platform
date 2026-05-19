@@ -50,6 +50,7 @@ const ALLOWED_PAGES: Record<string, string[]> = {
     "/student/quizzes",
     "/student/announcements",
     "/student/roadmap",
+    "/student/hub",
   ],
 };
 
@@ -401,6 +402,31 @@ export default function StudentLayout({
                   </Link>
                 );
               })}
+
+              <div className="sl-nav-sep" />
+              {(() => {
+                const hubHref = "/student/hub";
+                const isActive = pathname.startsWith(hubHref);
+                return (
+                  <Link
+                    href={hubHref}
+                    className={`sl-nav-item ${isActive ? "active" : ""}`}
+                    onClick={() => setSidebarOpen(false)}
+                  >
+                    {isActive && <div className="sl-nav-indicator" />}
+                    <span className="sl-nav-icon-wrap">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="2" y1="12" x2="22" y2="12" />
+                        <path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" />
+                      </svg>
+                    </span>
+                    <span className="sl-nav-label">
+                      {lang === "ar" ? "المجتمع" : lang === "sq" ? "Komuniteti" : "Community"}
+                    </span>
+                  </Link>
+                );
+              })()}
             </nav>
           )}
 
@@ -691,6 +717,7 @@ const styles = `
   /* Nav */
   .sl-nav{display:flex;flex-direction:column;gap:1px;padding:0 12px;flex:1;position:relative;z-index:1}
   .sl-nav-section{font-size:8.5px;font-weight:700;color:rgba(200,169,106,0.2);text-transform:uppercase;letter-spacing:2.5px;padding:0 10px 10px}
+  .sl-nav-sep{height:1px;margin:8px 8px;background:linear-gradient(90deg,transparent,rgba(200,169,106,0.15),transparent)}
   .sl-nav-item{
     display:flex;align-items:center;gap:10px;
     padding:9px 12px;border-radius:6px;

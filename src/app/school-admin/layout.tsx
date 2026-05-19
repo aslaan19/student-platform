@@ -101,6 +101,18 @@ export default function SchoolAdminLayout({
       icon: "⊞",
       exact: false,
     },
+    {
+      href: "/school-admin/invites",
+      label: lang === "ar" ? "الدعوات" : "Ftesa",
+      icon: "◈",
+      exact: false,
+    },
+    {
+      href: "/school-admin/hub",
+      label: lang === "ar" ? "المجتمع" : lang === "sq" ? "Komuniteti" : "Community",
+      icon: "◎",
+      exact: false,
+    },
   ];
 
   useEffect(() => {

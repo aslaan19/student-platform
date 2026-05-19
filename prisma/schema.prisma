@@ -14,6 +14,36 @@ enum Maqsad {
   MAL // المال
 }
 
+model Invite {
+  id    String     @id @default(uuid()) @db.Uuid
+  token String     @unique
+  type  InviteType
+
+  school_id  String  @db.Uuid
+  created_by String  @db.Uuid
+  used_by    String? @db.Uuid
+
+  is_active  Boolean   @default(true)
+  use_count  Int       @default(0)
+  max_uses   Int?
+  expires_at DateTime?
+  used_at    DateTime?
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  school  School   @relation(fields: [school_id], references: [id], onDelete: Cascade)
+  creator Profile  @relation("InvitesCreatedBy", fields: [created_by], references: [id], onDelete: Restrict)
+  usedBy  Profile? @relation("InviteUsedBy", fields: [used_by], references: [id], onDelete: SetNull)
+
+  @@map("invites")
+}
+
+enum InviteType {
+  TEACHER
+  STUDENT
+}
+
 // One trait per Maqsad per stage (so max 5 traits per stage)
 model StageTrait {
   id         String   @id @default(uuid()) @db.Uuid
@@ -98,6 +128,8 @@ model Profile {
   post_reactions               PostReaction[]
   avatar_url                   String?
   avatar_path                  String?
+  created_invites              Invite[]            @relation("InvitesCreatedBy")
+  used_invites                 Invite[]            @relation("InviteUsedBy")
 
   @@map("profiles")
 }
@@ -123,6 +155,7 @@ model School {
   students           Student[]
   teachers           Teacher[]
   posts              Post[]
+  invites            Invite[]
 
   @@map("schools")
 }
