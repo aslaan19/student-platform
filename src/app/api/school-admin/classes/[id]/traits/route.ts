@@ -6,12 +6,12 @@ import { prisma } from "@/lib/prisma";
 // GET /api/school-admin/reports/classes/[classId]/traits
 export async function GET(
   _req: Request,
-  context: { params: Promise<{ classId: string }> }
+  context: { params: Promise<{ id: string }> }
 ) {
   const auth = await requireSchoolAdmin();
   if (!auth) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { classId } = await context.params;
+  const { id: classId } = await context.params;
 
   const cls = await prisma.class.findFirst({
     where: { id: classId, school_id: auth.school.id },

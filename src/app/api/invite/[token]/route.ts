@@ -41,17 +41,16 @@ async function resolveInvite(token: string): Promise<InviteState> {
 }
 
 // ── GET /api/invite/[token] ────────────────────────────────────────────────
-// Public. Validates the token and returns its state.
-// Used by the signup page to decide what to render.
 
 export async function GET(
   _req: Request,
-  { params }: { params: { token: string } }
+  context: { params: Promise<{ token: string }> }
 ) {
-  const state = await resolveInvite(params.token);
+  const { token } = await context.params;
+  const state = await resolveInvite(token);
 
   if (!state.valid) {
-    return NextResponse.json({ valid: false, reason: state.reason }, { status: 200 });
+    return NextResponse.json({ valid: false, reason: state.reason });
   }
 
   return NextResponse.json({
@@ -62,16 +61,18 @@ export async function GET(
 }
 
 // ── POST /api/invite/[token] ───────────────────────────────────────────────
-// Public. Accepts the invite and creates the teacher account.
-// Body: { full_name, email, password }
 
 export async function POST(
   req: Request,
-  { params }: { params: { token: string } }
+  context: { params: Promise<{ token: string }> }
 ) {
-  // 1. Re-validate the invite atomically before doing anything
-  const state = await resolveInvite(params.token);
+  const [{ token }, body] = await Promise.all([
+    context.params,
+    req.json().catch(() => ({})),
+  ]);
 
+  // Re-validate invite
+  const state = await resolveInvite(token);
   if (!state.valid) {
     const messages: Record<string, string> = {
       not_found: "This invite link is invalid.",
@@ -79,23 +80,12 @@ export async function POST(
       expired:   "This invite link has expired. Please contact your school admin.",
       used:      "This invite has already been used.",
     };
-    return NextResponse.json(
-      { error: messages[state.reason] },
-      { status: 410 }
-    );
+    return NextResponse.json({ error: messages[state.reason] }, { status: 410 });
   }
 
-  // 2. Parse and validate body
-  let body: { full_name?: string; email?: string; password?: string };
-  try {
-    body = await req.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
-  }
-
-  const full_name = body.full_name?.trim();
-  const email     = body.email?.trim().toLowerCase();
-  const password  = body.password;
+  const full_name = (body.full_name as string | undefined)?.trim();
+  const email     = (body.email    as string | undefined)?.trim().toLowerCase();
+  const password  = body.password  as string | undefined;
 
   if (!full_name || !email || !password) {
     return NextResponse.json(
@@ -103,7 +93,6 @@ export async function POST(
       { status: 400 }
     );
   }
-
   if (password.length < 8) {
     return NextResponse.json(
       { error: "Password must be at least 8 characters" },
@@ -111,12 +100,12 @@ export async function POST(
     );
   }
 
-  // 3. Create Supabase auth user
+  // Create Supabase auth user (requires service role key)
   const supabase = await createClient();
   const { data: authData, error: authError } = await supabase.auth.admin.createUser({
     email,
     password,
-    email_confirm: true, // skip email confirmation for invite flow
+    email_confirm: true,
   });
 
   if (authError || !authData.user) {
@@ -128,39 +117,25 @@ export async function POST(
 
   const userId = authData.user.id;
 
-  // 4. Create Profile + Teacher row + mark invite used — all in one transaction
   try {
     await prisma.$transaction(async (tx) => {
-      // Create profile
       await tx.profile.create({
-        data: {
-          id: userId,
-          full_name,
-          role: "TEACHER",
-        },
+        data: { id: userId, full_name, role: "TEACHER" },
       });
-
-      // Create teacher row linked to school
       await tx.teacher.create({
-        data: {
-          profile_id: userId,
-          school_id: state.invite.school_id,
-        },
+        data: { profile_id: userId, school_id: state.invite.school_id },
       });
-
-      // Mark invite as used
       await tx.invite.update({
         where: { id: state.invite.id },
         data: {
           use_count: { increment: 1 },
-          is_active: false,   // single-use: disable immediately
-          used_at:   new Date(),
-          used_by:   userId,
+          is_active: false,
+          used_at: new Date(),
+          used_by: userId,
         },
       });
     });
   } catch (err) {
-    // If DB transaction fails, clean up the auth user to avoid orphan
     await supabase.auth.admin.deleteUser(userId);
     console.error("Invite acceptance transaction failed:", err);
     return NextResponse.json(
