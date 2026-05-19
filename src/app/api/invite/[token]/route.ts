@@ -1,7 +1,19 @@
 // src/app/api/invite/[token]/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@supabase/supabase-js";
+
+// ── Admin client using service role key ────────────────────────────────────
+const adminClient = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  }
+);
 
 // ── Shared: resolve invite state ───────────────────────────────────────────
 
@@ -79,7 +91,7 @@ export async function POST(
     return NextResponse.json({ error: messages[state.reason] }, { status: 410 });
   }
 
-  // ── Parse body — handle both JSON and multipart/form-data ─────────────
+  // ── Parse body ────────────────────────────────────────────────────────
   let full_name: string | undefined;
   let email: string | undefined;
   let password: string | undefined;
@@ -123,27 +135,30 @@ export async function POST(
     return NextResponse.json({ error: "كلمة المرور يجب أن تكون 8 أحرف على الأقل" }, { status: 400 });
   }
 
-  // ── Create Supabase auth user ─────────────────────────────────────────
-  const supabase = await createClient();
-  const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+  // ── Create auth user ──────────────────────────────────────────────────
+  console.log("[invite] creating auth user for:", email);
+  const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
     email,
     password,
     email_confirm: true,
   });
 
-  if (authError || !authData.user) {
-    const msg = authError?.message?.toLowerCase().includes("already registered")
+  if (authError || !authData?.user) {
+    console.error("[invite] auth.admin.createUser failed:", authError);
+    const isAlreadyExists = authError?.message?.toLowerCase().includes("already registered")
+      || authError?.message?.toLowerCase().includes("already exists");
+    const msg = isAlreadyExists
       ? "يوجد حساب مسجّل بهذا البريد الإلكتروني مسبقاً."
       : `فشل إنشاء الحساب: ${authError?.message ?? "خطأ غير معروف"}`;
     return NextResponse.json({ error: msg }, { status: 400 });
   }
 
   const userId = authData.user.id;
+  console.log("[invite] auth user created:", userId);
 
   // ── Create Profile + Teacher + mark invite — single transaction ───────
   try {
     await prisma.$transaction(async (tx) => {
-      // Only pass fields that exist on your Profile model
       await tx.profile.create({
         data: {
           id:        userId,
@@ -169,11 +184,11 @@ export async function POST(
         },
       });
     });
+
+    console.log("[invite] transaction complete for user:", userId);
   } catch (err) {
-    // Clean up orphan auth user
-    await supabase.auth.admin.deleteUser(userId);
+    await adminClient.auth.admin.deleteUser(userId);
     console.error("[invite] transaction failed:", err);
-    // Return the actual error in dev so you can see what's wrong
     const message = err instanceof Error ? err.message : "خطأ غير معروف";
     return NextResponse.json(
       { error: `فشل إنشاء الحساب: ${message}` },
