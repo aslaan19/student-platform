@@ -220,11 +220,16 @@ export default function SchoolSignupClient({ school }: { school: School }) {
         return;
       }
 
-      /* Upload avatar using the now-authenticated session */
+      // If server couldn't set the session, sign in client-side
+      const supabase = createClient();
+      if (data.needsLogin) {
+        await supabase.auth.signInWithPassword({ email: email.trim(), password });
+      }
+
+      /* Upload avatar using the authenticated session */
       if (avatarFile) {
         setPhase("uploading");
         try {
-          const supabase = createClient();
           const { data: { user } } = await supabase.auth.getUser();
           if (user) {
             const ext = avatarFile.name.split(".").pop() ?? "jpg";
@@ -242,7 +247,7 @@ export default function SchoolSignupClient({ school }: { school: School }) {
             }
           }
         } catch {
-          // Avatar upload failure is non-fatal — student can update it later
+          // Non-fatal — student can update avatar later from profile
         }
       }
 
