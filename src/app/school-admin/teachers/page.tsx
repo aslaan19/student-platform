@@ -11,7 +11,7 @@ import MandalaLoader from "@/components/MandalaLoader";
 
 interface Teacher {
   id: string;
-  profile: { full_name: string };
+  profile: { full_name: string; is_active: boolean };
   classes: { id: string; name: string }[];
 }
 
@@ -21,13 +21,41 @@ export function SchoolAdminTeachersPage() {
   const dir = lang === "ar" ? "rtl" : "ltr";
 
   const [teachers, setTeachers] = useState<Teacher[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading]   = useState(true);
+  const [toggling, setToggling] = useState<string | null>(null);
+  const [toggleError, setToggleError] = useState("");
 
   useEffect(() => {
-    cachedFetch<{ teachers: Teacher[] }>("/api/school-admin/teachers", 60_000)
+    fetch("/api/school-admin/teachers")
+      .then((r) => r.json())
       .then((d) => setTeachers(d.teachers ?? []))
       .finally(() => setLoading(false));
   }, []);
+
+  const toggleTeacher = async (teacherId: string, currentActive: boolean) => {
+    setToggling(teacherId);
+    setToggleError("");
+    try {
+      const r = await fetch(`/api/school-admin/teachers/${teacherId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ is_active: !currentActive }),
+      });
+      const d = await r.json();
+      if (!r.ok) { setToggleError(d.error ?? "حدث خطأ"); return; }
+      setTeachers((prev) =>
+        prev.map((t) =>
+          t.id === teacherId
+            ? { ...t, profile: { ...t.profile, is_active: !currentActive } }
+            : t,
+        ),
+      );
+    } catch {
+      setToggleError(lang === "ar" ? "تعذر الاتصال بالخادم" : "Gabim lidhje");
+    } finally {
+      setToggling(null);
+    }
+  };
   return (
     <div className="te-page" dir={dir}>
       {/* Header */}
@@ -49,6 +77,16 @@ export function SchoolAdminTeachersPage() {
         <div className="te-rule-diamond" />
         <div className="te-rule-line" />
       </div>
+
+      {toggleError && (
+        <div style={{
+          display: "flex", alignItems: "center", gap: 8,
+          background: "rgba(139,26,26,0.06)", border: "1px solid rgba(139,26,26,0.18)",
+          color: "#8b1a1a", fontSize: 13, padding: "10px 14px", borderRadius: 9, fontWeight: 600,
+        }}>
+          {toggleError}
+        </div>
+      )}
 
       {loading ? (
         <MandalaLoader label={tr.loading} />
@@ -93,19 +131,17 @@ export function SchoolAdminTeachersPage() {
                     <span className="te-no-class">{tr.noAssignedClasses}</span>
                   )}
                 </div>
+                {!teacher.profile.is_active && (
+                  <div className="te-inactive-label">
+                    {lang === "ar" ? "معطّل" : "Çaktivizuar"}
+                  </div>
+                )}
               </div>
 
               {/* Class count badge */}
               <div className="te-badge-wrap">
                 <div className="te-badge">
-                  <svg
-                    width="11"
-                    height="11"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={1.5}
-                  >
+                  <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path d="M4 19.5A2.5 2.5 0 016.5 17H20" />
                     <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" />
                   </svg>
@@ -113,6 +149,28 @@ export function SchoolAdminTeachersPage() {
                   <span className="te-badge-label">{tr.classCountLabel}</span>
                 </div>
               </div>
+
+              {/* Activate / Deactivate toggle */}
+              <button
+                className={`te-toggle ${teacher.profile.is_active ? "te-toggle--off" : "te-toggle--on"}`}
+                onClick={() => toggleTeacher(teacher.id, teacher.profile.is_active)}
+                disabled={toggling === teacher.id}
+                title={teacher.profile.is_active
+                  ? (lang === "ar" ? "تعطيل المعلم" : "Çaktivizo")
+                  : (lang === "ar" ? "تفعيل المعلم" : "Aktivizo")}
+              >
+                {toggling === teacher.id ? (
+                  <span className="te-spin" />
+                ) : teacher.profile.is_active ? (
+                  <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <circle cx="12" cy="12" r="10" /><path d="M8 12h8" />
+                  </svg>
+                ) : (
+                  <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <circle cx="12" cy="12" r="10" /><path d="M12 8v8m-4-4h8" />
+                  </svg>
+                )}
+              </button>
             </div>
           ))}
         </div>
@@ -221,6 +279,24 @@ export function SchoolAdminTeachersPage() {
         }
         .te-badge svg { color: var(--gold); }
         .te-badge-label { color: var(--text3); font-weight: 500; }
+
+        .te-inactive-label {
+          font-size: 11px; font-weight: 800; color: #8b1a1a;
+          background: rgba(139,26,26,0.08); border: 1px solid rgba(139,26,26,0.18);
+          border-radius: 6px; padding: 2px 8px; display: inline-block; margin-top: 4px;
+        }
+
+        .te-toggle {
+          flex-shrink: 0; width: 32px; height: 32px; border-radius: 9px;
+          display: flex; align-items: center; justify-content: center;
+          cursor: pointer; border: 1px solid; transition: all 0.18s;
+        }
+        .te-toggle:disabled { opacity: 0.4; cursor: not-allowed; }
+        .te-toggle--off { background: rgba(139,26,26,0.07); border-color: rgba(139,26,26,0.22); color: #8b1a1a; }
+        .te-toggle--off:hover:not(:disabled) { background: rgba(139,26,26,0.14); }
+        .te-toggle--on { background: rgba(45,138,74,0.08); border-color: rgba(45,138,74,0.22); color: #2D8A4A; }
+        .te-toggle--on:hover:not(:disabled) { background: rgba(45,138,74,0.15); }
+        .te-spin { display: inline-block; width: 11px; height: 11px; border: 2px solid rgba(200,169,106,0.2); border-top-color: var(--gold); border-radius: 50%; animation: fadeUp 0.7s linear infinite; }
 
         @media (max-width: 500px) {
           .te-badge-label { display: none; }

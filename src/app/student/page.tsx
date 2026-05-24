@@ -225,8 +225,8 @@ const styles = `
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
   @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 
-  .sd-shell{min-height:100%;background:#F6F4EE;font-family:'Cairo',Tajawal,sans-serif}
-  .sd-main{padding:28px 24px;display:flex;flex-direction:column;gap:18px;max-width:960px}
+  .sd-shell{min-height:100%;width:100%;background:#F6F4EE;font-family:'Cairo',Tajawal,sans-serif}
+  .sd-main{padding:28px 24px;display:flex;flex-direction:column;gap:18px;width:100%;max-width:1200px;margin-inline:auto}
 
   /* ── Banner ── */
   .sd-welcome{
@@ -275,7 +275,7 @@ const styles = `
   .sd-empty-sub{font-size:13px;color:#9A8A70}
 
   /* ── Grid ── */
-  .sd-grid{display:grid;grid-template-columns:1fr 272px;gap:14px;align-items:start}
+  .sd-grid{display:grid;grid-template-columns:1fr 300px;gap:16px;align-items:start}
   @media(max-width:740px){.sd-grid{grid-template-columns:1fr}}
 
   /* ── Card ── */

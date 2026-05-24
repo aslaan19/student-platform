@@ -159,23 +159,39 @@ export async function POST(
   const userId = authData.user.id;
   console.log("[invite] auth user created:", userId);
 
-  // ── Create Profile + Teacher + mark invite — single transaction ───────
+  // ── Create Profile + role-specific record + mark invite ─────────────
+  const isAdminInvite   = state.invite.type === "ADMIN";
+  const isTeacherInvite = state.invite.type === "TEACHER";
+
   try {
     await prisma.$transaction(async (tx) => {
+      const role = isAdminInvite ? "SCHOOL_ADMIN" : "TEACHER";
+
       await tx.profile.create({
         data: {
           id:        userId,
           full_name: full_name,
-          role:      "TEACHER",
+          email:     email,
+          role,
         },
       });
 
-      await tx.teacher.create({
-        data: {
-          profile_id: userId,
-          school_id:  state.invite.school_id,
-        },
-      });
+      if (isTeacherInvite) {
+        await tx.teacher.create({
+          data: {
+            profile_id: userId,
+            school_id:  state.invite.school_id,
+          },
+        });
+      }
+
+      if (isAdminInvite) {
+        // Assign this profile as the school admin
+        await tx.school.update({
+          where: { id: state.invite.school_id },
+          data:  { admin_id: userId },
+        });
+      }
 
       await tx.invite.update({
         where: { id: state.invite.id },

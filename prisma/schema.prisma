@@ -42,6 +42,7 @@ model Invite {
 enum InviteType {
   TEACHER
   STUDENT
+  ADMIN
 }
 
 // One trait per Maqsad per stage (so max 5 traits per stage)
@@ -120,6 +121,7 @@ model Profile {
   created_at                   DateTime            @default(now())
   full_name                    String
   email                        String?             @unique
+  is_active                    Boolean             @default(true)
   role                         Role
   reviewed_assessment_attempts AssessmentAttempt[] @relation("AssessmentReviewedBy")
   managed_school               School?             @relation("SchoolAdmin")

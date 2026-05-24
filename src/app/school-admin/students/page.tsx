@@ -23,7 +23,7 @@ interface Student {
   id: string;
   onboarding_status: string;
   created_at: string;
-  profile: { full_name: string; avatar_url: string | null };
+  profile: { full_name: string; avatar_url: string | null; is_active: boolean };
   class: { id: string; name: string } | null;
   attempts_count: number;
   passed_count: number;
@@ -164,10 +164,14 @@ function StudentCard({
   student,
   classes,
   onAssign,
+  onToggle,
+  toggling,
 }: {
   student: Student;
   classes: ClassItem[];
   onAssign: (studentId: string, classId: string) => void;
+  onToggle: (studentId: string, currentActive: boolean) => void;
+  toggling: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
   const meta =
@@ -227,6 +231,11 @@ function StudentCard({
               </span>
             )}
           </div>
+
+          {/* Inactive badge */}
+          {!student.profile.is_active && (
+            <div className="sc-inactive-badge">معطّل</div>
+          )}
 
           {/* Current position */}
           {student.current_stage ? (
@@ -288,6 +297,26 @@ function StudentCard({
             </div>
           )}
         </div>
+
+        {/* Activate / Deactivate toggle */}
+        <button
+          className={`sc-toggle-btn ${student.profile.is_active ? "sc-toggle-btn--off" : "sc-toggle-btn--on"}`}
+          onClick={(e) => { e.stopPropagation(); onToggle(student.id, student.profile.is_active); }}
+          disabled={toggling}
+          title={student.profile.is_active ? "تعطيل الطالب" : "تفعيل الطالب"}
+        >
+          {toggling ? (
+            <span className="sc-spin" />
+          ) : student.profile.is_active ? (
+            <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <circle cx="12" cy="12" r="10" /><path d="M8 12h8" />
+            </svg>
+          ) : (
+            <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <circle cx="12" cy="12" r="10" /><path d="M12 8v8m-4-4h8" />
+            </svg>
+          )}
+        </button>
 
         {/* Chevron */}
         <div
@@ -434,6 +463,8 @@ export default function SchoolAdminStudentsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | "active" | "none">("all");
+  const [toggling, setToggling] = useState<string | null>(null);
+  const [toggleError, setToggleError] = useState("");
 
   async function load() {
     const [sRes, cRes] = await Promise.all([
@@ -449,6 +480,31 @@ export default function SchoolAdminStudentsPage() {
   useEffect(() => {
     load();
   }, []);
+
+  async function handleToggle(studentId: string, currentActive: boolean) {
+    setToggling(studentId);
+    setToggleError("");
+    try {
+      const r = await fetch(`/api/school-admin/students/${studentId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ is_active: !currentActive }),
+      });
+      const d = await r.json();
+      if (!r.ok) { setToggleError(d.error ?? "حدث خطأ"); return; }
+      setStudents((prev) =>
+        prev.map((s) =>
+          s.id === studentId
+            ? { ...s, profile: { ...s.profile, is_active: !currentActive } }
+            : s,
+        ),
+      );
+    } catch {
+      setToggleError("تعذر الاتصال بالخادم");
+    } finally {
+      setToggling(null);
+    }
+  }
 
   async function handleAssign(studentId: string, classId: string) {
     await fetch(`/api/school-admin/students/${studentId}/assign-class`, {
@@ -560,6 +616,16 @@ export default function SchoolAdminStudentsPage() {
         </div>
       </div>
 
+      {toggleError && (
+        <div style={{
+          display: "flex", alignItems: "center", gap: 8,
+          background: "rgba(139,26,26,0.06)", border: "1px solid rgba(139,26,26,0.18)",
+          color: "#8b1a1a", fontSize: 13, padding: "10px 14px", borderRadius: 9, fontWeight: 600,
+        }}>
+          {toggleError}
+        </div>
+      )}
+
       {/* ── Content ── */}
       {loading ? (
         <div className="sp-loading">
@@ -592,6 +658,8 @@ export default function SchoolAdminStudentsPage() {
                 student={s}
                 classes={classes}
                 onAssign={handleAssign}
+                onToggle={handleToggle}
+                toggling={toggling === s.id}
               />
             </div>
           ))}
@@ -750,6 +818,18 @@ const css = `
 /* Class select */
 .sc-select{width:100%;max-width:280px;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:9px 12px;font-size:13px;font-family:var(--font);outline:none;cursor:pointer;transition:border-color 0.15s}
 .sc-select:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(200,169,106,0.1)}
+
+/* Inactive badge */
+.sc-inactive-badge{font-size:10px;font-weight:800;color:#8b1a1a;background:rgba(139,26,26,0.08);border:1px solid rgba(139,26,26,0.18);border-radius:5px;padding:2px 7px;display:inline-block;width:fit-content}
+
+/* Activate / deactivate toggle */
+.sc-toggle-btn{flex-shrink:0;width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:1px solid;transition:all 0.18s;background:none;margin-top:2px}
+.sc-toggle-btn:disabled{opacity:0.4;cursor:not-allowed}
+.sc-toggle-btn--off{background:rgba(139,26,26,0.07);border-color:rgba(139,26,26,0.22);color:#8b1a1a}
+.sc-toggle-btn--off:hover:not(:disabled){background:rgba(139,26,26,0.14)}
+.sc-toggle-btn--on{background:rgba(45,138,74,0.08);border-color:rgba(45,138,74,0.22);color:#2D8A4A}
+.sc-toggle-btn--on:hover:not(:disabled){background:rgba(45,138,74,0.15)}
+.sc-spin{display:inline-block;width:11px;height:11px;border:2px solid rgba(200,169,106,0.2);border-top-color:var(--gold);border-radius:50%;animation:spin 0.7s linear infinite}
 
 @media(max-width:600px){
   .sc-top{flex-wrap:wrap}

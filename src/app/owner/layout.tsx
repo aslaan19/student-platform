@@ -15,6 +15,8 @@ import {
   Bell,
   ChevronLeft,
   Sparkles,
+  Mail,
+  ShieldCheck,
   LucideIcon,
 } from "lucide-react";
 
@@ -333,6 +335,18 @@ const navItems: NavItem[] = [
     label: "الطلبات المقدمة",
     sublabel: "Submissions",
     icon: FileStack,
+  },
+  {
+    href: "/owner/admins",
+    label: "المدراء",
+    sublabel: "Admins",
+    icon: ShieldCheck,
+  },
+  {
+    href: "/owner/invites",
+    label: "دعوات المدراء",
+    sublabel: "Admin Invites",
+    icon: Mail,
   },
 ];
 

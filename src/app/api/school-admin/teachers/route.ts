@@ -10,7 +10,7 @@ export async function GET() {
   const teachers = await prisma.teacher.findMany({
     where: { school_id: auth.school.id },
     include: {
-      profile: { select: { id: true, full_name: true } },
+      profile: { select: { id: true, full_name: true, is_active: true } },
       classes: { select: { id: true, name: true } },
     },
   });

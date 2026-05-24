@@ -24,7 +24,7 @@ export async function GET() {
         id: true,
         onboarding_status: true,
         created_at: true,
-        profile: { select: { full_name: true, avatar_url: true } },
+        profile: { select: { full_name: true, avatar_url: true, is_active: true } },
         class: { select: { id: true, name: true } },
         moduleAttempts: {
           orderBy: { created_at: "desc" },

@@ -123,6 +123,7 @@ export default function SchoolAdminLayout({ children }: { children: React.ReactN
   const [loggingOut, setLoggingOut] = useState(false);
   const [showToggle, setShowToggle] = useState(false);
   const [schoolLang, setSchoolLang] = useState("ar");
+  const [deactivated, setDeactivated] = useState(false);
   const schoolSlugRef = useRef<string>("");
 
   const navItems: NavItem[] = [
@@ -165,6 +166,12 @@ export default function SchoolAdminLayout({ children }: { children: React.ReactN
   ];
 
   useEffect(() => {
+    // Check activation status first — deactivated admins see a wall page
+    fetch("/api/school-admin/me")
+      .then((r) => r.json())
+      .then((d) => { if (d?.status === "deactivated") setDeactivated(true); })
+      .catch(() => {});
+
     cachedFetch<any>("/api/school-admin/stats", 60_000)
       .then((d) => {
         if (d?.school) {
@@ -214,6 +221,41 @@ export default function SchoolAdminLayout({ children }: { children: React.ReactN
     const found = navItems.find((item) => isActive(item.href, item.exact));
     return found?.label ?? (lang === "ar" ? "الصفحة" : "Faqja");
   })();
+
+  // ── Deactivated wall — replaces the entire UI ─────────────────────────────
+  if (deactivated) {
+    return (
+      <div style={{
+        minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
+        flexDirection: "column", gap: 20, textAlign: "center", padding: 32,
+        fontFamily: "'Cairo', sans-serif", direction: "rtl",
+        background: "radial-gradient(ellipse at 50% 0%, rgba(200,169,106,0.07), transparent 60%), #F6F4EE",
+      }}>
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#C8A96A" strokeWidth={1.2}>
+          <circle cx="12" cy="12" r="10" />
+          <path d="M12 8v4m0 4h.01" />
+        </svg>
+        <h1 style={{ fontSize: 22, fontWeight: 900, color: "#0B0B0C", margin: 0 }}>
+          {lang === "ar" ? "تم تعطيل حسابك" : "Llogaria juaj është çaktivizuar"}
+        </h1>
+        <p style={{ fontSize: 14, color: "#8A8478", maxWidth: 380, lineHeight: 1.7, margin: 0 }}>
+          {lang === "ar"
+            ? "تم تعطيل حساب المدير الخاص بك من قِبل المالك. تواصل مع مالك النظام لإعادة التفعيل."
+            : "Llogaria juaj e administratorit është çaktivizuar nga pronari. Kontaktoni pronarin e sistemit për riaktivizim."}
+        </p>
+        <button
+          onClick={handleLogout}
+          style={{
+            marginTop: 8, padding: "10px 28px", borderRadius: 10,
+            background: "#0B0B0C", color: "#C8A96A", border: "1px solid rgba(200,169,106,0.3)",
+            fontFamily: "'Cairo', sans-serif", fontSize: 14, fontWeight: 700, cursor: "pointer",
+          }}
+        >
+          {lang === "ar" ? "تسجيل الخروج" : "Dalje"}
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="sa-shell" dir="rtl">
