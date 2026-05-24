@@ -555,7 +555,7 @@ export default function SchoolLoginClient({ school }: { school: School }) {
 
             <p className="lp-footer-text">
               {L.haveAccount}{" "}
-              <Link href="/signup" className="lp-link">
+              <Link href={`/schools/${school.slug}/signup`} className="lp-link">
                 {L.signup}
               </Link>
             </p>

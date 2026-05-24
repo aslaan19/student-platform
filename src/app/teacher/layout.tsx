@@ -302,7 +302,7 @@ export default function TeacherLayout({ children }: Readonly<{ children: React.R
           <div className="tl-rule-line" />
         </div>
 
-        {/* User block */}
+        {/* User block */}  
         <div className="tl-user-block">
           <div className="tl-user">
             <Link
