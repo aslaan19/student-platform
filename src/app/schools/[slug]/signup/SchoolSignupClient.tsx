@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useRef, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 
 interface School {
   id: string;
@@ -105,6 +104,10 @@ const STRINGS = {
     errPass: "كلمة المرور يجب أن تكون 6 أحرف على الأقل",
     errServer: "تعذر الاتصال بالخادم، حاول مرة أخرى",
     emailSuccess: "بريد إلكتروني صحيح ✓",
+    emailSentTitle: "تحقق من بريدك الإلكتروني",
+    emailSentSub: "أرسلنا رابط التأكيد إلى",
+    emailSentNote: "انقر على الرابط في الرسالة لتفعيل حسابك، ثم سجّل دخولك.",
+    emailSentLogin: "الذهاب إلى تسجيل الدخول",
     haveAccount: "لديك حساب بالفعل؟",
     login: "تسجيل الدخول",
     poweredBy: "مدعومة من",
@@ -135,6 +138,10 @@ const STRINGS = {
     errPass: "Fjalëkalimi duhet të ketë të paktën 6 karaktere",
     errServer: "Gabim lidhjeje, provoni përsëri",
     emailSuccess: "Email i vlefshëm ✓",
+    emailSentTitle: "Kontrolloni emailin tuaj",
+    emailSentSub: "Kemi dërguar lidhjen e konfirmimit te",
+    emailSentNote: "Klikoni lidhjen në email për të aktivizuar llogarinë tuaj, pastaj hyni.",
+    emailSentLogin: "Shko te hyrja",
     haveAccount: "Keni tashmë një llogari?",
     login: "Hyrje",
     poweredBy: "E mundësuar nga",
@@ -171,9 +178,10 @@ export default function SchoolSignupClient({ school }: { school: School }) {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [phase, setPhase] = useState<"idle" | "creating" | "uploading">("idle");
+  const [phase, setPhase] = useState<"idle" | "creating">("idle");
   const [error, setError] = useState("");
   const [emailTouched, setEmailTouched] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const L = STRINGS[lang];
@@ -235,38 +243,8 @@ export default function SchoolSignupClient({ school }: { school: School }) {
         return;
       }
 
-      // If server couldn't set the session, sign in client-side
-      const supabase = createClient();
-      if (data.needsLogin) {
-        await supabase.auth.signInWithPassword({ email: email.trim(), password });
-      }
-
-      /* Upload avatar using the authenticated session */
-      if (avatarFile) {
-        setPhase("uploading");
-        try {
-          const { data: { user } } = await supabase.auth.getUser();
-          if (user) {
-            const ext = avatarFile.name.split(".").pop() ?? "jpg";
-            const path = `profiles/${user.id}/avatar.${ext}`;
-            const { error: uploadError } = await supabase.storage
-              .from("avatars")
-              .upload(path, avatarFile, { upsert: true });
-            if (!uploadError) {
-              const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
-              await fetch("/api/profile", {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ avatar_url: urlData.publicUrl, avatar_path: path }),
-              });
-            }
-          }
-        } catch {
-          // Non-fatal — student can update avatar later from profile
-        }
-      }
-
-      window.location.href = "/student";
+      // Account created — user must confirm their email before logging in.
+      setEmailSent(true);
     } catch {
       setError(L.errServer);
     } finally {
@@ -275,8 +253,54 @@ export default function SchoolSignupClient({ school }: { school: School }) {
     }
   };
 
-  const btnLabel =
-    phase === "uploading" ? L.uploadingBtn : phase === "creating" ? L.loadingBtn : L.btn;
+  const btnLabel = phase === "creating" ? L.loadingBtn : L.btn;
+
+  if (emailSent) {
+    return (
+      <>
+        <main className="sp-shell" dir={dir}>
+          <div className="sp-panel">
+            <div className="sp-corner sp-corner-tl" />
+            <div className="sp-corner sp-corner-br" />
+            <div className="sp-panel-inner">
+              <Mandala size={200} className="sp-mandala" />
+              <div className="sp-brand-text">
+                <Rule />
+                <div className="sp-school-badge">{school.name.charAt(0)}</div>
+                <h2 className="sp-brand-name">{school.name}</h2>
+                {school.description && <p className="sp-brand-desc">{school.description}</p>}
+                <Rule />
+              </div>
+              <div className="sp-panel-footer">
+                <p className="sp-panel-quote">
+                  {L.poweredBy}{" "}
+                  <span style={{ color: "rgba(200,169,106,0.5)", fontWeight: 700 }}>بناء الأهلية</span>
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="sp-form-side">
+            <div className="sp-form-wrap">
+              <div className="sp-confirm-card">
+                <div className="sp-confirm-icon">
+                  <svg width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                  </svg>
+                </div>
+                <h2 className="sp-confirm-title">{L.emailSentTitle}</h2>
+                <p className="sp-confirm-sub">{L.emailSentSub} <strong className="sp-confirm-email">{email.trim()}</strong></p>
+                <p className="sp-confirm-note">{L.emailSentNote}</p>
+                <Link href={`/schools/${school.slug}/login`} className="sp-btn" style={{ textDecoration: "none" }}>
+                  {L.emailSentLogin}
+                </Link>
+              </div>
+            </div>
+          </div>
+        </main>
+        <style>{css}</style>
+      </>
+    );
+  }
 
   return (
     <>
@@ -658,4 +682,20 @@ const css = `
     .sp-row { flex-direction: column; }
     .sp-field-age { width: 100%; }
   }
+  .sp-confirm-card {
+    display: flex; flex-direction: column; align-items: center; text-align: center;
+    gap: 18px; padding: 48px 32px;
+    background: white; border: 1px solid var(--border); border-radius: 20px;
+    box-shadow: 0 4px 32px rgba(11,11,12,0.06); animation: scaleIn 0.45s cubic-bezier(0.4,0,0.2,1) both;
+    margin-top: 60px;
+  }
+  .sp-confirm-icon {
+    width: 80px; height: 80px; border-radius: 50%;
+    background: rgba(200,169,106,0.10); border: 2px solid rgba(200,169,106,0.25);
+    display: flex; align-items: center; justify-content: center; color: var(--gold);
+  }
+  .sp-confirm-title { font-size: 22px; font-weight: 900; color: var(--text); letter-spacing: -0.3px; }
+  .sp-confirm-sub { font-size: 14px; color: var(--text2); font-weight: 500; line-height: 1.6; }
+  .sp-confirm-email { color: var(--text); font-weight: 800; word-break: break-all; }
+  .sp-confirm-note { font-size: 13px; color: var(--text3); font-weight: 500; line-height: 1.7; max-width: 340px; }
 `;

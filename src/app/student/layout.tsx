@@ -255,7 +255,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
     );
 
   return (
-    <div className="sl-shell" dir="rtl">
+    <div className="sl-shell" dir={isRtl ? "rtl" : "ltr"}>
       {sidebarOpen && (
         <div className="sl-overlay" onClick={() => setSidebarOpen(false)} />
       )}
@@ -554,17 +554,19 @@ const styles = `
 
   /* ══ SIDEBAR ══ */
   .sl-sidebar {
-    position: fixed; top: 0; right: 0;
+    position: fixed; top: 0; inset-inline-start: 0;
     width: var(--sl-sidebar-w); height: 100vh;
     z-index: 50; display: flex; flex-direction: column; overflow: hidden;
-    border-left: 1px solid rgba(200,169,106,0.10);
+    border-inline-end: 1px solid rgba(200,169,106,0.10);
     background: linear-gradient(180deg, #0B0E10 0%, #060809 100%);
     transition: transform 0.32s var(--sl-ease-out);
     transform: translateX(0);
   }
   @media (max-width: 767px) {
-    .sl-sidebar       { transform: translateX(100%); }
-    .sl-sidebar.open  { transform: translateX(0); box-shadow: -22px 0 60px rgba(8,11,12,0.42); }
+    [dir="rtl"] .sl-sidebar      { transform: translateX(100%); }
+    [dir="rtl"] .sl-sidebar.open { transform: translateX(0); box-shadow: -22px 0 60px rgba(8,11,12,0.42); }
+    [dir="ltr"] .sl-sidebar      { transform: translateX(-100%); }
+    [dir="ltr"] .sl-sidebar.open { transform: translateX(0); box-shadow: 22px 0 60px rgba(8,11,12,0.42); }
   }
 
   .sl-sidebar-glow {
@@ -641,7 +643,7 @@ const styles = `
   .sl-nav-community { border-color: rgba(200,169,106,0.06); }
   .sl-nav-community:hover { border-color: rgba(200,169,106,0.14); }
 
-  .sl-nav-pill    { position: absolute; right: 0; top: 7px; bottom: 7px; width: 3px; border-radius: 2px 0 0 2px; background: linear-gradient(180deg, var(--sl-gold-soft), var(--sl-gold-deep)); }
+  .sl-nav-pill    { position: absolute; inset-inline-end: 0; top: 7px; bottom: 7px; width: 3px; border-radius: 2px; background: linear-gradient(180deg, var(--sl-gold-soft), var(--sl-gold-deep)); }
   .sl-nav-shimmer { position: absolute; top: 0; left: 12px; right: 12px; height: 1px; background: linear-gradient(to left, transparent, rgba(200,169,106,0.55), transparent); }
 
   .sl-nav-icon-wrap {
@@ -696,8 +698,8 @@ const styles = `
   .sl-spin { width: 13px; height: 13px; border: 2px solid rgba(200,169,106,0.15); border-top-color: var(--sl-gold); border-radius: 50%; animation: sl-spin 0.7s linear infinite; }
 
   /* ══ MAIN ══ */
-  .sl-main { flex: 1; display: flex; flex-direction: column; min-height: 100vh; margin-right: var(--sl-sidebar-w); }
-  @media (max-width: 767px) { .sl-main { margin-right: 0; } }
+  .sl-main { flex: 1; display: flex; flex-direction: column; min-height: 100vh; margin-inline-start: var(--sl-sidebar-w); }
+  @media (max-width: 767px) { .sl-main { margin-inline-start: 0; } }
 
   /* Topbar */
   .sl-topbar {
@@ -769,10 +771,9 @@ const styles = `
   .sl-topbar-name    { font-size: 12.5px; font-weight: 700; color: var(--sl-graphite); white-space: nowrap; padding-inline-start: 2px; }
 
   /* Content */
-  .sl-content { position: relative; flex: 1; padding: 28px 20px; animation: sl-slidein 0.42s var(--sl-ease-out); }
-  @media (min-width: 768px) { .sl-content { padding: 40px; } }
+  .sl-content { position: relative; flex: 1; padding: 0; animation: sl-slidein 0.42s var(--sl-ease-out); }
   .sl-watermark     { position: absolute; left: 24px; top: 24px; opacity: 0.04; pointer-events: none; }
-  .sl-content-inner { position: relative; z-index: 10; }
+  .sl-content-inner { position: relative; z-index: 10; height: 100%; }
 
   /* Bottom band */
   .sl-bottom-band {

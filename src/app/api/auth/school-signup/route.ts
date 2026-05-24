@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 
@@ -41,13 +40,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "المدرسة غير موجودة" }, { status: 404 });
     }
 
-    // Use admin client to create auth user — bypasses email confirmation,
-    // never silently returns null for existing emails.
+    // Admin client: gives a real error for duplicate emails (unlike signUp() which
+    // silently re-sends the confirmation link). email_confirm: false → Supabase
+    // sends the standard verification email to the user.
     const adminSupabase = createAdminClient();
     const { data: adminData, error: adminError } = await adminSupabase.auth.admin.createUser({
       email,
       password,
-      email_confirm: true,
+      email_confirm: false,
       user_metadata: { full_name, role: "STUDENT" },
     });
 
@@ -86,16 +86,8 @@ export async function POST(req: Request) {
       },
     });
 
-    // Sign the user in via the server client so the session cookie is set
-    const supabase = await createClient();
-    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
-
-    if (signInError) {
-      // User was created but sign-in failed — not critical, let client handle it
-      return NextResponse.json({ success: true, needsLogin: true });
-    }
-
-    return NextResponse.json({ success: true });
+    // Account created — user must click the confirmation link before logging in.
+    return NextResponse.json({ success: true, emailConfirmationRequired: true });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("School signup error:", message);
