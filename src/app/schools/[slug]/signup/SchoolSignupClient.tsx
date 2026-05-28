@@ -557,7 +557,7 @@ const css = `
   }
   .sp-form-wrap { width: 100%; max-width: 440px; animation: scaleIn 0.45s cubic-bezier(0.4,0,0.2,1) both; position: relative; z-index: 1; }
   .sp-form-ornament { margin-bottom: 24px; }
-  .sp-form-header { margin-bottom: 28px; text-align: right; }
+  .sp-form-header { margin-bottom: 28px; text-align: end; }
   .sp-form-title { font-size: 26px; font-weight: 900; color: var(--text); letter-spacing: -0.4px; }
   .sp-form-title::after {
     content: ''; display: block; width: 40px; height: 3px;
@@ -665,28 +665,92 @@ const css = `
   .sp-back-link { font-size: 12px; color: var(--text3); text-decoration: none; font-weight: 600; transition: color 0.15s; }
   .sp-back-link:hover { color: var(--text2); }
   @media (max-width: 820px) {
-    .sp-shell { flex-direction: column-reverse; overflow-y: auto; height: auto; min-height: 100dvh; }
-    .sp-panel { width: 100%; }
-    .sp-panel-inner { padding: 32px 24px; gap: 14px; height: auto; position: static; }
-    .sp-mandala { width: 110px !important; height: 110px !important; }
-    .sp-brand-name { font-size: 22px; }
-    .sp-school-badge { width: 40px; height: 40px; font-size: 18px; }
-    .sp-panel-footer { display: none; }
-    .sp-panel .sp-lang-toggle { display: none; }
-    .sp-lang-toggle-mobile { display: flex; }
-    .sp-form-side {
-      padding: 32px 20px;
-      padding-bottom: calc(env(safe-area-inset-bottom) + 32px);
+    /*
+     * Mobile layout: compact dark header bar at top, scrollable form below.
+     * align-items: flex-start on form-side prevents any top-clipping issues.
+     */
+    .sp-shell {
+      flex-direction: column;
+      height: auto;
+      min-height: 100dvh;
+      overflow-y: auto;
+      overflow-x: hidden;
     }
-    .sp-form-ornament { margin-bottom: 16px; }
-    .sp-form-header { margin-bottom: 20px; }
+
+    /* ── Compact dark header bar ── */
+    .sp-panel { width: 100%; flex-shrink: 0; }
+    .sp-panel-inner {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      padding-top: calc(env(safe-area-inset-top, 0px) + 12px);
+      height: auto;
+      position: static;
+      gap: 10px;
+    }
+
+    .sp-mandala { display: none; }
+    .sp-brand-text {
+      flex-direction: row;
+      align-items: center;
+      gap: 10px;
+      text-align: start;
+      flex: 1;
+      min-width: 0;
+    }
+    .sp-panel .sp-brand-text .sp-rule { display: none; }
+    .sp-school-badge {
+      width: 34px; height: 34px; font-size: 14px;
+      border-radius: 9px; margin: 0; flex-shrink: 0;
+    }
+    .sp-brand-name {
+      font-size: 14px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .sp-brand-desc { display: none; }
+    .sp-panel-footer { display: none; }
+
+    /* Keep lang toggle in the dark header */
+    .sp-panel .sp-lang-toggle { display: flex; flex-shrink: 0; }
+    .sp-lang-toggle-mobile { display: none; }
+
+    /* ── Form: starts from top, fully scrollable ── */
+    .sp-form-side {
+      flex: none;
+      width: 100%;
+      align-items: flex-start;
+      padding: 28px 20px;
+      padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 40px);
+    }
+    .sp-form-wrap { max-width: 100%; }
+    .sp-form-ornament { margin-bottom: 14px; }
+    .sp-form-header { margin-bottom: 18px; }
+    .sp-avatar-section { padding: 12px; gap: 12px; }
+    .sp-avatar-wrap { width: 60px; height: 60px; }
     .sp-btn { padding: 16px; font-size: 16px; }
-    .sp-lang-btn { padding: 9px 16px; }
+    .sp-lang-btn { padding: 8px 14px; }
+    .sp-lang-name { font-size: 11px; }
+
+    /* Confirmation card */
+    .sp-confirm-card { padding: 36px 24px; margin-top: 20px; }
   }
+
   @media (max-width: 420px) {
+    .sp-panel-inner {
+      padding: 10px 16px;
+      padding-top: calc(env(safe-area-inset-top, 0px) + 10px);
+    }
     .sp-row { flex-direction: column; }
     .sp-field-age { width: 100%; }
-    .sp-form-side { padding: 24px 16px; padding-bottom: calc(env(safe-area-inset-bottom) + 24px); }
+    .sp-form-side {
+      padding: 22px 16px;
+      padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 32px);
+    }
+    .sp-form-title { font-size: 21px; }
+    .sp-lang-btn { padding: 7px 10px; }
+    .sp-lang-flag { font-size: 13px; }
+    .sp-confirm-card { padding: 28px 16px; }
   }
   .sp-confirm-card {
     display: flex; flex-direction: column; align-items: center; text-align: center;

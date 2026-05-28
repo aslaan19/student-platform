@@ -612,7 +612,7 @@ const css = `
     display: flex;
     font-family: 'Cairo', sans-serif;
     background: var(--off-white);
-    overflow: hidden;
+    overflow: hidden;   /* desktop: panels fill viewport exactly */
   }
 
   /* ── Brand panel ── */
@@ -820,7 +820,7 @@ const css = `
 
   .lp-form-ornament { margin-bottom: 24px; }
 
-  .lp-form-header { margin-bottom: 32px; text-align: right; }
+  .lp-form-header { margin-bottom: 32px; text-align: end; }
   .lp-form-title {
     font-size: 26px; font-weight: 900;
     color: var(--text);
@@ -969,36 +969,88 @@ const css = `
 
   /* ── Responsive ── */
   @media (max-width: 820px) {
+    /*
+     * Mobile layout: single column, panel becomes a compact header bar at the
+     * top, form flows below it — no vertical centering so nothing is clipped.
+     */
     .lp-shell {
-      flex-direction: column-reverse;
-      overflow-y: auto;
+      flex-direction: column;   /* panel (header) on top, form below */
       height: auto;
-      min-height: 100dvh; /* dvh accounts for browser chrome on mobile */
+      min-height: 100dvh;
+      overflow-y: auto;
+      overflow-x: hidden;
     }
-    .lp-panel { width: 100%; min-height: auto; }
-    .lp-panel-inner { padding: 32px 24px; gap: 14px; }
-    .lp-mandala { width: 110px !important; height: 110px !important; }
-    .lp-brand-name { font-size: 22px; }
-    .lp-school-badge { width: 40px; height: 40px; font-size: 18px; }
+
+    /* ── Compact dark header bar ── */
+    .lp-panel { width: 100%; flex-shrink: 0; min-height: auto; }
+    .lp-panel-inner {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      padding-top: calc(env(safe-area-inset-top, 0px) + 12px);
+      height: auto;
+      gap: 10px;
+    }
+
+    /* Hide big mandala — no room in a compact header */
+    .lp-mandala { display: none; }
+
+    /* Brand text becomes a horizontal badge + name row */
+    .lp-brand-text {
+      flex-direction: row;
+      align-items: center;
+      gap: 10px;
+      text-align: start;
+      flex: 1;
+      min-width: 0;   /* allow text-overflow to work */
+    }
+    /* Hide ornament Rules inside the panel on mobile */
+    .lp-panel .lp-brand-text .lp-rule { display: none; }
+    .lp-school-badge {
+      width: 34px; height: 34px; font-size: 14px;
+      border-radius: 9px; margin: 0; flex-shrink: 0;
+    }
+    .lp-brand-name {
+      font-size: 14px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .lp-brand-desc { display: none; }
     .lp-panel-footer { display: none; }
-    /* Hide panel toggle on mobile, show above form */
-    .lp-panel .lp-lang-toggle { display: none; }
-    .lp-lang-toggle-mobile { display: flex; }
+
+    /* Keep lang toggle in the dark header — colours already work on dark bg */
+    .lp-panel .lp-lang-toggle { display: flex; flex-shrink: 0; }
+    /* No need for the duplicate toggle above the form */
+    .lp-lang-toggle-mobile { display: none; }
+
+    /* ── Form: aligned to top so NOTHING is clipped ── */
     .lp-form-side {
-      padding: 32px 20px;
-      padding-bottom: calc(env(safe-area-inset-bottom) + 32px);
-      min-height: auto;
+      flex: none;
+      width: 100%;
+      min-height: 0;
+      align-items: flex-start;   /* ← critical: prevents top-clipping bug */
+      padding: 28px 20px;
+      padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 40px);
     }
-    .lp-form-ornament { margin-bottom: 16px; }
-    .lp-form-header { margin-bottom: 24px; }
-    /* Better touch targets */
+    .lp-form-wrap { max-width: 100%; }
+    .lp-form-ornament { margin-bottom: 14px; }
+    .lp-form-header { margin-bottom: 22px; }
     .lp-btn { padding: 16px; font-size: 16px; }
-    .lp-lang-btn { padding: 9px 16px; }
+    .lp-lang-btn { padding: 8px 14px; }
+    .lp-lang-name { font-size: 11px; }
   }
 
   @media (max-width: 400px) {
-    .lp-form-side { padding: 24px 16px; padding-bottom: calc(env(safe-area-inset-bottom) + 24px); }
-    .lp-panel-inner { padding: 24px 16px; }
-    .lp-form-title { font-size: 22px; }
+    .lp-panel-inner {
+      padding: 10px 16px;
+      padding-top: calc(env(safe-area-inset-top, 0px) + 10px);
+    }
+    .lp-form-side {
+      padding: 22px 16px;
+      padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 32px);
+    }
+    .lp-form-title { font-size: 21px; }
+    .lp-lang-btn { padding: 7px 10px; }
+    .lp-lang-flag { font-size: 13px; }
   }
 `;
