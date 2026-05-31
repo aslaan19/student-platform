@@ -736,8 +736,7 @@ const styles = `
   .tl-topbar-name    { font-size: 12.5px; font-weight: 700; color: var(--tl-graphite); white-space: nowrap; padding-inline-start: 2px; }
 
   /* Content */
-  .tl-content { position: relative; flex: 1; padding: 28px 20px; animation: tl-slidein 0.42s var(--tl-ease-out); }
-  @media (min-width: 768px) { .tl-content { padding: 40px; } }
+  .tl-content { position: relative; flex: 1; padding: 0; animation: tl-slidein 0.42s var(--tl-ease-out); }
   .tl-watermark    { position: absolute; left: 24px; top: 24px; opacity: 0.04; pointer-events: none; }
   .tl-content-inner { position: relative; z-index: 10; }
 
