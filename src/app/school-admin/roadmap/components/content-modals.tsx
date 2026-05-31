@@ -27,6 +27,8 @@ export function TextModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const charCount = body.length;
+
   const save = async () => {
     if (!body.trim()) {
       setError("المحتوى مطلوب");
@@ -63,9 +65,9 @@ export function TextModal({
           <div className="rb-modal-icon dark">{Icons.text}</div>
           <div className="rb-modal-hd-text">
             <h3 className="rb-modal-title">
-              {content ? "تعديل النص" : "إضافة نص"}
+              {content ? "تعديل النص" : "إضافة محتوى نصي"}
             </h3>
-            <p className="rb-modal-sub">أضف محتوى نصياً للدرس</p>
+            <p className="rb-modal-sub">أضف محتوى نصياً تعليمياً للدرس</p>
           </div>
           <button className="rb-close-btn" onClick={onClose}>
             {Icons.close}
@@ -73,15 +75,23 @@ export function TextModal({
         </div>
         <div className="rb-modal-body">
           <div className="rb-field">
-            <label className="rb-label">محتوى النص</label>
+            <label className="rb-label">
+              محتوى النص
+              <span className="rb-label-hint" style={{ marginRight: "auto", direction: "ltr" }}>
+                {charCount > 0 ? `${charCount} حرف` : ""}
+              </span>
+            </label>
             <textarea
               className="rb-textarea"
-              rows={8}
-              placeholder="اكتب محتوى الدرس هنا..."
+              rows={10}
+              placeholder="اكتب محتوى الدرس هنا... يمكنك إضافة شرح تفصيلي، أمثلة، وملاحظات مهمة"
               value={body}
-              onChange={(e) => setBody(e.target.value)}
+              onChange={(e) => {
+                setBody(e.target.value);
+                setError("");
+              }}
               dir="rtl"
-              style={{ minHeight: 160 }}
+              style={{ minHeight: 200 }}
             />
           </div>
           {error && (
@@ -99,9 +109,15 @@ export function TextModal({
                 جارٍ الحفظ...
               </>
             ) : content ? (
-              "حفظ التعديلات"
+              <>
+                {Icons.check}
+                حفظ التعديلات
+              </>
             ) : (
-              "إضافة النص"
+              <>
+                {Icons.plus}
+                إضافة النص
+              </>
             )}
           </button>
           <button className="rb-btn-ghost" onClick={onClose}>
@@ -134,10 +150,20 @@ export function ImageModal({
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [dragOver, setDragOver] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleFile = (f: File) => {
+    if (!f.type.startsWith("image/")) {
+      setError("يُسمح فقط برفع ملفات الصور");
+      return;
+    }
+    if (f.size > 10 * 1024 * 1024) {
+      setError("حجم الصورة يتجاوز 10 ميغابايت");
+      return;
+    }
     setFile(f);
+    setError("");
     const reader = new FileReader();
     reader.onload = (e) => setPreview(e.target?.result as string);
     reader.readAsDataURL(f);
@@ -145,8 +171,9 @@ export function ImageModal({
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
+    setDragOver(false);
     const f = e.dataTransfer.files[0];
-    if (f && f.type.startsWith("image/")) handleFile(f);
+    if (f) handleFile(f);
   };
 
   const save = async () => {
@@ -179,6 +206,8 @@ export function ImageModal({
     }
   };
 
+  const fileSize = file ? `${(file.size / 1024 / 1024).toFixed(1)} MB` : null;
+
   return (
     <div
       className="rb-overlay"
@@ -186,17 +215,14 @@ export function ImageModal({
     >
       <div className="rb-modal">
         <div className="rb-modal-hd">
-          <div
-            className="rb-modal-icon"
-            style={{ background: "rgba(200,169,106,0.12)", color: "#7A6020" }}
-          >
+          <div className="rb-modal-icon" style={{ background: "rgba(200,169,106,0.1)", color: "#7A6020", borderColor: "rgba(200,169,106,0.2)" }}>
             {Icons.image}
           </div>
           <div className="rb-modal-hd-text">
             <h3 className="rb-modal-title">
-              {content ? "تعديل الصورة" : "إضافة صورة"}
+              {content ? "تعديل الصورة" : "رفع صورة جديدة"}
             </h3>
-            <p className="rb-modal-sub">ارفع صورة للدرس</p>
+            <p className="rb-modal-sub">أضف صورة توضيحية للدرس</p>
           </div>
           <button className="rb-close-btn" onClick={onClose}>
             {Icons.close}
@@ -213,55 +239,89 @@ export function ImageModal({
             }
           />
           {preview ? (
-            <div style={{ position: "relative" }}>
-              <img src={preview} alt="preview" className="rb-img-preview" />
-              <button
-                onClick={() => {
-                  setPreview(null);
-                  setFile(null);
-                }}
-                style={{
-                  position: "absolute",
-                  top: 8,
-                  right: 8,
-                  background: "rgba(11,11,12,.7)",
-                  border: "none",
-                  borderRadius: 8,
-                  padding: "5px 7px",
-                  cursor: "pointer",
-                  color: "#fff",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 4,
-                  fontSize: 11,
-                  fontFamily: "Tajawal",
-                }}
-              >
-                {Icons.x} <span>تغيير</span>
-              </button>
+            <div style={{ position: "relative", borderRadius: 16, overflow: "hidden", border: "1px solid rgba(200,169,106,0.15)" }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={preview} alt="preview" className="rb-img-preview" style={{ borderRadius: 0, border: "none" }} />
+              <div style={{
+                position: "absolute", bottom: 0, left: 0, right: 0,
+                background: "linear-gradient(transparent, rgba(11,11,12,0.8))",
+                padding: "24px 16px 14px",
+                display: "flex", alignItems: "center", justifyContent: "space-between",
+              }}>
+                {fileSize && (
+                  <span style={{ fontSize: 11, color: "rgba(255,255,255,0.6)", fontWeight: 600 }}>
+                    {file?.name} · {fileSize}
+                  </span>
+                )}
+                <button
+                  onClick={() => { setPreview(null); setFile(null); }}
+                  style={{
+                    background: "rgba(255,255,255,0.15)", backdropFilter: "blur(8px)",
+                    border: "1px solid rgba(255,255,255,0.2)", borderRadius: 10,
+                    padding: "7px 14px", cursor: "pointer", color: "#fff",
+                    display: "flex", alignItems: "center", gap: 5,
+                    fontSize: 12, fontWeight: 700, fontFamily: "'Tajawal',sans-serif",
+                    transition: "all 0.2s",
+                  }}
+                >
+                  {Icons.x} تغيير
+                </button>
+              </div>
             </div>
           ) : (
             <div
               className="rb-upload-zone"
               onClick={() => inputRef.current?.click()}
               onDrop={handleDrop}
-              onDragOver={(e) => e.preventDefault()}
+              onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+              onDragLeave={() => setDragOver(false)}
+              style={{
+                borderColor: dragOver ? "#C8A96A" : undefined,
+                background: dragOver ? "rgba(229,185,60,0.08)" : undefined,
+                transform: dragOver ? "scale(1.01)" : undefined,
+              }}
             >
-              <div className="icon">{Icons.upload}</div>
-              <p>
-                <strong>اسحب صورة هنا</strong> أو اضغط للاختيار
+              <div style={{
+                width: 64, height: 64, borderRadius: 16,
+                background: "rgba(200,169,106,0.08)", border: "1px solid rgba(200,169,106,0.15)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                marginBottom: 4,
+              }}>
+                <div className="icon">{Icons.upload}</div>
+              </div>
+              <p style={{ fontSize: 14 }}>
+                <strong>اسحب الصورة هنا</strong>
               </p>
-              <p style={{ fontSize: 11 }}>PNG، JPG، WEBP</p>
+              <p>أو اضغط للاختيار من جهازك</p>
+              <div style={{
+                display: "flex", gap: 8, marginTop: 4,
+              }}>
+                {["PNG", "JPG", "WEBP"].map((fmt) => (
+                  <span key={fmt} style={{
+                    fontSize: 10, fontWeight: 700, color: "#9A8A70",
+                    background: "rgba(200,169,106,0.08)", border: "1px solid rgba(200,169,106,0.12)",
+                    padding: "3px 10px", borderRadius: 100,
+                  }}>
+                    {fmt}
+                  </span>
+                ))}
+                <span style={{
+                  fontSize: 10, fontWeight: 600, color: "#9A8A70",
+                  padding: "3px 6px",
+                }}>
+                  حتى 10MB
+                </span>
+              </div>
             </div>
           )}
           <div className="rb-field">
             <label className="rb-label">
-              النص البديل <span className="rb-label-hint">(اختياري)</span>
+              النص البديل <span className="rb-label-hint">(اختياري — يُحسّن إمكانية الوصول)</span>
             </label>
             <input
               className="rb-input"
               type="text"
-              placeholder="وصف الصورة..."
+              placeholder="وصف موجز للصورة..."
               value={altText}
               onChange={(e) => setAltText(e.target.value)}
               dir="rtl"
@@ -282,9 +342,21 @@ export function ImageModal({
                 جارٍ الرفع...
               </>
             ) : content ? (
-              "حفظ التعديلات"
+              <>
+                {Icons.check}
+                حفظ التعديلات
+              </>
             ) : (
-              "رفع الصورة"
+              <>
+                {Icons.upload ? (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="16 16 12 12 8 16" />
+                    <line x1="12" y1="12" x2="12" y2="21" />
+                    <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3" />
+                  </svg>
+                ) : null}
+                رفع الصورة
+              </>
             )}
           </button>
           <button className="rb-btn-ghost" onClick={onClose}>
@@ -359,7 +431,7 @@ export function VideoModal({
             <h3 className="rb-modal-title">
               {content ? "تعديل الفيديو" : "إضافة فيديو"}
             </h3>
-            <p className="rb-modal-sub">أضف رابط فيديو يوتيوب</p>
+            <p className="rb-modal-sub">أضف رابط فيديو يوتيوب للدرس</p>
           </div>
           <button className="rb-close-btn" onClick={onClose}>
             {Icons.close}
@@ -373,17 +445,39 @@ export function VideoModal({
               type="url"
               placeholder="https://www.youtube.com/watch?v=..."
               value={url}
-              onChange={(e) => setUrl(e.target.value)}
+              onChange={(e) => {
+                setUrl(e.target.value);
+                setError("");
+              }}
               dir="ltr"
             />
+            {!ytId && url.trim() && (
+              <span style={{ fontSize: 11, color: "#9A8A70", fontWeight: 500 }}>
+                أدخل رابط يوتيوب صالح للمعاينة
+              </span>
+            )}
           </div>
           {ytId && (
-            <div className="rb-yt-preview">
+            <div className="rb-yt-preview" style={{ position: "relative" }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={`https://img.youtube.com/vi/${ytId}/mqdefault.jpg`}
+                src={`https://img.youtube.com/vi/${ytId}/hqdefault.jpg`}
                 alt="YouTube thumbnail"
                 style={{ width: "100%", display: "block" }}
               />
+              <div style={{
+                position: "absolute", bottom: 12, right: 12,
+                background: "rgba(11,11,12,0.75)", backdropFilter: "blur(8px)",
+                border: "1px solid rgba(255,255,255,0.1)",
+                borderRadius: 8, padding: "5px 12px",
+                fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.8)",
+                display: "flex", alignItems: "center", gap: 5,
+              }}>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="#E5B93C">
+                  <polygon points="5 3 19 12 5 21 5 3" />
+                </svg>
+                YouTube
+              </div>
             </div>
           )}
           <div className="rb-field">
@@ -393,7 +487,7 @@ export function VideoModal({
             <input
               className="rb-input"
               type="text"
-              placeholder="عنوان الفيديو..."
+              placeholder="مثال: شرح الدرس الأول — المقدمة"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               dir="rtl"
@@ -414,9 +508,15 @@ export function VideoModal({
                 جارٍ الحفظ...
               </>
             ) : content ? (
-              "حفظ التعديلات"
+              <>
+                {Icons.check}
+                حفظ التعديلات
+              </>
             ) : (
-              "إضافة الفيديو"
+              <>
+                {Icons.video}
+                إضافة الفيديو
+              </>
             )}
           </button>
           <button className="rb-btn-ghost" onClick={onClose}>

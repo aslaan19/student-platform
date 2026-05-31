@@ -37,6 +37,8 @@ export async function GET(request: NextRequest) {
   const supabase = await createClient();
 
   // ── 1. Verify the token / exchange the code ──────────────────────────────
+  let isRecovery = type === "recovery";
+
   if (token_hash && type) {
     const { error } = await supabase.auth.verifyOtp({ token_hash, type });
     if (error) {
@@ -44,10 +46,20 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(`${origin}/login?error=link_invalid`);
     }
   } else if (code) {
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
     if (error) {
       console.error("[auth/callback] exchangeCodeForSession error:", error.message);
       return NextResponse.redirect(`${origin}/login?error=oauth_failed`);
+    }
+    // PKCE recovery: Supabase puts type in the session's AMR claims
+    // Check if this session was created via a recovery flow
+    if (data?.session?.user?.recovery_sent_at) {
+      const recoverySentAt = new Date(data.session.user.recovery_sent_at).getTime();
+      const now = Date.now();
+      // If recovery was sent within the last hour, this is a password reset flow
+      if (now - recoverySentAt < 60 * 60 * 1000) {
+        isRecovery = true;
+      }
     }
   } else {
     return NextResponse.redirect(`${origin}/login?error=missing_params`);
@@ -65,7 +77,7 @@ export async function GET(request: NextRequest) {
   }
 
   // ── 3. Password-recovery flow — send to reset page, skip role lookup ────
-  if (type === "recovery") {
+  if (isRecovery) {
     return NextResponse.redirect(`${origin}/reset-password`);
   }
 

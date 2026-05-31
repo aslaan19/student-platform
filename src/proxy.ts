@@ -93,8 +93,8 @@ export async function proxy(request: NextRequest) {
       else                              { url.pathname = "/student"; }
       return NextResponse.redirect(url);
     }
-    // /deactivated has no role-guard below; let it render for anyone authenticated.
-    if (pathname === "/deactivated") {
+    // These pages have no role-guard — let them render for anyone authenticated.
+    if (pathname === "/deactivated" || pathname === "/reset-password") {
       return response;
     }
 
