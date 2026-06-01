@@ -13,7 +13,6 @@ import {
   Menu,
   LogOut,
   Bell,
-  ChevronLeft,
   Sparkles,
   Mail,
   ShieldCheck,
@@ -536,12 +535,6 @@ export default function OwnerLayout({
               <GeoMark size={18} color="var(--gold-deep)" />
             </div>
             <div className="ow-breadcrumb">
-              <span className="ow-bc-root">الرئيسية</span>
-              <ChevronLeft
-                size={13}
-                strokeWidth={1.8}
-                className="ow-bc-sep-icon"
-              />
               <span className="ow-bc-cur">{current?.label ?? "الصفحة"}</span>
             </div>
           </div>

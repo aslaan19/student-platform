@@ -20,7 +20,6 @@ import {
   Menu,
   LogOut,
   Bell,
-  ChevronLeft,
   Sparkles,
   LucideIcon,
   X,
@@ -361,8 +360,6 @@ export default function TeacherLayout({ children }: Readonly<{ children: React.R
               <GeoMark size={18} color="var(--tl-gold-deep)" />
             </div>
             <div className="tl-breadcrumb">
-              <span className="tl-bc-root">{lang === "ar" ? "الرئيسية" : "Kryesore"}</span>
-              <ChevronLeft size={13} strokeWidth={1.8} className="tl-bc-sep" />
               <span className="tl-bc-cur">{currentLabel}</span>
             </div>
           </div>

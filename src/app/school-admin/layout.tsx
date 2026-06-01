@@ -24,7 +24,6 @@ import {
   Menu,
   LogOut,
   Bell,
-  ChevronLeft,
   Sparkles,
   X,
   LucideIcon,
@@ -440,8 +439,6 @@ export default function SchoolAdminLayout({ children }: { children: React.ReactN
               <GeoMark size={18} color="var(--sa-gold-deep)" />
             </div>
             <div className="sa-breadcrumb">
-              <span className="sa-bc-root">{lang === "ar" ? "الرئيسية" : "Kryesore"}</span>
-              <ChevronLeft size={13} strokeWidth={1.8} className="sa-bc-sep" />
               <span className="sa-bc-cur">{currentLabel}</span>
             </div>
           </div>

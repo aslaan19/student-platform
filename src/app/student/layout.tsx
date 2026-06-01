@@ -20,7 +20,6 @@ import {
   Menu,
   LogOut,
   Bell,
-  ChevronLeft,
   Sparkles,
   X,
   LucideIcon,
@@ -426,8 +425,6 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
               <GeoMark size={18} color="var(--sl-gold-deep)" />
             </div>
             <div className="sl-breadcrumb">
-              <span className="sl-bc-root">{lang === "ar" ? "الرئيسية" : "Kryesore"}</span>
-              <ChevronLeft size={13} strokeWidth={1.8} className="sl-bc-sep" />
               <span className="sl-bc-cur">{currentLabel}</span>
             </div>
           </div>
